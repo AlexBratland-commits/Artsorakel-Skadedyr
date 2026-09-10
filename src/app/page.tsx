@@ -1,69 +1,278 @@
-import Image from "next/image";
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Search } from "lucide-react";
+
+import ImageUploader from "@/components/ImageUploader";
+import ResultDisplay from "@/components/ResultDisplay";
+import HistoryPanel from "@/components/HistoryPanel";
+import InstallBanner from "@/components/InstallBanner";
+import ThemeToggle from "@/components/ThemeToggle";
+import OcabLogo from "@/components/OcabLogo";
+import AskAboutFinding from "@/components/AskAboutFinding";
+import { useToast } from "@/components/Toast";
+
+import { compressImage, makeThumbnail } from "@/lib/image-tools";
+import { addToHistory, clearHistory, readHistory, removeFromHistory } from "@/lib/history";
+import { LOCATIONS, type AnalysisResult, type HistoryEntry } from "@/lib/types";
+
+const SIZES = [
+  "under 5 mm (mindre enn et riskorn)",
+  "5–10 mm (som et riskorn til en ert)",
+  "1–3 cm (som en femkroning)",
+  "3–10 cm (som en fyrstikkeske til en hånd)",
+  "større enn 10 cm",
+];
 
 export default function Home() {
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [analyserer, setAnalyserer] = useState(false);
+  const [fremdrift, setFremdrift] = useState(0);
+  const [sted, setSted] = useState("");
+  const [storrelse, setStorrelse] = useState("");
+  const [historikk, setHistorikk] = useState<HistoryEntry[]>([]);
+
+  const previewUrl = useRef<string | null>(null);
+  const { vis } = useToast();
+
+  // Historikk leses fra localStorage én gang etter mount (kun tilgjengelig på klienten).
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => setHistorikk(readHistory()), []);
+
+  // Rydd opp objekt-URL-en når komponenten forsvinner
+  useEffect(() => {
+    return () => {
+      if (previewUrl.current) URL.revokeObjectURL(previewUrl.current);
+    };
+  }, []);
+
+  const velgBilde = useCallback((valgt: File | null) => {
+    if (previewUrl.current) {
+      URL.revokeObjectURL(previewUrl.current);
+      previewUrl.current = null;
+    }
+    setResult(null);
+    setFile(valgt);
+
+    if (valgt) {
+      const url = URL.createObjectURL(valgt);
+      previewUrl.current = url;
+      setPreview(url);
+    } else {
+      setPreview(null);
+      setSted("");
+      setStorrelse("");
+    }
+  }, []);
+
+  const analyser = async () => {
+    if (!file || analyserer) return;
+
+    setAnalyserer(true);
+    setResult(null);
+    setFremdrift(8);
+
+    // Fremdriften er et estimat, ikke en måling – den stopper på 90 %
+    // og fylles helt når svaret faktisk er der.
+    const timer = window.setInterval(() => {
+      setFremdrift((f) => (f >= 90 ? f : f + Math.max(1, (90 - f) * 0.08)));
+    }, 220);
+
+    try {
+      const { file: klar, originalBytes, compressed } = await compressImage(file);
+      if (compressed && originalBytes > klar.size * 1.5) {
+        vis("Bildet ble komprimert før opplasting.", "info");
+      }
+
+      const formData = new FormData();
+      formData.append("image", klar);
+      formData.append("location", sted);
+      formData.append("storrelse", storrelse);
+
+      const response = await fetch("/api/analyze", { method: "POST", body: formData });
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(data?.error ?? "Analysen feilet. Prøv igjen.");
+      }
+
+      const analysis = data as AnalysisResult;
+      setFremdrift(100);
+      setResult(analysis);
+
+      const thumb = await makeThumbnail(klar);
+      setHistorikk(addToHistory(analysis, thumb, sted));
+
+      if (!analysis.found) {
+        vis("Ingen sikker match. Prøv et skarpere bilde nærmere dyret.", "info");
+      }
+    } catch (error) {
+      const melding =
+        error instanceof Error ? error.message : "Noe gikk galt. Prøv igjen.";
+      vis(melding, "feil");
+    } finally {
+      window.clearInterval(timer);
+      setAnalyserer(false);
+      window.setTimeout(() => setFremdrift(0), 500);
+    }
+  };
+
+  const nyttBilde = () => {
+    velgBilde(null);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
+    <div className="mx-auto flex min-h-dvh max-w-3xl flex-col px-4 pb-10 sm:px-6">
+      <header className="no-print flex items-center justify-between gap-4 py-6">
+        <a href="https://www.ocab.no/" target="_blank" rel="noopener noreferrer">
+          <OcabLogo height={26} />
+        </a>
+        <ThemeToggle />
+      </header>
+
+      <main id="innhold" className="flex-1">
+        <div className="pb-8 pt-2">
+          <h1 className="text-balance text-4xl font-extrabold leading-[1.05] tracking-tight text-ocab-900 sm:text-5xl dark:text-white">
+            Hva er det du har funnet?
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="mt-3 max-w-md text-base leading-relaxed text-muted">
+            Ta et bilde, så foreslår vi hvilken art det er, hvor alvorlig det er
+            og hva du bør gjøre videre.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+
+        <ImageUploader
+          onImageSelect={velgBilde}
+          imagePreview={preview}
+          fileName={file?.name}
+          fileSize={file?.size}
+          disabled={analyserer}
+        />
+
+        {file && !result && (
+          <div className="no-print mt-6 animate-stagger-in">
+            <label htmlFor="sted" className="block text-sm font-semibold">
+              Hvor fant du det?
+            </label>
+            <p className="mt-1 text-sm text-muted">
+              Valgfritt, men det skiller arter som ser like ut – for eksempel
+              skjeggkre inne og sølvkre på badet.
+            </p>
+            <select
+              id="sted"
+              value={sted}
+              onChange={(e) => setSted(e.target.value)}
+              disabled={analyserer}
+              className="mt-3 w-full rounded-lg border hairline bg-[color:var(--surface)] px-4 py-3 text-base shadow-flat transition disabled:opacity-50"
+            >
+              <option value="">Ikke oppgitt</option>
+              {LOCATIONS.map((l) => (
+                <option key={l.value} value={l.value}>
+                  {l.label}
+                </option>
+              ))}
+            </select>
+
+            <label htmlFor="storrelse" className="mt-6 block text-sm font-semibold">
+              Omtrent hvor stort var det?
+            </label>
+            <p className="mt-1 text-sm text-muted">
+              Størrelse er det enkeltopplysningen som skiller flest arter fra
+              hverandre. Sammenlign gjerne med en fyrstikk eller en femkroning.
+            </p>
+            <select
+              id="storrelse"
+              value={storrelse}
+              onChange={(e) => setStorrelse(e.target.value)}
+              disabled={analyserer}
+              className="mt-3 w-full rounded-lg border hairline bg-[color:var(--surface)] px-4 py-3 text-base shadow-flat transition disabled:opacity-50"
+            >
+              <option value="">Ikke oppgitt</option>
+              {SIZES.map((sz) => (
+                <option key={sz} value={sz}>
+                  {sz}
+                </option>
+              ))}
+            </select>
+
+            <button
+              type="button"
+              onClick={analyser}
+              disabled={analyserer}
+              className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-signal-500 px-8 py-4 text-lg font-bold text-white shadow-raised transition hover:bg-signal-600 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
+            >
+              <Search className="size-5" aria-hidden />
+              {analyserer ? "Analyserer bildet…" : "Artsbestem bildet"}
+            </button>
+
+            {analyserer && (
+              <div className="mt-5">
+                <div
+                  className="sweep relative h-1.5 overflow-hidden rounded-full bg-[color:var(--surface-sunken)]"
+                  role="progressbar"
+                  aria-valuenow={Math.round(fremdrift)}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-label="Analyserer bildet"
+                >
+                  <div
+                    className="h-full rounded-full bg-ocab-900 transition-[width] duration-300 ease-out dark:bg-ocab-200"
+                    style={{ width: `${fremdrift}%` }}
+                  />
+                </div>
+                <p className="mt-2 text-xs text-muted">
+                  Sammenligner bildet med artslisten. Dette tar vanligvis noen sekunder.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        <ResultDisplay result={result} onReset={nyttBilde} />
+
+        {result && <AskAboutFinding key={result.name} result={result} />}
+
+        {!file && <InstallBanner />}
+
+        <HistoryPanel
+          entries={historikk}
+          onOpen={(e) => {
+            setResult(e.resultat);
+            setPreview(e.thumb || null);
+            setFile(null);
+          }}
+          onRemove={(id) => setHistorikk(removeFromHistory(id))}
+          onClear={() => setHistorikk(clearHistory())}
+        />
       </main>
+
+      <footer className="mt-14 border-t hairline pt-6 text-sm text-muted">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <OcabLogo height={20} />
+            <p className="mt-2">Over 40 års erfaring med skadedyr</p>
+          </div>
+          <div className="flex flex-col gap-1 sm:items-end">
+            <a
+              href="https://www.ocab.no/skade/skadedyr/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-ocab-700 underline underline-offset-4 dark:text-ocab-200"
+            >
+              Skadedyrtjenester fra Ocab
+            </a>
+            <p>© {new Date().getFullYear()} Ocab AS</p>
+          </div>
+        </div>
+        <p className="mt-5 max-w-prose text-xs">
+          Tjenesten er gratis og bruker bildeanalyse. Bildene lagres ikke hos oss
+          etter at svaret er gitt. Svaret er veiledende og erstatter ikke en
+          befaring.
+        </p>
+      </footer>
     </div>
   );
 }
