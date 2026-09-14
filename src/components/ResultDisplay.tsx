@@ -222,6 +222,29 @@ export default function ResultDisplay({
               </div>
             )}
 
+            {result.bekreftelse && result.bekreftelse.length > 0 && (
+              <div>
+                <h3 className="text-sm font-semibold">Slik bekrefter du funnet</h3>
+                <ul className="mt-3 space-y-2">
+                  {result.bekreftelse.map((b, i) => (
+                    <li key={i} className="flex gap-3 text-sm leading-relaxed">
+                      <span
+                        className="mt-2 size-1.5 shrink-0 rounded-full bg-ocab-500"
+                        aria-hidden
+                      />
+                      <span>{b}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {result.notat && (
+              <p className="rounded-lg border-l-2 border-ocab-500 bg-ocab-50 px-4 py-3 text-sm dark:bg-ocab-900/20">
+                {result.notat}
+              </p>
+            )}
+
             {result.forveksles && result.forveksles.length > 0 && (
               <div>
                 <h3 className="text-sm font-semibold">Slik skiller du den fra liknende arter</h3>
@@ -237,6 +260,15 @@ export default function ResultDisplay({
                   ))}
                 </ul>
               </div>
+            )}
+
+            {result.gruppe === "Ekskrementer" && (
+              <p className="rounded-lg border-l-2 border-signal-500 bg-signal-100/50 px-4 py-3 text-sm dark:bg-signal-600/10">
+                Dette er en AI-vurdering basert på bilde og oppgitte kjennetegn,
+                ikke en laboratorieprøve. Er du usikker, eller gjelder det et
+                sted der sikker bestemmelse er viktig – kontakt Ocab for
+                bekreftelse.
+              </p>
             )}
 
             <p className="rounded-lg border-l-2 border-signal-500 bg-signal-100/50 px-4 py-3 text-sm dark:bg-signal-600/10">

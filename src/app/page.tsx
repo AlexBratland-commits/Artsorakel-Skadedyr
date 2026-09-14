@@ -14,7 +14,16 @@ import { useToast } from "@/components/Toast";
 
 import { compressImage, makeThumbnail } from "@/lib/image-tools";
 import { addToHistory, clearHistory, readHistory, removeFromHistory } from "@/lib/history";
-import { LOCATIONS, type AnalysisResult, type HistoryEntry } from "@/lib/types";
+import {
+  LOCATIONS,
+  DROPPING_SIZES,
+  DROPPING_SHAPES,
+  DROPPING_CONTENTS,
+  DROPPING_COUNTS,
+  DROPPING_TEXTURES,
+  type AnalysisResult,
+  type HistoryEntry,
+} from "@/lib/types";
 
 const SIZES = [
   "under 5 mm (mindre enn et riskorn)",
@@ -24,6 +33,8 @@ const SIZES = [
   "større enn 10 cm",
 ];
 
+type AnalyseType = "dyr" | "ekskrementer";
+
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -32,6 +43,12 @@ export default function Home() {
   const [fremdrift, setFremdrift] = useState(0);
   const [sted, setSted] = useState("");
   const [storrelse, setStorrelse] = useState("");
+  const [analyseType, setAnalyseType] = useState<AnalyseType>("dyr");
+  const [droppingSize, setDroppingSize] = useState("");
+  const [droppingShape, setDroppingShape] = useState("");
+  const [droppingContent, setDroppingContent] = useState("");
+  const [droppingCount, setDroppingCount] = useState("");
+  const [droppingTexture, setDroppingTexture] = useState("");
   const [historikk, setHistorikk] = useState<HistoryEntry[]>([]);
 
   const previewUrl = useRef<string | null>(null);
@@ -64,6 +81,12 @@ export default function Home() {
       setPreview(null);
       setSted("");
       setStorrelse("");
+      setAnalyseType("dyr");
+      setDroppingSize("");
+      setDroppingShape("");
+      setDroppingContent("");
+      setDroppingCount("");
+      setDroppingTexture("");
     }
   }, []);
 
@@ -90,6 +113,14 @@ export default function Home() {
       formData.append("image", klar);
       formData.append("location", sted);
       formData.append("storrelse", storrelse);
+      formData.append("type", analyseType);
+      if (analyseType === "ekskrementer") {
+        formData.append("droppingSize", droppingSize);
+        formData.append("droppingShape", droppingShape);
+        formData.append("droppingContent", droppingContent);
+        formData.append("droppingCount", droppingCount);
+        formData.append("droppingTexture", droppingTexture);
+      }
 
       const response = await fetch("/api/analyze", { method: "POST", body: formData });
       const data = await response.json().catch(() => null);
@@ -154,7 +185,40 @@ export default function Home() {
 
         {file && !result && (
           <div className="no-print mt-6 animate-stagger-in">
-            <label htmlFor="sted" className="block text-sm font-semibold">
+            <span className="block text-sm font-semibold">Hva vil du artsbestemme?</span>
+            <p className="mt-1 text-sm text-muted">
+              Velg ekskrementer hvis bildet viser avføring, ikke selve dyret.
+            </p>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setAnalyseType("dyr")}
+                disabled={analyserer}
+                aria-pressed={analyseType === "dyr"}
+                className={`rounded-lg border px-4 py-3 text-sm font-semibold shadow-flat transition disabled:opacity-50 ${
+                  analyseType === "dyr"
+                    ? "border-ocab-900 bg-ocab-900 text-white dark:border-ocab-200 dark:bg-ocab-200 dark:text-ocab-950"
+                    : "hairline bg-[color:var(--surface)]"
+                }`}
+              >
+                Dyr
+              </button>
+              <button
+                type="button"
+                onClick={() => setAnalyseType("ekskrementer")}
+                disabled={analyserer}
+                aria-pressed={analyseType === "ekskrementer"}
+                className={`rounded-lg border px-4 py-3 text-sm font-semibold shadow-flat transition disabled:opacity-50 ${
+                  analyseType === "ekskrementer"
+                    ? "border-ocab-900 bg-ocab-900 text-white dark:border-ocab-200 dark:bg-ocab-200 dark:text-ocab-950"
+                    : "hairline bg-[color:var(--surface)]"
+                }`}
+              >
+                Ekskrementer
+              </button>
+            </div>
+
+            <label htmlFor="sted" className="mt-6 block text-sm font-semibold">
               Hvor fant du det?
             </label>
             <p className="mt-1 text-sm text-muted">
@@ -176,27 +240,127 @@ export default function Home() {
               ))}
             </select>
 
-            <label htmlFor="storrelse" className="mt-6 block text-sm font-semibold">
-              Omtrent hvor stort var det?
-            </label>
-            <p className="mt-1 text-sm text-muted">
-              Størrelse er det enkeltopplysningen som skiller flest arter fra
-              hverandre. Sammenlign gjerne med en fyrstikk eller en femkroning.
-            </p>
-            <select
-              id="storrelse"
-              value={storrelse}
-              onChange={(e) => setStorrelse(e.target.value)}
-              disabled={analyserer}
-              className="mt-3 w-full rounded-lg border hairline bg-[color:var(--surface)] px-4 py-3 text-base shadow-flat transition disabled:opacity-50"
-            >
-              <option value="">Ikke oppgitt</option>
-              {SIZES.map((sz) => (
-                <option key={sz} value={sz}>
-                  {sz}
-                </option>
-              ))}
-            </select>
+            {analyseType === "dyr" ? (
+              <>
+                <label htmlFor="storrelse" className="mt-6 block text-sm font-semibold">
+                  Omtrent hvor stort var det?
+                </label>
+                <p className="mt-1 text-sm text-muted">
+                  Størrelse er det enkeltopplysningen som skiller flest arter fra
+                  hverandre. Sammenlign gjerne med en fyrstikk eller en femkroning.
+                </p>
+                <select
+                  id="storrelse"
+                  value={storrelse}
+                  onChange={(e) => setStorrelse(e.target.value)}
+                  disabled={analyserer}
+                  className="mt-3 w-full rounded-lg border hairline bg-[color:var(--surface)] px-4 py-3 text-base shadow-flat transition disabled:opacity-50"
+                >
+                  <option value="">Ikke oppgitt</option>
+                  {SIZES.map((sz) => (
+                    <option key={sz} value={sz}>
+                      {sz}
+                    </option>
+                  ))}
+                </select>
+              </>
+            ) : (
+              <>
+                <label htmlFor="droppingSize" className="mt-6 block text-sm font-semibold">
+                  Størrelse på ekskrementene
+                </label>
+                <select
+                  id="droppingSize"
+                  value={droppingSize}
+                  onChange={(e) => setDroppingSize(e.target.value)}
+                  disabled={analyserer}
+                  className="mt-3 w-full rounded-lg border hairline bg-[color:var(--surface)] px-4 py-3 text-base shadow-flat transition disabled:opacity-50"
+                >
+                  <option value="">Ikke oppgitt</option>
+                  {DROPPING_SIZES.map((s) => (
+                    <option key={s.value} value={s.value}>
+                      {s.label}
+                    </option>
+                  ))}
+                </select>
+
+                <label htmlFor="droppingShape" className="mt-6 block text-sm font-semibold">
+                  Form
+                </label>
+                <select
+                  id="droppingShape"
+                  value={droppingShape}
+                  onChange={(e) => setDroppingShape(e.target.value)}
+                  disabled={analyserer}
+                  className="mt-3 w-full rounded-lg border hairline bg-[color:var(--surface)] px-4 py-3 text-base shadow-flat transition disabled:opacity-50"
+                >
+                  <option value="">Ikke oppgitt</option>
+                  {DROPPING_SHAPES.map((s) => (
+                    <option key={s.value} value={s.value}>
+                      {s.label}
+                    </option>
+                  ))}
+                </select>
+
+                <label htmlFor="droppingContent" className="mt-6 block text-sm font-semibold">
+                  Innhold
+                </label>
+                <select
+                  id="droppingContent"
+                  value={droppingContent}
+                  onChange={(e) => setDroppingContent(e.target.value)}
+                  disabled={analyserer}
+                  className="mt-3 w-full rounded-lg border hairline bg-[color:var(--surface)] px-4 py-3 text-base shadow-flat transition disabled:opacity-50"
+                >
+                  <option value="">Ikke oppgitt</option>
+                  {DROPPING_CONTENTS.map((c) => (
+                    <option key={c.value} value={c.value}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
+
+                <label htmlFor="droppingCount" className="mt-6 block text-sm font-semibold">
+                  Antall
+                </label>
+                <select
+                  id="droppingCount"
+                  value={droppingCount}
+                  onChange={(e) => setDroppingCount(e.target.value)}
+                  disabled={analyserer}
+                  className="mt-3 w-full rounded-lg border hairline bg-[color:var(--surface)] px-4 py-3 text-base shadow-flat transition disabled:opacity-50"
+                >
+                  <option value="">Ikke oppgitt</option>
+                  {DROPPING_COUNTS.map((c) => (
+                    <option key={c.value} value={c.value}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
+
+                <label htmlFor="droppingTexture" className="mt-6 block text-sm font-semibold">
+                  Konsistens
+                </label>
+                <p className="mt-1 text-sm text-muted">
+                  Prøv forsiktig med en pinne eller hanske – smuldrer det, er det
+                  trolig flaggermus og ikke mus.
+                </p>
+                <select
+                  id="droppingTexture"
+                  value={droppingTexture}
+                  onChange={(e) => setDroppingTexture(e.target.value)}
+                  disabled={analyserer}
+                  className="mt-3 w-full rounded-lg border hairline bg-[color:var(--surface)] px-4 py-3 text-base shadow-flat transition disabled:opacity-50"
+                >
+                  <option value="">Ikke oppgitt</option>
+                  {DROPPING_TEXTURES.map((t) => (
+                    <option key={t.value} value={t.value}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
+              </>
+            )}
 
             <button
               type="button"

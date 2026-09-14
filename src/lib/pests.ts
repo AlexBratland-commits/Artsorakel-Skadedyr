@@ -19,6 +19,7 @@ export const GROUPS = [
   "Lus, lopper og midd",
   "Edderkoppdyr",
   "Andre småkryp",
+  "Ekskrementer",
 ] as const;
 
 export type PestGroup = (typeof GROUPS)[number];
@@ -39,6 +40,10 @@ export interface Pest {
   aliaser?: string[];
   /** Arter dette lett forveksles med, og hva som skiller dem. */
   forveksles?: string[];
+  /** Ekstra kjennetegn som bekrefter funnet – brukt for ekskrement-arter. */
+  bekreftelse?: string[];
+  /** Kort, viktig varsel som fremheves i resultatvisningen. */
+  notat?: string;
 }
 
 /**
@@ -948,6 +953,167 @@ export const PESTS: Pest[] = [
       "Krever profesjonell behandling – meld fra til huseier eller hotellet",
     ],
   },
+
+  // ── Ekskrementer ─────────────────────────────────────────────────────
+  {
+    norsk: "Brunrotte", latin: "Rattus norvegicus", slug: "rotte-ekskrementer", gruppe: "Ekskrementer",
+    kjennetegn: "15–20 mm, pølseformet med spisse ender, mørkebrun, ofte i klynger på faste toalettplasser",
+    utbredelse: "Hele landet, tettest i byer og langs kysten",
+    sesong: "Hele året",
+    alvorlighet: "høy",
+    aliaser: ["rotteekskrementer", "rotteavføring"],
+    forveksles: [
+      "Skogsmus – mye mindre (4–8 mm) og inneholder ofte synlige frørester",
+      "Mår – større (5–10 cm), avlange og finnes gjerne på steiner eller i trær, ikke i klynger på gulvet",
+    ],
+    bekreftelse: [
+      "Pølseformet med spisse ender i begge ender",
+      "Mørkebrun, blir gråere når den tørker",
+      "Finnes ofte i klynger på ett eller få faste steder, ikke spredt",
+      "Ofte langs vegger, i skap, på loft eller i kjeller",
+    ],
+    notat: "Rotter lager faste toaletter – ekskrementer finnes derfor ofte i klynger på utvalgte steder, ikke spredt rundt i rommet.",
+    tiltak: [
+      "Bruk hansker og støvmaske ved opprydding – rotteekskrementer kan smitte",
+      "Fukt området før rengjøring – ikke tørrfei eller støvsug direkte",
+      "Rotter lager faste toaletter – let etter flere klynger, ikke bare den du så først",
+      "Kontakt Ocab for kartlegging og sanering ved funn innendørs",
+    ],
+  },
+  {
+    norsk: "Liten skogsmus", latin: "Apodemus sylvaticus", slug: "liten-skogsmus-ekskrementer", gruppe: "Ekskrementer",
+    kjennetegn: "4–7 mm, spisse ender, inneholder ofte synlige frørester, spredt i skog, hage eller uthus",
+    utbredelse: "Sør- og Østlandet, vanlig i hytter og uthus",
+    sesong: "Trekker inn sent på høsten",
+    alvorlighet: "lav",
+    aliaser: ["skogmus", "skogmusekskrementer"],
+    forveksles: [
+      "Stor skogsmus – litt større ekskrementer (5–8 mm), ellers svært like",
+      "Flaggermus – smuldrer lett ved berøring og glinser av insektskall, mens skogsmusekskrementer er faste og inneholder frørester",
+    ],
+    bekreftelse: [
+      "4–7 mm lange, spisse i begge ender",
+      "Inneholder ofte synlige frørester",
+      "Faste og smuldrer ikke ved berøring",
+      "Som regel spredt, ikke i tette klynger",
+    ],
+    tiltak: [
+      "Tett innganger i grunnmur, kledning og ventiler",
+      "Rydd ved, løv og busker inntil veggen",
+      "Sett feller på loft og i kjeller før vinteren",
+    ],
+  },
+  {
+    norsk: "Stor skogsmus", latin: "Apodemus flavicollis", slug: "stor-skogsmus-ekskrementer", gruppe: "Ekskrementer",
+    kjennetegn: "5–8 mm, spisse ender, inneholder ofte synlige frørester, litt større enn liten skogsmus",
+    utbredelse: "Sørøstlandet",
+    sesong: "Trekker inn sent på høsten",
+    alvorlighet: "lav",
+    aliaser: ["halsbåndmus", "stor skogsmusekskrementer"],
+    forveksles: [
+      "Liten skogsmus – litt mindre ekskrementer (4–7 mm), ellers svært like",
+      "Flaggermus – smuldrer lett ved berøring og glinser av insektskall, mens skogsmusekskrementer er faste og inneholder frørester",
+    ],
+    bekreftelse: [
+      "5–8 mm lange, spisse i begge ender",
+      "Inneholder ofte synlige frørester",
+      "Faste og smuldrer ikke ved berøring",
+      "Som regel spredt, ikke i tette klynger",
+    ],
+    tiltak: [
+      "Samme tiltak som for liten skogsmus: tetting og feller",
+      "Sjekk hytteloft etter avføring og reirmateriale",
+    ],
+  },
+  {
+    norsk: "Mink", latin: "Neogale vison", slug: "mink-ekskrementer", gruppe: "Ekskrementer",
+    kjennetegn: "5–10 cm, avlang, inneholder ofte pels eller fiskebein, finnes ofte ved vann og på steiner",
+    utbredelse: "Hele landet, nesten alltid nær vann",
+    sesong: "Hele året",
+    alvorlighet: "middels",
+    aliaser: ["neovison vison", "minkekskrementer"],
+    forveksles: [
+      "Mår – like store, men inneholder oftere frø og bær og finnes gjerne i trær eller på loft, ikke ved vann",
+      "Røyskatt – mindre (3–6 cm) og finnes ofte i haug ved reiret",
+    ],
+    bekreftelse: [
+      "Avlang form, ofte 5–10 cm lang",
+      "Kan inneholde pels, fiskebein eller skjell",
+      "Funnet ved vann, på steiner, brygger eller naust",
+      "Skarp, ubehagelig lukt",
+    ],
+    tiltak: [
+      "Fremmed art som tar fugl, egg og fisk – sikre hønsehus og fuglebur med finmasket netting",
+      "Tett innganger under naust, brygge, terrasse og uthus",
+      "Fangst krever kjennskap til regelverket – ta kontakt med kommunen eller Ocab",
+    ],
+  },
+  {
+    norsk: "Mår", latin: "Martes martes", slug: "mar-ekskrementer", gruppe: "Ekskrementer",
+    kjennetegn: "5–10 cm, avlang, inneholder ofte pels, frø eller bær, finnes ofte på loft, steiner eller i trær",
+    utbredelse: "Hele landet i skogsområder",
+    sesong: "Hele året, mest bråk på loft om vinteren",
+    alvorlighet: "middels",
+    aliaser: ["skogmår", "mårekskrementer"],
+    forveksles: [
+      "Mink – like store, men inneholder oftere fiskebein og finnes ved vann, ikke på loft",
+      "Røyskatt – mindre (3–6 cm) og finnes ofte i haug ved reiret",
+    ],
+    bekreftelse: [
+      "Avlang form, ofte 5–10 cm lang, gjerne vridd i endene",
+      "Kan inneholde pels, frørester eller bærkjerner",
+      "Funnet på loft, mønekam, steiner eller i trær",
+      "Ofte plassert synlig, som markeringssted",
+    ],
+    tiltak: [
+      "Mår er fredet – den skal ikke avlives uten tillatelse",
+      "Steng inngangen på loftet når du er sikker på at dyret er ute",
+      "Fjern klatreveier: greiner, kabler og stiger inntil huset",
+    ],
+  },
+  {
+    norsk: "Røyskatt", latin: "Mustela erminea", slug: "royskatt-ekskrementer", gruppe: "Ekskrementer",
+    kjennetegn: "3–6 cm, avlang, inneholder ofte pels eller bein, finnes gjerne i haug ved reiret",
+    utbredelse: "Hele landet",
+    sesong: "Hele året",
+    alvorlighet: "lav",
+    aliaser: ["hermelin", "royskattekskrementer"],
+    forveksles: [
+      "Mink og mår – begge tydelig større (5–10 cm)",
+    ],
+    bekreftelse: [
+      "Avlang og tynn, 3–6 cm lang",
+      "Kan inneholde pels og små beinrester fra byttedyr",
+      "Ofte funnet samlet i haug nær reiret, for eksempel i steinrøys eller under uthus",
+    ],
+    tiltak: [
+      "Arten jakter mus og gjør sjelden skade – vurder om tiltak trengs i det hele tatt",
+      "Tett åpninger i grunnmur hvis den holder til under huset",
+    ],
+  },
+  {
+    norsk: "Flaggermus", latin: "Chiroptera", slug: "flaggermus-ekskrementer", gruppe: "Ekskrementer",
+    kjennetegn: "3–5 mm, ligner musavføring, men smuldrer lett ved berøring og glinser av uknuste insektskall",
+    utbredelse: "Hele landet",
+    sesong: "Aktiv april–oktober, dvale om vinteren",
+    alvorlighet: "lav",
+    aliaser: ["flaggermusekskrementer", "flaggermusguano"],
+    forveksles: [
+      "Musavføring – fast og smuldrer ikke, inneholder frørester i stedet for insektskall",
+    ],
+    bekreftelse: [
+      "3–5 mm, ligner et lite riskorn",
+      "Smuldrer lett til pulver mellom fingrene (bruk hansker)",
+      "Glinser av uknuste insektskall i bruddflaten",
+      "Finnes ofte i hauger under en fast oppholdsplass, f.eks. på loft eller under takutstikk",
+    ],
+    notat: "Flaggermus-ekskrementer smuldrer lett ved berøring og inneholder insektskall. Mus-ekskrementer er faste og inneholder frørester.",
+    tiltak: [
+      "Alle flaggermus er fredet i Norge – de kan ikke fjernes eller avlives",
+      "Utestenging kan bare gjøres utenfor yngle- og dvaletiden",
+      "Bruk hansker og munnbind ved rengjøring, og luft godt – kontakt kommunen eller BatLife Norge ved usikkerhet",
+    ],
+  },
 ];
 
 // ── Oppslag og hjelpere ──────────────────────────────────────────────────
@@ -971,6 +1137,23 @@ export function findPest(name?: string | null): Pest | undefined {
 export function pestsInGroup(gruppe: string): Pest[] {
   const g = normalize(gruppe);
   return PESTS.filter((p) => normalize(p.gruppe) === g);
+}
+
+/**
+ * Slår opp art på navn, men bare innenfor én gruppe. Flere grupper kan ha
+ * en art med samme norske navn (f.eks. "Brunrotte" som dyr og som
+ * ekskrement-art) – da må oppslaget vite hvilken gruppe steg 2 faktisk
+ * jobbet mot, ellers kan det plukke feil oppføring (feil kjennetegn/tiltak).
+ */
+export function findPestInGroup(name: string | undefined | null, gruppe: string): Pest | undefined {
+  if (!name) return undefined;
+  const n = normalize(name);
+  return pestsInGroup(gruppe).find(
+    (p) =>
+      normalize(p.norsk) === n ||
+      normalize(p.latin) === n ||
+      p.aliaser?.some((a) => normalize(a) === n)
+  );
 }
 
 /** Slår opp hovedgruppe på (omtrent) navn. Null hvis ikke i listen. */
@@ -1025,6 +1208,7 @@ export const GROUP_FOCUS: Record<PestGroup, string> = {
   "Lus, lopper og midd": "Vurder størrelse, kroppsform (flat, smal, rund), bein og om den hopper.",
   Edderkoppdyr: "Vurder størrelse, farge, antall og lengde på bein, kroppsform og øyne.",
   "Andre småkryp": "Vurder størrelse, farge, kroppsform, antall bein og bevegelsesmønster.",
+  Ekskrementer: "Vurder ekskrementenes form, størrelse, farge og innhold (pels, frørester eller insektskall), i tillegg til hvor de ble funnet og om de ligger spredt eller samlet i klynge/haug.",
 };
 
 /** Fokusinstruksjon for en gruppe – faller tilbake til en generisk tekst. */

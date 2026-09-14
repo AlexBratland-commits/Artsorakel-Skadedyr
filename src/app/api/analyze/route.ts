@@ -12,9 +12,21 @@ import {
   focusForGroup,
   findGroup,
   findPest,
+  findPestInGroup,
   fhiUrl,
+  type PestGroup,
 } from "@/lib/pests";
-import { LOCATIONS, type AnalysisResult, type Candidate, type Severity } from "@/lib/types";
+import {
+  LOCATIONS,
+  DROPPING_SIZES,
+  DROPPING_SHAPES,
+  DROPPING_CONTENTS,
+  DROPPING_COUNTS,
+  DROPPING_TEXTURES,
+  type AnalysisResult,
+  type Candidate,
+  type Severity,
+} from "@/lib/types";
 import { checkRateLimit, getCached, setCached, RATE_LIMIT } from "@/lib/server-store";
 
 export const runtime = "nodejs"; // sharp krever Node-runtime, ikke Edge
@@ -67,6 +79,38 @@ REGLER
 
 SVARFORMAT – kun gyldig JSON, ingen forklaring rundt:
 {"gruppe":"Gruppenavn fra listen"}`;
+
+/**
+ * Egen systemprompt for ekskrementer. Husmus og svartrotte er bevisst
+ * utelatt fra artslisten (Ocab jobber nesten ikke med disse på
+ * ekskrement-oppdrag), og modellen får et eksplisitt forbud i tillegg –
+ * som en ekstra sikring utover at artene rett og slett ikke finnes i listen
+ * den får velge fra.
+ */
+function buildDroppingsSystemPrompt(speciesList: string, focus: string): string {
+  return `Du er artsbestemmer for Ocab, et norsk skadedyrfirma. Du får ett bilde av ekskrementer (avføring) og skal bestemme hvilket dyr de stammer fra.
+
+REGLER
+1. Bruk kun norske navn fra listen under. Passer ingen av dem, svarer du "Ukjent".
+2. Du skal ALDRI foreslå "Husmus" eller "Svartrotte", selv om ekskrementene ligner – disse artene finnes bevisst ikke i listen. Ligner funnet mest på en av dem, svar "Ukjent" og forklar i beskrivelsen at det bør sjekkes av Ocab.
+3. Gjett aldri for å være hjelpsom. Er du i tvil mellom to arter, velg den som passer stedet, størrelsen og innholdet best, og senk "confidence".
+4. "confidence" er hvor sikker du faktisk er, 0–100. Uskarpt bilde eller lite informasjon om størrelse/innhold skal gi under 50.
+5. Rotter (brunrotte) lager faste toaletter. Ekskrementer fra rotte finnes derfor ofte i klynger på ett eller få utvalgte steder, ikke spredt tilfeldig rundt. Bruk dette til å skille rotte fra andre arter.
+6. Flaggermus-ekskrementer smuldrer lett til pulver ved berøring og glinser av uknuste insektskall i bruddflaten. Museekskrementer (skogsmus) er faste, smuldrer ikke, og inneholder ofte synlige frørester i stedet. Bruk dette aktivt til å skille flaggermus fra skogsmus.
+7. Beskrivelsen skal peke på hva du faktisk ser på bildet: form, størrelse, farge og eventuelt innhold. To setninger, på norsk bokmål, uten "jeg" eller "AI".
+
+HVA DU SKAL SE ETTER PÅ BILDET
+${focus}
+
+ARTER
+${speciesList}
+
+SVARFORMAT – kun gyldig JSON, ingen forklaring rundt:
+{"found":true,"name":"Norsk navn fra listen","latinName":"Latinsk navn fra listen","description":"To setninger om det du ser","observasjon":"Kort hva du faktisk ser på bildet","confidence":0-100,"alternativer":[{"name":"Norsk navn","latinName":"Latinsk navn","confidence":0-100,"hvorfor":"Hvorfor dette kan være riktig"}]}
+
+"alternativer" er de 1–3 artene som ligner mest etter hovedforslaget, sortert fallende på confidence. Er du sikker, kan listen være tom.
+Ukjent art: {"found":false,"name":"Ukjent","latinName":"Ukjent","description":"...","observasjon":"...","confidence":0}`;
+}
 
 function buildSystemPrompt(speciesList: string, focus: string): string {
   return `Du er artsbestemmer for Ocab, et norsk skadedyrfirma. Du får ett bilde og skal identifisere dyret.
@@ -134,6 +178,13 @@ export async function POST(request: NextRequest) {
     const image = formData.get("image");
     const location = String(formData.get("location") ?? "");
     const storrelse = String(formData.get("storrelse") ?? "");
+    const analyseType = String(formData.get("type") ?? "dyr");
+    const erEkskrementer = analyseType === "ekskrementer";
+    const droppingSize = String(formData.get("droppingSize") ?? "");
+    const droppingShape = String(formData.get("droppingShape") ?? "");
+    const droppingContent = String(formData.get("droppingContent") ?? "");
+    const droppingCount = String(formData.get("droppingCount") ?? "");
+    const droppingTexture = String(formData.get("droppingTexture") ?? "");
 
     if (!(image instanceof File) || image.size === 0) {
       return NextResponse.json({ error: "Ingen bildefil ble sendt med." }, { status: 400 });
@@ -159,6 +210,12 @@ export async function POST(request: NextRequest) {
       .update(inputBuffer)
       .update(location)
       .update(storrelse)
+      .update(analyseType)
+      .update(droppingSize)
+      .update(droppingShape)
+      .update(droppingContent)
+      .update(droppingCount)
+      .update(droppingTexture)
       .digest("hex");
 
     const cached = getCached(hash);
@@ -196,43 +253,73 @@ export async function POST(request: NextRequest) {
     const sizeText = buildSizeText(storrelse);
     const imageContent = { type: "image_url", image_url: { url: base64Image, detail: "high" } };
 
-    // ── Steg 1: finn hovedgruppe ────────────────────────────────────────
-    // Gruppefilteret gjør at et pattedyr bare konkurrerer mot andre pattedyr
-    // i steg 2 – ikke mot 40 insekter.
-    const groupOutcome = await callModel(
-      GROUP_SYSTEM_PROMPT,
-      [
-        {
-          type: "text",
-          text: `Velg hvilken hovedgruppe dyret på bildet tilhører.${locationText}${sizeText} Svar kun med JSON.`,
-        },
-        imageContent,
-      ],
-      { maxTokens: 60, timeoutMs: 10_000 }
-    );
+    let gruppe: PestGroup | null;
+    let speciesOutcome: CallOutcome;
 
-    if (!groupOutcome.ok) return modelError(groupOutcome.reason);
+    if (erEkskrementer) {
+      // Ekskrement-analyser vet allerede hvilken gruppe det gjelder – vi
+      // trenger ikke steg 1 for å gjette hovedgruppen.
+      gruppe = "Ekskrementer";
+      const speciesList = groupPromptList(gruppe);
+      const focus = focusForGroup(gruppe);
+      const droppingsText = buildDroppingsText({
+        droppingSize,
+        droppingShape,
+        droppingContent,
+        droppingCount,
+        droppingTexture,
+      });
 
-    const gruppe = findGroup(groupOutcome.json?.gruppe);
-    const speciesList = gruppe ? groupPromptList(gruppe) : PEST_PROMPT_LIST;
-    const focus = focusForGroup(gruppe);
+      speciesOutcome = await callModel(
+        buildDroppingsSystemPrompt(speciesList, focus),
+        [
+          {
+            type: "text",
+            text: `Artsbestem hvilket dyr ekskrementene på bildet stammer fra.${locationText}${droppingsText} Svar kun med JSON.`,
+          },
+          imageContent,
+        ],
+        { maxTokens: 700, timeoutMs: 15_000 }
+      );
+    } else {
+      // ── Steg 1: finn hovedgruppe ─────────────────────────────────────
+      // Gruppefilteret gjør at et pattedyr bare konkurrerer mot andre
+      // pattedyr i steg 2 – ikke mot 40 insekter.
+      const groupOutcome = await callModel(
+        GROUP_SYSTEM_PROMPT,
+        [
+          {
+            type: "text",
+            text: `Velg hvilken hovedgruppe dyret på bildet tilhører.${locationText}${sizeText} Svar kun med JSON.`,
+          },
+          imageContent,
+        ],
+        { maxTokens: 60, timeoutMs: 10_000 }
+      );
 
-    // ── Steg 2: velg art innenfor gruppen ───────────────────────────────
-    const speciesOutcome = await callModel(
-      buildSystemPrompt(speciesList, focus),
-      [
-        {
-          type: "text",
-          text: `Artsbestem dyret på bildet.${locationText}${sizeText} Svar kun med JSON.`,
-        },
-        imageContent,
-      ],
-      { maxTokens: 700, timeoutMs: 15_000 }
-    );
+      if (!groupOutcome.ok) return modelError(groupOutcome.reason);
+
+      gruppe = findGroup(groupOutcome.json?.gruppe);
+      const speciesList = gruppe ? groupPromptList(gruppe) : PEST_PROMPT_LIST;
+      const focus = focusForGroup(gruppe);
+
+      // ── Steg 2: velg art innenfor gruppen ───────────────────────────
+      speciesOutcome = await callModel(
+        buildSystemPrompt(speciesList, focus),
+        [
+          {
+            type: "text",
+            text: `Artsbestem dyret på bildet.${locationText}${sizeText} Svar kun med JSON.`,
+          },
+          imageContent,
+        ],
+        { maxTokens: 700, timeoutMs: 15_000 }
+      );
+    }
 
     if (!speciesOutcome.ok) return modelError(speciesOutcome.reason);
 
-    const result = speciesOutcome.json ? enrich(speciesOutcome.json) : UNKNOWN;
+    const result = speciesOutcome.json ? enrich(speciesOutcome.json, gruppe) : UNKNOWN;
     setCached(hash, result);
 
     return NextResponse.json(result, {
@@ -258,6 +345,34 @@ function buildLocationText(location: string): string {
 function buildSizeText(storrelse: string): string {
   if (!storrelse) return "";
   return ` Oppgitt størrelse: ${storrelse}. Bruk størrelsen til å skille arter som ligner.`;
+}
+
+function buildDroppingsText(fields: {
+  droppingSize: string;
+  droppingShape: string;
+  droppingContent: string;
+  droppingCount: string;
+  droppingTexture: string;
+}): string {
+  const parts: string[] = [];
+
+  const size = DROPPING_SIZES.find((s) => s.value === fields.droppingSize);
+  if (size) parts.push(`størrelse ${size.prompt}`);
+
+  const shape = DROPPING_SHAPES.find((s) => s.value === fields.droppingShape);
+  if (shape) parts.push(`formet ${shape.prompt}`);
+
+  const content = DROPPING_CONTENTS.find((c) => c.value === fields.droppingContent);
+  if (content) parts.push(`inneholder ${content.prompt}`);
+
+  const count = DROPPING_COUNTS.find((c) => c.value === fields.droppingCount);
+  if (count) parts.push(count.prompt);
+
+  const texture = DROPPING_TEXTURES.find((t) => t.value === fields.droppingTexture);
+  if (texture) parts.push(`er ${texture.prompt}`);
+
+  if (parts.length === 0) return "";
+  return ` Oppgitt om ekskrementene: ${parts.join(", ")}. Bruk dette aktivt til å skille artene fra hverandre.`;
 }
 
 function parseJson(content: string): Record<string, unknown> | null {
@@ -367,7 +482,7 @@ function modelError(reason: string): NextResponse {
 }
 
 /** Mapper modellens alternativ-liste til kjente arter, sortert fallende. */
-function parseAlternatives(raw: unknown): Candidate[] {
+function parseAlternatives(raw: unknown, gruppe: PestGroup | null): Candidate[] {
   if (!Array.isArray(raw)) return [];
   const out: Candidate[] = [];
 
@@ -376,7 +491,9 @@ function parseAlternatives(raw: unknown): Candidate[] {
     const rec = item as Record<string, unknown>;
     const name = typeof rec.name === "string" ? rec.name : "";
     const latinName = typeof rec.latinName === "string" ? rec.latinName : "";
-    const pest = findPest(name) ?? findPest(latinName);
+    const pest = (gruppe && (findPestInGroup(name, gruppe) ?? findPestInGroup(latinName, gruppe)))
+      ?? findPest(name)
+      ?? findPest(latinName);
     if (!pest) continue;
 
     let confidence = Number(rec.confidence);
@@ -397,9 +514,12 @@ function parseAlternatives(raw: unknown): Candidate[] {
  * Alvorlighet, tiltak, utbredelse og sesong tar vi fra vår egen database,
  * ikke fra modellen.
  */
-function enrich(raw: Record<string, unknown>): AnalysisResult {
+function enrich(raw: Record<string, unknown>, gruppe: PestGroup | null): AnalysisResult {
   const name = typeof raw.name === "string" ? raw.name : "";
-  const pest = findPest(name) ?? findPest(String(raw.latinName ?? ""));
+  const latinName = String(raw.latinName ?? "");
+  const pest = (gruppe && (findPestInGroup(name, gruppe) ?? findPestInGroup(latinName, gruppe)))
+    ?? findPest(name)
+    ?? findPest(latinName);
   const description =
     typeof raw.description === "string" && raw.description.trim().length > 0
       ? raw.description.trim()
@@ -418,7 +538,7 @@ function enrich(raw: Record<string, unknown>): AnalysisResult {
   }
 
   const severity: Severity = pest.alvorlighet;
-  const alternativer = parseAlternatives(raw.alternativer).filter(
+  const alternativer = parseAlternatives(raw.alternativer, gruppe).filter(
     (a) => a.name !== pest.norsk
   );
 
@@ -437,6 +557,8 @@ function enrich(raw: Record<string, unknown>): AnalysisResult {
     utbredelse: pest.utbredelse,
     sesong: pest.sesong,
     forveksles: pest.forveksles,
+    bekreftelse: pest.bekreftelse,
+    notat: pest.notat,
     fhiUrl: fhiUrl(pest.slug),
   };
 }
