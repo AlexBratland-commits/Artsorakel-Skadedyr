@@ -19,10 +19,6 @@ import {
 import {
   LOCATIONS,
   DROPPING_SIZES,
-  DROPPING_SHAPES,
-  DROPPING_CONTENTS,
-  DROPPING_COUNTS,
-  DROPPING_TEXTURES,
   type AnalysisResult,
   type Candidate,
   type Severity,
@@ -94,23 +90,29 @@ SVARFORMAT – kun gyldig JSON, ingen forklaring rundt:
 function buildDroppingsSystemPrompt(speciesList: string, focus: string, beskrivelseText: string): string {
   return `Du er artsbestemmer for Ocab, et norsk skadedyrfirma. Du får ett bilde av ekskrementer (avføring) og skal bestemme hvilket dyr de stammer fra.
 
+VIKTIGST AV ALT: IKKE SVAR "UKJENT" HVIS DU HAR EN TEORI
+Målet ditt er å gi brukeren et konkret forslag den kan sjekke selv, ikke å være 100 % sikker før du sier noe. Det er mye mer nyttig for brukeren å få "Mulig mink" med 35 % sikkerhet enn å få "Ukjent". En feil, men markert usikker, gjetning er bedre enn ingen gjetning:
+- Har du NOEN teori, uansett hvor svak, skal du sette "found":true og en confidence som matcher usikkerheten (også helt ned mot 30).
+- "found":false skal du KUN bruke når du bokstavelig talt ikke har noen teori i det hele tatt – bildet viser noe helt annet, er helt sort/uskarpt, eller ingenting i det brukeren har skrevet og det du ser peker mot noen art i listen.
+- Er du i tvil mellom to arter, velg den som passer best med det brukeren har skrevet, og bruk "alternativer" til den andre.
+
 REGLER
 1. Bruk kun norske navn fra listen under. Passer overhodet ingen av dem, svarer du "Ukjent".
 2. Du skal ALDRI foreslå "Husmus" eller "Svartrotte", selv om ekskrementene ligner – disse artene finnes bevisst ikke i listen. Ligner funnet mest på en av dem, svar "Ukjent" og forklar i beskrivelsen at det bør sjekkes av Ocab.
-3. Gi alltid ditt beste forslag fra listen, selv når du er usikker – bruk i stedet en lav "confidence" til å vise usikkerheten. Svar KUN "found":false når bildet og informasjonen samlet sett ikke peker mot noen art i listen i det hele tatt (for eksempel et helt annet motiv, eller for uklart til å si noe som helst).
-4. "confidence" er hvor sikker du faktisk er, 0–100. Bruk hele skalaen: gi gjerne 30–50 når du har en rimelig, men ikke sikker, antagelse – det er langt bedre enn å svare "Ukjent" når du faktisk har en teori.
-5. Rotter (brunrotte) lager faste toaletter. Ekskrementer fra rotte finnes derfor ofte i klynger på ett eller få utvalgte steder, ikke spredt tilfeldig rundt. Bruk dette til å skille rotte fra andre arter.
-6. Flaggermus-ekskrementer smuldrer lett til pulver ved berøring og glinser av uknuste insektskall i bruddflaten. Museekskrementer (skogsmus) er faste, smuldrer ikke, og inneholder ofte synlige frørester i stedet. Bruk dette aktivt til å skille flaggermus fra skogsmus.
-7. Beskrivelsen skal peke på hva du faktisk ser på bildet: form, størrelse, farge og eventuelt innhold. To setninger, på norsk bokmål, uten "jeg" eller "AI".
+3. "confidence" er hvor sikker du faktisk er, 0–100 – bruk hele skalaen ned mot 30 for en rimelig antagelse. Under 50 vises forslaget til brukeren som "Mulig [art]" med en tydelig advarsel, så du trenger ikke være redd for å gi et lavt tall i stedet for å hoppe over svaret.
+4. Rotter (brunrotte) lager faste toaletter. Ekskrementer fra rotte finnes derfor ofte i klynger på ett eller få utvalgte steder, ikke spredt tilfeldig rundt. Bruk dette til å skille rotte fra andre arter.
+5. Flaggermus-ekskrementer smuldrer lett til pulver ved berøring og glinser av uknuste insektskall i bruddflaten. Museekskrementer (skogsmus) er faste, smuldrer ikke, og inneholder ofte synlige frørester i stedet. Bruk dette aktivt til å skille flaggermus fra skogsmus.
+6. Beskrivelsen skal peke på hva du faktisk ser på bildet: form, størrelse, farge og eventuelt innhold. To setninger, på norsk bokmål, uten "jeg" eller "AI".
 
-BRUK BRUKERENS EGEN BESKRIVELSE AKTIVT
-Brukeren kan ha skrevet inn ekstra kjennetegn i fritekst (lukt, hvor det ble funnet, konsistens osv.). Denne informasjonen er ofte det som avgjør riktig art, og skal veie tungt – ikke bare bildet alene. Eksempler på hvordan du skal tolke slike opplysninger:
-- "smuldrer lett" / "faller fra hverandre" / "pulveraktig" → styrker flaggermus, svekker skogsmus
-- "sterk lukt", "ved vann", "brygge", "fisk", "hønsehus tømt for fugl" → styrker mink
-- "i tre", "på stein", "bær", "frø" et stykke over bakken → styrker mår
-- "liten haug ved et hull/reir", "under stein" → styrker røyskatt
-- "i skap", "langs vegg", "samme sted flere ganger", "i klynge" → styrker brunrotte
-- "frørester", "i hage eller skog", spredt → styrker liten/stor skogsmus
+BRUKERENS EGEN BESKRIVELSE VEIER TYNGRE ENN BILDET
+Brukeren har som regel skrevet inn hva de ser og LUKTER i fritekst. Lukt, lyd og kontekst kan ikke leses av bildet i det hele tatt, så denne teksten er ofte den mest avgjørende kilden du har – ikke bare et tillegg til bildet. Bruk følgende koblinger aktivt (både fra fritekst og det du selv ser på bildet):
+- smuldrer / smuler / pulver / faller fra hverandre → flaggermus (svekker skogsmus, som er fast)
+- sterk lukt / skarp lukt / ved vann / brygge / fisk / fiskebein / tømt hønsehus → mink
+- i tre / på stein / bær / frø, tydelig over bakkenivå → mår
+- liten haug ved et hull, reir eller stein → røyskatt
+- i skap, langs vegg, samme sted igjen og igjen, i klynge → brunrotte
+- synlige frørester, i hage eller skog, spredt utover → liten eller stor skogsmus
+"Bedre å gjette feil enn å si Ukjent" gjelder også her: bruk beskrivelsen til å lande på ett hovedforslag selv om den ikke er 100 % entydig.
 ${beskrivelseText}
 
 HVA DU SKAL SE ETTER PÅ BILDET
@@ -195,10 +197,6 @@ export async function POST(request: NextRequest) {
     const analyseType = String(formData.get("type") ?? "dyr");
     const erEkskrementer = analyseType === "ekskrementer";
     const droppingSize = String(formData.get("droppingSize") ?? "");
-    const droppingShape = String(formData.get("droppingShape") ?? "");
-    const droppingContent = String(formData.get("droppingContent") ?? "");
-    const droppingCount = String(formData.get("droppingCount") ?? "");
-    const droppingTexture = String(formData.get("droppingTexture") ?? "");
     const beskrivelse = String(formData.get("beskrivelse") ?? "").trim().slice(0, 300);
 
     if (!(image instanceof File) || image.size === 0) {
@@ -227,10 +225,6 @@ export async function POST(request: NextRequest) {
       .update(storrelse)
       .update(analyseType)
       .update(droppingSize)
-      .update(droppingShape)
-      .update(droppingContent)
-      .update(droppingCount)
-      .update(droppingTexture)
       .update(beskrivelse)
       .digest("hex");
 
@@ -278,17 +272,11 @@ export async function POST(request: NextRequest) {
       gruppe = "Ekskrementer";
       const speciesList = groupPromptList(gruppe);
       const focus = focusForGroup(gruppe);
-      const droppingsText = buildDroppingsText({
-        droppingSize,
-        droppingShape,
-        droppingContent,
-        droppingCount,
-        droppingTexture,
-      });
+      const droppingsText = buildDroppingsText({ droppingSize });
 
       const beskrivelseText = beskrivelse
-        ? `\nBrukeren har gitt følgende ekstra beskrivelse: "${beskrivelse}". Bruk denne informasjonen aktivt for å skille mellom artene.`
-        : "";
+        ? `\nBrukerens egen beskrivelse (dette er den viktigste kilden du har – vei den tyngre enn bildet alene): "${beskrivelse}"\nBruk den aktivt til å skille mellom artene under, jamfør eksemplene over.`
+        : "\nBrukeren har ikke skrevet noen fritekstbeskrivelse denne gangen – bruk da bildet, stedet og størrelsen så godt du kan, og gi likevel et beste forslag med passende confidence i stedet for å svare Ukjent.";
 
       speciesOutcome = await callModel(
         buildDroppingsSystemPrompt(speciesList, focus, beskrivelseText),
@@ -369,32 +357,10 @@ function buildSizeText(storrelse: string): string {
   return ` Oppgitt størrelse: ${storrelse}. Bruk størrelsen til å skille arter som ligner.`;
 }
 
-function buildDroppingsText(fields: {
-  droppingSize: string;
-  droppingShape: string;
-  droppingContent: string;
-  droppingCount: string;
-  droppingTexture: string;
-}): string {
-  const parts: string[] = [];
-
+function buildDroppingsText(fields: { droppingSize: string }): string {
   const size = DROPPING_SIZES.find((s) => s.value === fields.droppingSize);
-  if (size) parts.push(`størrelse ${size.prompt}`);
-
-  const shape = DROPPING_SHAPES.find((s) => s.value === fields.droppingShape);
-  if (shape) parts.push(`formet ${shape.prompt}`);
-
-  const content = DROPPING_CONTENTS.find((c) => c.value === fields.droppingContent);
-  if (content) parts.push(`inneholder ${content.prompt}`);
-
-  const count = DROPPING_COUNTS.find((c) => c.value === fields.droppingCount);
-  if (count) parts.push(count.prompt);
-
-  const texture = DROPPING_TEXTURES.find((t) => t.value === fields.droppingTexture);
-  if (texture) parts.push(`er ${texture.prompt}`);
-
-  if (parts.length === 0) return "";
-  return ` Oppgitt om ekskrementene: ${parts.join(", ")}. Bruk dette aktivt til å skille artene fra hverandre.`;
+  if (!size) return "";
+  return ` Oppgitt størrelse på ekskrementene: ${size.prompt}. Bruk dette aktivt til å skille artene fra hverandre.`;
 }
 
 function parseJson(content: string): Record<string, unknown> | null {

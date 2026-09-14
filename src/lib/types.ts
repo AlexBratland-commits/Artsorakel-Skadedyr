@@ -81,31 +81,3 @@ export const DROPPING_SIZES = [
   { value: "6-15mm", label: "6–15 mm (som en solsikkekjerne til en liten bønne)", prompt: "6–15 mm" },
   { value: "15mm+", label: "15 mm eller mer (som en liten pølsebit)", prompt: "15 mm eller mer" },
 ] as const;
-
-export const DROPPING_SHAPES = [
-  { value: "runde", label: "Runde", prompt: "runde" },
-  { value: "polseformet", label: "Pølseformet med spisse ender", prompt: "pølseformet med spisse ender" },
-  { value: "avlange", label: "Avlange, jevnt tykke", prompt: "avlange og jevnt tykke" },
-  { value: "bananformet", label: "Bananformet, litt bøyd", prompt: "bananformet og litt bøyd" },
-] as const;
-
-export const DROPPING_CONTENTS = [
-  { value: "rent", label: "Rent, ingen synlige rester", prompt: "rent, uten synlige rester" },
-  { value: "pels", label: "Pels/hår", prompt: "pels eller hår" },
-  { value: "fro", label: "Frø eller planterester", prompt: "frø eller planterester" },
-  { value: "insekt", label: "Insektskall (glinsende)", prompt: "glinsende insektskall" },
-  { value: "bein", label: "Bein/skjell", prompt: "bein eller skjell" },
-] as const;
-
-export const DROPPING_COUNTS = [
-  { value: "spredt", label: "Spredt, enkeltvis", prompt: "spredt enkeltvis" },
-  { value: "haug", label: "Samlet i haug", prompt: "samlet i én haug" },
-  { value: "vegg", label: "Langs en vegg", prompt: "liggende langs en vegg" },
-  { value: "klynge", label: "I klynge/flere hauger på samme sted", prompt: "i en klynge, med flere hauger på samme sted" },
-] as const;
-
-export const DROPPING_TEXTURES = [
-  { value: "tørr", label: "Tørr og fast", prompt: "tørr og fast" },
-  { value: "glinsende", label: "Glinsende/blank", prompt: "glinsende eller blank" },
-  { value: "smuldrer", label: "Smuldrer lett ved berøring", prompt: "smuldrer lett ved berøring" },
-] as const;

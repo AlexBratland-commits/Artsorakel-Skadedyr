@@ -17,10 +17,6 @@ import { addToHistory, clearHistory, readHistory, removeFromHistory } from "@/li
 import {
   LOCATIONS,
   DROPPING_SIZES,
-  DROPPING_SHAPES,
-  DROPPING_CONTENTS,
-  DROPPING_COUNTS,
-  DROPPING_TEXTURES,
   type AnalysisResult,
   type HistoryEntry,
 } from "@/lib/types";
@@ -45,10 +41,6 @@ export default function Home() {
   const [storrelse, setStorrelse] = useState("");
   const [analyseType, setAnalyseType] = useState<AnalyseType>("dyr");
   const [droppingSize, setDroppingSize] = useState("");
-  const [droppingShape, setDroppingShape] = useState("");
-  const [droppingContent, setDroppingContent] = useState("");
-  const [droppingCount, setDroppingCount] = useState("");
-  const [droppingTexture, setDroppingTexture] = useState("");
   const [beskrivelse, setBeskrivelse] = useState("");
   const [historikk, setHistorikk] = useState<HistoryEntry[]>([]);
 
@@ -84,10 +76,6 @@ export default function Home() {
       setStorrelse("");
       setAnalyseType("dyr");
       setDroppingSize("");
-      setDroppingShape("");
-      setDroppingContent("");
-      setDroppingCount("");
-      setDroppingTexture("");
       setBeskrivelse("");
     }
   }, []);
@@ -118,10 +106,6 @@ export default function Home() {
       formData.append("type", analyseType);
       if (analyseType === "ekskrementer") {
         formData.append("droppingSize", droppingSize);
-        formData.append("droppingShape", droppingShape);
-        formData.append("droppingContent", droppingContent);
-        formData.append("droppingCount", droppingCount);
-        formData.append("droppingTexture", droppingTexture);
         formData.append("beskrivelse", beskrivelse);
       }
 
@@ -269,8 +253,35 @@ export default function Home() {
               </>
             ) : (
               <>
+                <label htmlFor="beskrivelse" className="mt-6 block text-sm font-semibold">
+                  Beskriv det du ser og lukter (viktigst!)
+                </label>
+                <p className="mt-1 text-sm text-muted">
+                  Dette er den enkeltopplysningen som gir sikrest svar – viktigere
+                  enn bildet alene. Skriv gjerne litt mer enn du tror er nødvendig.
+                </p>
+                <textarea
+                  id="beskrivelse"
+                  value={beskrivelse}
+                  onChange={(e) => setBeskrivelse(e.target.value.slice(0, 300))}
+                  disabled={analyserer}
+                  maxLength={300}
+                  rows={6}
+                  placeholder={
+                    "F.eks. smuldrer lett til pulver når jeg trykker på det, glinser litt, " +
+                    "funnet i en haug rett under en sprekk på loftet. Eller: sterk, skarp " +
+                    "lukt, ligger på en stein ved bekken, inneholder det som ser ut som " +
+                    "fiskebein. Ta med lukt, konsistens (fast/smuldrer/glinsende), om det " +
+                    "ligger spredt eller i haug/klynge, og nøyaktig hvor du fant det."
+                  }
+                  className="mt-3 w-full resize-none rounded-lg border hairline bg-[color:var(--surface)] px-4 py-3 text-base shadow-flat transition disabled:opacity-50"
+                />
+                <p className="mt-1 text-right text-xs text-muted">
+                  {beskrivelse.length}/300 tegn
+                </p>
+
                 <label htmlFor="droppingSize" className="mt-6 block text-sm font-semibold">
-                  Størrelse på ekskrementene
+                  Omtrentlig størrelse?
                 </label>
                 <select
                   id="droppingSize"
@@ -286,103 +297,6 @@ export default function Home() {
                     </option>
                   ))}
                 </select>
-
-                <label htmlFor="droppingShape" className="mt-6 block text-sm font-semibold">
-                  Form
-                </label>
-                <select
-                  id="droppingShape"
-                  value={droppingShape}
-                  onChange={(e) => setDroppingShape(e.target.value)}
-                  disabled={analyserer}
-                  className="mt-3 w-full rounded-lg border hairline bg-[color:var(--surface)] px-4 py-3 text-base shadow-flat transition disabled:opacity-50"
-                >
-                  <option value="">Ikke oppgitt</option>
-                  {DROPPING_SHAPES.map((s) => (
-                    <option key={s.value} value={s.value}>
-                      {s.label}
-                    </option>
-                  ))}
-                </select>
-
-                <label htmlFor="droppingContent" className="mt-6 block text-sm font-semibold">
-                  Innhold
-                </label>
-                <select
-                  id="droppingContent"
-                  value={droppingContent}
-                  onChange={(e) => setDroppingContent(e.target.value)}
-                  disabled={analyserer}
-                  className="mt-3 w-full rounded-lg border hairline bg-[color:var(--surface)] px-4 py-3 text-base shadow-flat transition disabled:opacity-50"
-                >
-                  <option value="">Ikke oppgitt</option>
-                  {DROPPING_CONTENTS.map((c) => (
-                    <option key={c.value} value={c.value}>
-                      {c.label}
-                    </option>
-                  ))}
-                </select>
-
-                <label htmlFor="droppingCount" className="mt-6 block text-sm font-semibold">
-                  Antall
-                </label>
-                <select
-                  id="droppingCount"
-                  value={droppingCount}
-                  onChange={(e) => setDroppingCount(e.target.value)}
-                  disabled={analyserer}
-                  className="mt-3 w-full rounded-lg border hairline bg-[color:var(--surface)] px-4 py-3 text-base shadow-flat transition disabled:opacity-50"
-                >
-                  <option value="">Ikke oppgitt</option>
-                  {DROPPING_COUNTS.map((c) => (
-                    <option key={c.value} value={c.value}>
-                      {c.label}
-                    </option>
-                  ))}
-                </select>
-
-                <label htmlFor="droppingTexture" className="mt-6 block text-sm font-semibold">
-                  Konsistens
-                </label>
-                <p className="mt-1 text-sm text-muted">
-                  Prøv forsiktig med en pinne eller hanske – smuldrer det, er det
-                  trolig flaggermus og ikke mus.
-                </p>
-                <select
-                  id="droppingTexture"
-                  value={droppingTexture}
-                  onChange={(e) => setDroppingTexture(e.target.value)}
-                  disabled={analyserer}
-                  className="mt-3 w-full rounded-lg border hairline bg-[color:var(--surface)] px-4 py-3 text-base shadow-flat transition disabled:opacity-50"
-                >
-                  <option value="">Ikke oppgitt</option>
-                  {DROPPING_TEXTURES.map((t) => (
-                    <option key={t.value} value={t.value}>
-                      {t.label}
-                    </option>
-                  ))}
-                </select>
-
-                <label htmlFor="beskrivelse" className="mt-6 block text-sm font-semibold">
-                  Andre kjennetegn (valgfritt)
-                </label>
-                <p className="mt-1 text-sm text-muted">
-                  Jo mer du beskriver, jo sikrere blir bestemmelsen – for
-                  eksempel lukt, hvor nøyaktig det lå, eller om det smuldrer.
-                </p>
-                <textarea
-                  id="beskrivelse"
-                  value={beskrivelse}
-                  onChange={(e) => setBeskrivelse(e.target.value.slice(0, 300))}
-                  disabled={analyserer}
-                  maxLength={300}
-                  rows={3}
-                  placeholder="F.eks. sterk lukt, funnet under hytte på stubbeloft, smuldrer lett ved berøring, inngang under…"
-                  className="mt-3 w-full resize-none rounded-lg border hairline bg-[color:var(--surface)] px-4 py-3 text-base shadow-flat transition disabled:opacity-50"
-                />
-                <p className="mt-1 text-right text-xs text-muted">
-                  {beskrivelse.length}/300 tegn
-                </p>
               </>
             )}
 
