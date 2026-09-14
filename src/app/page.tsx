@@ -42,6 +42,7 @@ export default function Home() {
   const [analyseType, setAnalyseType] = useState<AnalyseType>("dyr");
   const [droppingSize, setDroppingSize] = useState("");
   const [beskrivelse, setBeskrivelse] = useState("");
+  const [notesAnimal, setNotesAnimal] = useState("");
   const [historikk, setHistorikk] = useState<HistoryEntry[]>([]);
 
   const previewUrl = useRef<string | null>(null);
@@ -77,6 +78,7 @@ export default function Home() {
       setAnalyseType("dyr");
       setDroppingSize("");
       setBeskrivelse("");
+      setNotesAnimal("");
     }
   }, []);
 
@@ -107,6 +109,8 @@ export default function Home() {
       if (analyseType === "ekskrementer") {
         formData.append("droppingSize", droppingSize);
         formData.append("beskrivelse", beskrivelse);
+      } else {
+        formData.append("notesAnimal", notesAnimal);
       }
 
       const response = await fetch("/api/analyze", { method: "POST", body: formData });
@@ -250,6 +254,27 @@ export default function Home() {
                     </option>
                   ))}
                 </select>
+
+                <label htmlFor="notesAnimal" className="mt-6 block text-sm font-semibold">
+                  Notater om skadedyret
+                </label>
+                <p className="mt-1 text-sm text-muted">
+                  Valgfritt. Skriv gjerne ned det du ellers ville sagt til en
+                  skadedyrtekniker – atferd, lyd eller andre kjennetegn.
+                </p>
+                <textarea
+                  id="notesAnimal"
+                  value={notesAnimal}
+                  onChange={(e) => setNotesAnimal(e.target.value.slice(0, 300))}
+                  disabled={analyserer}
+                  maxLength={300}
+                  rows={6}
+                  placeholder="F.eks. beveger seg raskt langs gulvlisten om kvelden, hørt skraping i veggen om natten, sett flere sammen."
+                  className="mt-3 w-full resize-none rounded-lg border hairline bg-[color:var(--surface)] px-4 py-3 text-base shadow-flat transition disabled:opacity-50"
+                />
+                <p className="mt-1 text-right text-xs text-muted">
+                  {notesAnimal.length}/300 tegn
+                </p>
               </>
             ) : (
               <>

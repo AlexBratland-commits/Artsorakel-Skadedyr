@@ -128,7 +128,7 @@ SVARFORMAT – kun gyldig JSON, ingen forklaring rundt:
 Ukjent art (kun når INGEN art i listen passer i det hele tatt): {"found":false,"name":"Ukjent","latinName":"Ukjent","description":"...","observasjon":"...","confidence":0}`;
 }
 
-function buildSystemPrompt(speciesList: string, focus: string): string {
+function buildSystemPrompt(speciesList: string, focus: string, notesAnimal: string): string {
   return `Du er artsbestemmer for Ocab, et norsk skadedyrfirma. Du får ett bilde og skal identifisere dyret.
 
 REGLER
@@ -143,6 +143,8 @@ ${focus}
 
 ARTER
 ${speciesList}
+
+Brukerens notater om skadedyret: ${notesAnimal || "Ingen notater"}
 
 SVARFORMAT – kun gyldig JSON, ingen forklaring rundt:
 {"found":true,"name":"Norsk navn fra listen","latinName":"Latinsk navn fra listen","description":"To setninger om det du ser","observasjon":"Kort hva du faktisk ser på bildet","confidence":0-100,"alternativer":[{"name":"Norsk navn","latinName":"Latinsk navn","confidence":0-100,"hvorfor":"Hvorfor dette kan være riktig"}]}
@@ -198,6 +200,7 @@ export async function POST(request: NextRequest) {
     const erEkskrementer = analyseType === "ekskrementer";
     const droppingSize = String(formData.get("droppingSize") ?? "");
     const beskrivelse = String(formData.get("beskrivelse") ?? "").trim().slice(0, 300);
+    const notesAnimal = String(formData.get("notesAnimal") ?? "").trim().slice(0, 300);
 
     if (!(image instanceof File) || image.size === 0) {
       return NextResponse.json({ error: "Ingen bildefil ble sendt med." }, { status: 400 });
@@ -226,6 +229,7 @@ export async function POST(request: NextRequest) {
       .update(analyseType)
       .update(droppingSize)
       .update(beskrivelse)
+      .update(notesAnimal)
       .digest("hex");
 
     const cached = getCached(hash);
@@ -315,7 +319,7 @@ export async function POST(request: NextRequest) {
 
       // ── Steg 2: velg art innenfor gruppen ───────────────────────────
       speciesOutcome = await callModel(
-        buildSystemPrompt(speciesList, focus),
+        buildSystemPrompt(speciesList, focus, notesAnimal),
         [
           {
             type: "text",
