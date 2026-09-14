@@ -38,6 +38,8 @@ export interface AnalysisResult extends AiIdentification {
   bekreftelse?: string[];
   /** Kort, viktig varsel som fremheves i resultatvisningen. */
   notat?: string;
+  /** Satt når treffet er en usikker enkeltkandidat (confidence 30–49) – vises som "Mulig [navn]". */
+  usikkerKandidat?: boolean;
   /** Satt hvis svaret kom fra serverens cache (samme bilde analysert før). */
   cached?: boolean;
 }

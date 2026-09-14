@@ -49,6 +49,10 @@ if (!apiKey) {
 /** Synsmodell for bildeanalyse – kan overstyres med OPENROUTER_VISION_MODEL. */
 const MODEL = process.env.OPENROUTER_VISION_MODEL ?? "google/gemini-3.7-flash";
 const MAX_BYTES = 15 * 1024 * 1024;
+/** Under denne sikkerheten behandles selv en navngitt kandidat som "Ukjent". */
+const MIN_CONFIDENCE = 30;
+/** Under denne sikkerheten merkes navnet med "Mulig " i visningen. */
+const LOW_CONFIDENCE_LABEL = 50;
 const ALLOWED_TYPES = /^image\/(jpeg|png|webp|heic|heif|gif|avif|tiff)$/i;
 
 const UNKNOWN: AnalysisResult = {
@@ -87,17 +91,27 @@ SVARFORMAT – kun gyldig JSON, ingen forklaring rundt:
  * som en ekstra sikring utover at artene rett og slett ikke finnes i listen
  * den får velge fra.
  */
-function buildDroppingsSystemPrompt(speciesList: string, focus: string): string {
+function buildDroppingsSystemPrompt(speciesList: string, focus: string, beskrivelseText: string): string {
   return `Du er artsbestemmer for Ocab, et norsk skadedyrfirma. Du får ett bilde av ekskrementer (avføring) og skal bestemme hvilket dyr de stammer fra.
 
 REGLER
-1. Bruk kun norske navn fra listen under. Passer ingen av dem, svarer du "Ukjent".
+1. Bruk kun norske navn fra listen under. Passer overhodet ingen av dem, svarer du "Ukjent".
 2. Du skal ALDRI foreslå "Husmus" eller "Svartrotte", selv om ekskrementene ligner – disse artene finnes bevisst ikke i listen. Ligner funnet mest på en av dem, svar "Ukjent" og forklar i beskrivelsen at det bør sjekkes av Ocab.
-3. Gjett aldri for å være hjelpsom. Er du i tvil mellom to arter, velg den som passer stedet, størrelsen og innholdet best, og senk "confidence".
-4. "confidence" er hvor sikker du faktisk er, 0–100. Uskarpt bilde eller lite informasjon om størrelse/innhold skal gi under 50.
+3. Gi alltid ditt beste forslag fra listen, selv når du er usikker – bruk i stedet en lav "confidence" til å vise usikkerheten. Svar KUN "found":false når bildet og informasjonen samlet sett ikke peker mot noen art i listen i det hele tatt (for eksempel et helt annet motiv, eller for uklart til å si noe som helst).
+4. "confidence" er hvor sikker du faktisk er, 0–100. Bruk hele skalaen: gi gjerne 30–50 når du har en rimelig, men ikke sikker, antagelse – det er langt bedre enn å svare "Ukjent" når du faktisk har en teori.
 5. Rotter (brunrotte) lager faste toaletter. Ekskrementer fra rotte finnes derfor ofte i klynger på ett eller få utvalgte steder, ikke spredt tilfeldig rundt. Bruk dette til å skille rotte fra andre arter.
 6. Flaggermus-ekskrementer smuldrer lett til pulver ved berøring og glinser av uknuste insektskall i bruddflaten. Museekskrementer (skogsmus) er faste, smuldrer ikke, og inneholder ofte synlige frørester i stedet. Bruk dette aktivt til å skille flaggermus fra skogsmus.
 7. Beskrivelsen skal peke på hva du faktisk ser på bildet: form, størrelse, farge og eventuelt innhold. To setninger, på norsk bokmål, uten "jeg" eller "AI".
+
+BRUK BRUKERENS EGEN BESKRIVELSE AKTIVT
+Brukeren kan ha skrevet inn ekstra kjennetegn i fritekst (lukt, hvor det ble funnet, konsistens osv.). Denne informasjonen er ofte det som avgjør riktig art, og skal veie tungt – ikke bare bildet alene. Eksempler på hvordan du skal tolke slike opplysninger:
+- "smuldrer lett" / "faller fra hverandre" / "pulveraktig" → styrker flaggermus, svekker skogsmus
+- "sterk lukt", "ved vann", "brygge", "fisk", "hønsehus tømt for fugl" → styrker mink
+- "i tre", "på stein", "bær", "frø" et stykke over bakken → styrker mår
+- "liten haug ved et hull/reir", "under stein" → styrker røyskatt
+- "i skap", "langs vegg", "samme sted flere ganger", "i klynge" → styrker brunrotte
+- "frørester", "i hage eller skog", spredt → styrker liten/stor skogsmus
+${beskrivelseText}
 
 HVA DU SKAL SE ETTER PÅ BILDET
 ${focus}
@@ -109,7 +123,7 @@ SVARFORMAT – kun gyldig JSON, ingen forklaring rundt:
 {"found":true,"name":"Norsk navn fra listen","latinName":"Latinsk navn fra listen","description":"To setninger om det du ser","observasjon":"Kort hva du faktisk ser på bildet","confidence":0-100,"alternativer":[{"name":"Norsk navn","latinName":"Latinsk navn","confidence":0-100,"hvorfor":"Hvorfor dette kan være riktig"}]}
 
 "alternativer" er de 1–3 artene som ligner mest etter hovedforslaget, sortert fallende på confidence. Er du sikker, kan listen være tom.
-Ukjent art: {"found":false,"name":"Ukjent","latinName":"Ukjent","description":"...","observasjon":"...","confidence":0}`;
+Ukjent art (kun når INGEN art i listen passer i det hele tatt): {"found":false,"name":"Ukjent","latinName":"Ukjent","description":"...","observasjon":"...","confidence":0}`;
 }
 
 function buildSystemPrompt(speciesList: string, focus: string): string {
@@ -185,6 +199,7 @@ export async function POST(request: NextRequest) {
     const droppingContent = String(formData.get("droppingContent") ?? "");
     const droppingCount = String(formData.get("droppingCount") ?? "");
     const droppingTexture = String(formData.get("droppingTexture") ?? "");
+    const beskrivelse = String(formData.get("beskrivelse") ?? "").trim().slice(0, 300);
 
     if (!(image instanceof File) || image.size === 0) {
       return NextResponse.json({ error: "Ingen bildefil ble sendt med." }, { status: 400 });
@@ -216,6 +231,7 @@ export async function POST(request: NextRequest) {
       .update(droppingContent)
       .update(droppingCount)
       .update(droppingTexture)
+      .update(beskrivelse)
       .digest("hex");
 
     const cached = getCached(hash);
@@ -270,12 +286,18 @@ export async function POST(request: NextRequest) {
         droppingTexture,
       });
 
+      const beskrivelseText = beskrivelse
+        ? `\nBrukeren har gitt følgende ekstra beskrivelse: "${beskrivelse}". Bruk denne informasjonen aktivt for å skille mellom artene.`
+        : "";
+
       speciesOutcome = await callModel(
-        buildDroppingsSystemPrompt(speciesList, focus),
+        buildDroppingsSystemPrompt(speciesList, focus, beskrivelseText),
         [
           {
             type: "text",
-            text: `Artsbestem hvilket dyr ekskrementene på bildet stammer fra.${locationText}${droppingsText} Svar kun med JSON.`,
+            text: `Artsbestem hvilket dyr ekskrementene på bildet stammer fra.${locationText}${droppingsText}${
+              beskrivelse ? ` Ekstra beskrivelse fra brukeren: ${beskrivelse}.` : ""
+            } Svar kun med JSON.`,
           },
           imageContent,
         ],
@@ -533,7 +555,7 @@ function enrich(raw: Record<string, unknown>, gruppe: PestGroup | null): Analysi
   if (!Number.isFinite(confidence)) confidence = 55;
   confidence = Math.min(100, Math.max(0, Math.round(confidence)));
 
-  if (!pest || raw.found === false) {
+  if (!pest || raw.found === false || confidence < MIN_CONFIDENCE) {
     return { ...UNKNOWN, description: description || UNKNOWN.description };
   }
 
@@ -557,6 +579,7 @@ function enrich(raw: Record<string, unknown>, gruppe: PestGroup | null): Analysi
     utbredelse: pest.utbredelse,
     sesong: pest.sesong,
     forveksles: pest.forveksles,
+    usikkerKandidat: confidence < LOW_CONFIDENCE_LABEL,
     bekreftelse: pest.bekreftelse,
     notat: pest.notat,
     fhiUrl: fhiUrl(pest.slug),

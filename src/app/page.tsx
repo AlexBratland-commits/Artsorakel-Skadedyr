@@ -49,6 +49,7 @@ export default function Home() {
   const [droppingContent, setDroppingContent] = useState("");
   const [droppingCount, setDroppingCount] = useState("");
   const [droppingTexture, setDroppingTexture] = useState("");
+  const [beskrivelse, setBeskrivelse] = useState("");
   const [historikk, setHistorikk] = useState<HistoryEntry[]>([]);
 
   const previewUrl = useRef<string | null>(null);
@@ -87,6 +88,7 @@ export default function Home() {
       setDroppingContent("");
       setDroppingCount("");
       setDroppingTexture("");
+      setBeskrivelse("");
     }
   }, []);
 
@@ -120,6 +122,7 @@ export default function Home() {
         formData.append("droppingContent", droppingContent);
         formData.append("droppingCount", droppingCount);
         formData.append("droppingTexture", droppingTexture);
+        formData.append("beskrivelse", beskrivelse);
       }
 
       const response = await fetch("/api/analyze", { method: "POST", body: formData });
@@ -359,6 +362,27 @@ export default function Home() {
                     </option>
                   ))}
                 </select>
+
+                <label htmlFor="beskrivelse" className="mt-6 block text-sm font-semibold">
+                  Andre kjennetegn (valgfritt)
+                </label>
+                <p className="mt-1 text-sm text-muted">
+                  Jo mer du beskriver, jo sikrere blir bestemmelsen – for
+                  eksempel lukt, hvor nøyaktig det lå, eller om det smuldrer.
+                </p>
+                <textarea
+                  id="beskrivelse"
+                  value={beskrivelse}
+                  onChange={(e) => setBeskrivelse(e.target.value.slice(0, 300))}
+                  disabled={analyserer}
+                  maxLength={300}
+                  rows={3}
+                  placeholder="F.eks. sterk lukt, funnet under hytte på stubbeloft, smuldrer lett ved berøring, inngang under…"
+                  className="mt-3 w-full resize-none rounded-lg border hairline bg-[color:var(--surface)] px-4 py-3 text-base shadow-flat transition disabled:opacity-50"
+                />
+                <p className="mt-1 text-right text-xs text-muted">
+                  {beskrivelse.length}/300 tegn
+                </p>
               </>
             )}
 

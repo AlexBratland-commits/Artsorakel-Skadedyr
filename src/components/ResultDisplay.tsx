@@ -53,9 +53,11 @@ export default function ResultDisplay({
 
   const grad = SEVERITY[result.severity] ?? SEVERITY.middels;
   const usikker = result.confidence < 60;
+  const visningsnavn =
+    result.found && result.usikkerKandidat ? `Mulig ${result.name}` : result.name;
 
   const delingstekst = result.found
-    ? `Artsbestemmelse fra Ocab: ${result.name} (${result.latinName}). ${result.description}`
+    ? `Artsbestemmelse fra Ocab: ${visningsnavn} (${result.latinName}). ${result.description}`
     : "Ocab Artsbestemmer klarte ikke å bestemme arten på bildet.";
 
   const del = async () => {
@@ -77,13 +79,13 @@ export default function ResultDisplay({
   };
 
   const epost = `mailto:?subject=${encodeURIComponent(
-    `Artsbestemmelse: ${result.name}`
+    `Artsbestemmelse: ${visningsnavn}`
   )}&body=${encodeURIComponent(delingstekst)}`;
 
   const rapporter = `mailto:post@ocab.no?subject=${encodeURIComponent(
-    `Feil artsbestemmelse: ${result.name}`
+    `Feil artsbestemmelse: ${visningsnavn}`
   )}&body=${encodeURIComponent(
-    `Appen foreslo ${result.name} (${result.latinName}), sikkerhet ${result.confidence} %.\n\nJeg tror det egentlig er: \n\nHva jeg så: \n`
+    `Appen foreslo ${visningsnavn} (${result.latinName}), sikkerhet ${result.confidence} %.\n\nJeg tror det egentlig er: \n\nHva jeg så: \n`
   )}`;
 
   return (
@@ -104,10 +106,17 @@ export default function ResultDisplay({
             </p>
 
             <h2 className="mt-1 text-3xl font-extrabold tracking-tight text-ocab-900 sm:text-4xl dark:text-white">
-              {result.name}
+              {visningsnavn}
             </h2>
             {result.found && (
               <p className="mt-1 text-lg italic text-muted">{result.latinName}</p>
+            )}
+            {result.usikkerKandidat && (
+              <p className="mt-2 max-w-prose text-sm text-muted">
+                Dette er det mest sannsynlige forslaget, men sikkerheten er for
+                lav til en trygg bestemmelse. Bruk kjennetegnene under til å
+                sjekke selv, eller kontakt Ocab for bekreftelse.
+              </p>
             )}
 
             <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
