@@ -3,7 +3,7 @@
 import { Trash2 } from "lucide-react";
 import type { HistoryEntry } from "@/lib/types";
 import { formatTime } from "@/lib/history";
-import { LOCATIONS } from "@/lib/types";
+import { LOCATIONS, SIKKERHET_ETIKETT, sikkerhetsnivaa } from "@/lib/types";
 
 export default function HistoryPanel({
   entries,
@@ -56,7 +56,8 @@ export default function HistoryPanel({
                 <span className="block truncate text-xs text-muted">
                   {formatTime(e.tid)}
                   {e.sted && ` · ${stedLabel(e.sted)}`}
-                  {e.resultat.found && ` · ${e.resultat.confidence} %`}
+                  {e.resultat.found &&
+                    ` · ${SIKKERHET_ETIKETT[sikkerhetsnivaa(e.resultat.confidence)]}`}
                 </span>
               </span>
             </button>

@@ -81,3 +81,23 @@ export const DROPPING_SIZES = [
   { value: "6-15mm", label: "6–15 mm (som en solsikkekjerne til en liten bønne)", prompt: "6–15 mm" },
   { value: "15mm+", label: "15 mm eller mer (som en liten pølsebit)", prompt: "15 mm eller mer" },
 ] as const;
+// ── Sikkerhetsnivå ───────────────────────────────────────────────────────
+// Modellens prosent er dens egen vurdering, ikke en måling, og er dårlig
+// kalibrert. Vi viser derfor bare et grovt nivå. Under 30 blir svaret
+// "Ukjent" allerede på serveren (MIN_CONFIDENCE i /api/analyze).
+
+export type Sikkerhetsnivaa = "lav" | "middels" | "høy";
+
+export const SIKKERHET_GRENSER = { MIDDELS: 50, HOY: 80 } as const;
+
+export function sikkerhetsnivaa(confidence: number): Sikkerhetsnivaa {
+  if (confidence >= SIKKERHET_GRENSER.HOY) return "høy";
+  if (confidence >= SIKKERHET_GRENSER.MIDDELS) return "middels";
+  return "lav";
+}
+
+export const SIKKERHET_ETIKETT: Record<Sikkerhetsnivaa, string> = {
+  lav: "Lav sikkerhet",
+  middels: "Middels sikkerhet",
+  høy: "Høy sikkerhet",
+};

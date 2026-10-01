@@ -50,8 +50,11 @@ const MIN_CONFIDENCE = 30;
 /** Under denne sikkerheten merkes navnet med "Mulig " i visningen. */
 const LOW_CONFIDENCE_LABEL = 50;
 const ALLOWED_TYPES = /^image\/(jpeg|png|webp|heic|heif|gif|avif|tiff)$/i;
-/** Lengste side på bildet som sendes til modellen. Små insekter trenger detaljer. */
-const MAX_EDGE = 2048;
+/**
+ * Lengste side på bildet som sendes til modellen. Samme som nettleseren
+ * skalerer til, så bildet ikke krympes en gang til her.
+ */
+const MAX_EDGE = 1600;
 /**
  * Testmodus for scripts/eval.mjs: slår av rate limit og cache, slik at et
  * helt testsett kan kjøres og nye prompter faktisk blir testet. Virker bare
@@ -249,7 +252,7 @@ export async function POST(request: NextRequest) {
       jpegBuffer = await sharp(inputBuffer)
         .rotate() // følg EXIF-orientering
         .resize({ width: MAX_EDGE, height: MAX_EDGE, fit: "inside", withoutEnlargement: true })
-        .jpeg({ quality: 90, progressive: true, mozjpeg: true })
+        .jpeg({ quality: 85, progressive: true, mozjpeg: true })
         .toBuffer();
     } catch (convError) {
       console.error("❌ sharp klarte ikke å lese bildet:", convError);

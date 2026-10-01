@@ -11,7 +11,12 @@ import {
   RotateCcw,
   Share2,
 } from "lucide-react";
-import type { AnalysisResult, Severity } from "@/lib/types";
+import {
+  SIKKERHET_ETIKETT,
+  sikkerhetsnivaa,
+  type AnalysisResult,
+  type Severity,
+} from "@/lib/types";
 import { useToast } from "./Toast";
 
 const SEVERITY: Record<Severity, { etikett: string, farge: string, tekst: string }> = {
@@ -52,7 +57,9 @@ export default function ResultDisplay({
   if (!result) return null;
 
   const grad = SEVERITY[result.severity] ?? SEVERITY.middels;
-  const usikker = result.confidence < 60;
+  const nivaa = sikkerhetsnivaa(result.confidence);
+  const nivaaTrinn = { lav: 1, middels: 2, høy: 3 }[nivaa];
+  const usikker = nivaa !== "høy";
   const visningsnavn =
     result.found && result.usikkerKandidat ? `Mulig ${result.name}` : result.name;
 
@@ -85,7 +92,7 @@ export default function ResultDisplay({
   const rapporter = `mailto:post@ocab.no?subject=${encodeURIComponent(
     `Feil artsbestemmelse: ${visningsnavn}`
   )}&body=${encodeURIComponent(
-    `Appen foreslo ${visningsnavn} (${result.latinName}), sikkerhet ${result.confidence} %.\n\nJeg tror det egentlig er: \n\nHva jeg så: \n`
+    `Appen foreslo ${visningsnavn} (${result.latinName}), sikkerhet: ${SIKKERHET_ETIKETT[nivaa].toLowerCase()} (modellens tall: ${result.confidence}).\n\nJeg tror det egentlig er: \n\nHva jeg så: \n`
   )}`;
 
   return (
@@ -143,26 +150,33 @@ export default function ResultDisplay({
               <div>
                 <div className="flex items-baseline justify-between gap-4">
                   <span className="text-sm font-semibold">Sikkerhet i bestemmelsen</span>
-                  <span className="tabular-nums text-sm font-semibold">
-                    {result.confidence} %
-                  </span>
+                  <span className="text-sm font-semibold">{SIKKERHET_ETIKETT[nivaa]}</span>
                 </div>
                 <div
-                  className="mt-2 h-2 overflow-hidden rounded-full bg-[color:var(--surface-sunken)]"
+                  className="mt-2 grid grid-cols-3 gap-1"
                   role="meter"
-                  aria-valuenow={result.confidence}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
+                  aria-valuenow={nivaaTrinn}
+                  aria-valuemin={1}
+                  aria-valuemax={3}
+                  aria-valuetext={SIKKERHET_ETIKETT[nivaa]}
                   aria-label="Sikkerhet i bestemmelsen"
                 >
-                  <div
-                    className={`h-full rounded-full ${usikker ? "bg-grad-middels" : "bg-ocab-900 dark:bg-ocab-200"}`}
-                    style={{ width: `${Math.max(3, result.confidence)}%` }}
-                  />
+                  {[1, 2, 3].map((trinn) => (
+                    <div
+                      key={trinn}
+                      className={`h-2 rounded-full ${
+                        trinn > nivaaTrinn
+                          ? "bg-[color:var(--surface-sunken)]"
+                          : usikker
+                            ? "bg-grad-middels"
+                            : "bg-ocab-900 dark:bg-ocab-200"
+                      }`}
+                    />
+                  ))}
                 </div>
                 <p className="mt-2 text-xs text-muted">
                   Dette er modellens egen vurdering av bildet, ikke en måling.
-                  {usikker && " Under 60 % bør bestemmelsen bekreftes av en fagperson."}
+                  {usikker && " Ved lav eller middels sikkerhet bør bestemmelsen bekreftes av en fagperson."}
                 </p>
               </div>
             )}
@@ -178,8 +192,8 @@ export default function ResultDisplay({
                     >
                       <span className="font-semibold">{alt.name}</span>
                       <span className="italic text-muted">{alt.latinName}</span>
-                      <span className="ml-auto shrink-0 tabular-nums text-muted">
-                        {alt.confidence} %
+                      <span className="ml-auto shrink-0 text-muted">
+                        {SIKKERHET_ETIKETT[sikkerhetsnivaa(alt.confidence)]}
                       </span>
                       {alt.hvorfor && (
                         <span className="w-full text-muted">{alt.hvorfor}</span>
