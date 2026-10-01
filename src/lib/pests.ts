@@ -62,7 +62,7 @@ export const PESTS: Pest[] = [
     aliaser: ["brun rotte", "rotte"],
     forveksles: ["Husmus – langt mindre, og ørene er store i forhold til hodet", "Vånd – har svært kort hale og nesten skjulte ører"],
     tiltak: [
-      "Tett åpninger større enn 20 mm rundt rør, dører og luftventiler",
+      "Tett alle åpninger på 12 mm eller mer rundt rør, dører og luftventiler",
       "Fjern matkilder: fuglemat, kompost, åpne avfallsbeholdere",
       "Sjekk avløp og kummer – brunrotte kommer ofte opp via kloakk",
       "Rotteangrep i bolig bør håndteres av godkjent skadedyrbekjemper",
@@ -79,6 +79,7 @@ export const PESTS: Pest[] = [
     tiltak: [
       "Sikre loft og hulrom – arten klatrer godt og holder til høyt i bygget",
       "Tett innganger og fjern klatreveier langs fasade og kabler",
+      "Tett alle åpninger på 12 mm eller mer rundt rør, dører og luftventiler",
       "Kontakt skadedyrbekjemper for artsbestemmelse og tiltak",
     ],
   },
