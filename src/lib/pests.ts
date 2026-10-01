@@ -1181,13 +1181,18 @@ export function fhiUrl(slug?: string): string {
   return FHI_FALLBACK;
 }
 
-/** Kort gruppeoversikt til steg 1 i artsbestemmelsen. */
-export const GROUP_PROMPT_LIST = GROUPS.map((g) => {
-  const eksempler = pestsInGroup(g)
-    .slice(0, 4)
+/**
+ * Gruppeoversikt til steg 1 i artsbestemmelsen. Alle artene i hver gruppe
+ * tas med – en art som ikke vises her (f.eks. veggedyr eller flaggermus)
+ * havner lett i feil gruppe, og da kan steg 2 aldri finne den.
+ * Ekskrementer er utelatt: de analyseres i et eget løp og er aldri et
+ * riktig svar når brukeren har tatt bilde av et dyr.
+ */
+export const GROUP_PROMPT_LIST = GROUPS.filter((g) => g !== "Ekskrementer").map((g) => {
+  const arter = pestsInGroup(g)
     .map((p) => p.norsk)
     .join(", ");
-  return `- ${g}: ${eksempler}`;
+  return `- ${g}: ${arter}`;
 }).join("\n");
 
 /**

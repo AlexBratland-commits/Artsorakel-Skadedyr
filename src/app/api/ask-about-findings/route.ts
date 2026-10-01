@@ -67,6 +67,14 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: "Ugyldig forespørsel." }, { status: 400 });
   }
+  // Klienten styrer innholdet – sjekk formen før vi kaller metoder på det.
+  if (
+    typeof body !== "object" ||
+    body === null ||
+    (body.art !== undefined && typeof body.art !== "string")
+  ) {
+    return NextResponse.json({ error: "Ugyldig forespørsel." }, { status: 400 });
+  }
 
   // Chatten finnes bare i sammenheng med et funn. Uten art, ingen samtale.
   const pest = findPest(body.art);
@@ -75,6 +83,10 @@ export async function POST(request: NextRequest) {
       { error: "Chatten er knyttet til et artsfunn. Analyser et bilde først." },
       { status: 400 }
     );
+  }
+
+  if (body.messages !== undefined && !Array.isArray(body.messages)) {
+    return NextResponse.json({ error: "Ugyldig forespørsel." }, { status: 400 });
   }
 
   const messages = (body.messages ?? [])

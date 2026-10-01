@@ -50,6 +50,14 @@ const MIN_CONFIDENCE = 30;
 /** Under denne sikkerheten merkes navnet med "Mulig " i visningen. */
 const LOW_CONFIDENCE_LABEL = 50;
 const ALLOWED_TYPES = /^image\/(jpeg|png|webp|heic|heif|gif|avif|tiff)$/i;
+/** Lengste side på bildet som sendes til modellen. Små insekter trenger detaljer. */
+const MAX_EDGE = 2048;
+/**
+ * Testmodus for scripts/eval.mjs: slår av rate limit og cache, slik at et
+ * helt testsett kan kjøres og nye prompter faktisk blir testet. Virker bare
+ * under `next dev` – aldri i produksjon.
+ */
+const EVAL_MODE = process.env.EVAL_MODE === "1" && process.env.NODE_ENV !== "production";
 
 const UNKNOWN: AnalysisResult = {
   found: false,
@@ -180,7 +188,9 @@ export async function POST(request: NextRequest) {
     request.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
     request.headers.get("x-real-ip") ||
     "ukjent";
-  const limit = checkRateLimit(ip);
+  const limit = EVAL_MODE
+    ? { allowed: true, remaining: RATE_LIMIT.MAX_REQUESTS, retryAfterSeconds: 0 }
+    : checkRateLimit(ip);
   if (!limit.allowed) {
     const minutter = Math.ceil(limit.retryAfterSeconds / 60);
     return NextResponse.json(
@@ -221,18 +231,14 @@ export async function POST(request: NextRequest) {
     const inputBuffer = Buffer.from(await image.arrayBuffer());
 
     // ── Cache: samme bilde + samme sted gir samme svar ───────────────────
+    // Feltene serialiseres som JSON, så "ab"+"c" og "a"+"bc" ikke gir samme nøkkel.
     const hash = crypto
       .createHash("sha256")
       .update(inputBuffer)
-      .update(location)
-      .update(storrelse)
-      .update(analyseType)
-      .update(droppingSize)
-      .update(beskrivelse)
-      .update(notesAnimal)
+      .update(JSON.stringify([location, storrelse, analyseType, droppingSize, beskrivelse, notesAnimal]))
       .digest("hex");
 
-    const cached = getCached(hash);
+    const cached = EVAL_MODE ? undefined : getCached(hash);
     if (cached) {
       return NextResponse.json({ ...cached, cached: true });
     }
@@ -242,8 +248,8 @@ export async function POST(request: NextRequest) {
     try {
       jpegBuffer = await sharp(inputBuffer)
         .rotate() // følg EXIF-orientering
-        .resize({ width: 1280, height: 1280, fit: "inside", withoutEnlargement: true })
-        .jpeg({ quality: 82, progressive: true, mozjpeg: true })
+        .resize({ width: MAX_EDGE, height: MAX_EDGE, fit: "inside", withoutEnlargement: true })
+        .jpeg({ quality: 90, progressive: true, mozjpeg: true })
         .toBuffer();
     } catch (convError) {
       console.error("❌ sharp klarte ikke å lese bildet:", convError);
@@ -265,6 +271,7 @@ export async function POST(request: NextRequest) {
     const base64Image = `data:image/jpeg;base64,${jpegBuffer.toString("base64")}`;
     const locationText = buildLocationText(location);
     const sizeText = buildSizeText(storrelse);
+    const notesText = notesAnimal ? ` Brukerens notater: "${notesAnimal}".` : "";
     const imageContent = { type: "image_url", image_url: { url: base64Image, detail: "high" } };
 
     let gruppe: PestGroup | null;
@@ -304,7 +311,7 @@ export async function POST(request: NextRequest) {
         [
           {
             type: "text",
-            text: `Velg hvilken hovedgruppe dyret på bildet tilhører.${locationText}${sizeText} Svar kun med JSON.`,
+            text: `Velg hvilken hovedgruppe dyret på bildet tilhører.${locationText}${sizeText}${notesText} Svar kun med JSON.`,
           },
           imageContent,
         ],
@@ -333,8 +340,10 @@ export async function POST(request: NextRequest) {
 
     if (!speciesOutcome.ok) return modelError(speciesOutcome.reason);
 
+    // Et svar vi ikke klarte å lese er en feil, ikke en vurdering – det skal
+    // ikke caches, ellers får brukeren samme "Ukjent" i 24 timer.
     const result = speciesOutcome.json ? enrich(speciesOutcome.json, gruppe) : UNKNOWN;
-    setCached(hash, result);
+    if (speciesOutcome.json && !EVAL_MODE) setCached(hash, result);
 
     return NextResponse.json(result, {
       headers: { "X-RateLimit-Remaining": String(limit.remaining) },
@@ -431,7 +440,16 @@ async function callModel(
 
     const data = await response.json();
     const raw: string = data?.choices?.[0]?.message?.content ?? "";
-    return { ok: true, json: parseJson(raw) };
+    const finishReason: string = data?.choices?.[0]?.finish_reason ?? "ukjent";
+    const json = parseJson(raw);
+    // "length" betyr at max_tokens var for lavt og svaret ble kuttet.
+    if (!json || finishReason === "length") {
+      console.warn(
+        `⚠️ Modellsvar ${json ? "kuttet" : "ikke lesbart"}: finish_reason=${finishReason}, ` +
+          `max_tokens=${opts.maxTokens}, svar=${JSON.stringify(raw.slice(0, 300))}`
+      );
+    }
+    return { ok: true, json };
   } catch (err) {
     const aborted = err instanceof Error && err.name === "AbortError";
     if (aborted) {

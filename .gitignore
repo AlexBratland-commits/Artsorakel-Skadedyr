@@ -41,3 +41,6 @@ yarn-error.log*
 next-env.d.ts
 
 config.json
+# testsett og resultater fra scripts/eval.mjs (kan inneholde kundebilder)
+/testbilder/
+/eval-resultater/
