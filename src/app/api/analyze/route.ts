@@ -111,9 +111,10 @@ Et forslag skal bygge på bevis, ikke gjetting. Bevis er noe du faktisk ser på 
 /** Hva brukerens fritekst og sted betyr. Gjelder bare arter som står i listen. */
 const KONTEKSTREGLER = `BRUKERENS TEKST VEIER TYNGRE ENN BILDET
 Lukt, lyd, sted og atferd kan ikke leses av bildet, så det brukeren skriver er ofte den mest avgjørende kilden. Men ett stikkord alene avgjør aldri: kombiner det med størrelse, form og innhold. Mange arter kan være på samme sted – på et loft kan det for eksempel være mus, rotte, mår og flaggermus.
+Teksten styrker vurderingen, men kreves ikke. Mange brukere skriver ingenting. Synes kjennetegnene tydelig på bildet (størrelse, form, innhold), skal du bestemme arten ut fra bildet alene.
 Bruk disse koblingene, og bare for arter som står i listen under:
-- ved vann (brygge, naust, sjø, bekk) + fiskelukt, fiskebein eller skjell + store ekskrementer → mink
-- store, vridde ekskrementer med bær, frø eller hår, lagt synlig på stein, bjelke eller mønekam + bråk på loft om natten → mår
+- fiskebein, fiskeskjell eller krepsdyrskall i store, mørke ekskrementer (synlig på bildet), gjerne sammen med vann eller fiskelukt → mink
+- store, vridde ekskrementer med bær, frø eller hår, lagt synlig på stein, bjelke eller mønekam, gjerne sammen med bråk på loft om natten → mår
 - tynne ekskrementer med hår og bein, i haug ved et hull, reir eller steinrøys → røyskatt
 - 12–20 mm, butte ender, samlet på faste steder + kjeller, avløp eller kloakk → brunrotte
 - 3–8 mm, spisse ender, mange og spredt + skuffer, skap, isolasjon eller stikkende lukt → mus
