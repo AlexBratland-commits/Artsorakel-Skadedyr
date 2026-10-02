@@ -127,7 +127,7 @@ export default function Home() {
       const thumb = await makeThumbnail(klar);
       setHistorikk(addToHistory(analysis, thumb, sted));
 
-      if (!analysis.found) {
+      if (!analysis.found && !analysis.annenArt) {
         vis("Ingen sikker match. Prøv et skarpere bilde nærmere dyret.", "info");
       }
     } catch (error) {

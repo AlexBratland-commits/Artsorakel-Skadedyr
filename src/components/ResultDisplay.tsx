@@ -11,7 +11,12 @@ import {
   RotateCcw,
   Share2,
 } from "lucide-react";
-import type { AnalysisResult, Severity } from "@/lib/types";
+import {
+  SIKKERHET_ETIKETT,
+  sikkerhetsnivaa,
+  type AnalysisResult,
+  type Severity,
+} from "@/lib/types";
 import { useToast } from "./Toast";
 
 const SEVERITY: Record<Severity, { etikett: string, farge: string, tekst: string }> = {
@@ -52,13 +57,22 @@ export default function ResultDisplay({
   if (!result) return null;
 
   const grad = SEVERITY[result.severity] ?? SEVERITY.middels;
-  const usikker = result.confidence < 60;
-  const visningsnavn =
-    result.found && result.usikkerKandidat ? `Mulig ${result.name}` : result.name;
+  const nivaa = sikkerhetsnivaa(result.confidence);
+  const nivaaTrinn = { lav: 1, middels: 2, høy: 3 }[nivaa];
+  const usikker = nivaa !== "høy";
+  const annen = !result.found ? result.annenArt : undefined;
+  const visningsnavn = annen
+    ? `Mulig ${annen.name}`
+    : result.found && result.usikkerKandidat
+      ? `Mulig ${result.name}`
+      : result.name;
+  const latinNavn = annen ? annen.latinName : result.latinName;
 
   const delingstekst = result.found
     ? `Artsbestemmelse fra Ocab: ${visningsnavn} (${result.latinName}). ${result.description}`
-    : "Ocab Artsbestemmer klarte ikke å bestemme arten på bildet.";
+    : annen
+      ? `Ocab Artsbestemmer: ${visningsnavn} (${annen.latinName}) – arten finnes ikke i Ocabs database. ${result.description}`
+      : "Ocab Artsbestemmer klarte ikke å bestemme arten på bildet.";
 
   const del = async () => {
     const url = typeof window !== "undefined" ? window.location.href : OCAB_SKADEDYR;
@@ -85,7 +99,7 @@ export default function ResultDisplay({
   const rapporter = `mailto:post@ocab.no?subject=${encodeURIComponent(
     `Feil artsbestemmelse: ${visningsnavn}`
   )}&body=${encodeURIComponent(
-    `Appen foreslo ${visningsnavn} (${result.latinName}), sikkerhet ${result.confidence} %.\n\nJeg tror det egentlig er: \n\nHva jeg så: \n`
+    `Appen foreslo ${visningsnavn} (${latinNavn})${annen ? " – ikke i databasen" : ""}, sikkerhet: ${SIKKERHET_ETIKETT[nivaa].toLowerCase()} (modellens tall: ${result.confidence}).\n\nJeg tror det egentlig er: \n\nHva jeg så: \n`
   )}`;
 
   return (
@@ -97,7 +111,10 @@ export default function ResultDisplay({
     >
       {/* Fargeryggen bærer alvorlighetsgraden */}
       <div className="flex">
-        <div className={`w-1.5 shrink-0 ${grad.farge}`} aria-hidden />
+        <div
+          className={`w-1.5 shrink-0 ${result.found ? grad.farge : "bg-[color:var(--hairline)]"}`}
+          aria-hidden
+        />
 
         <div className="min-w-0 flex-1">
           <header className="border-b hairline px-5 py-5 sm:px-7">
@@ -108,8 +125,15 @@ export default function ResultDisplay({
             <h2 className="mt-1 text-3xl font-extrabold tracking-tight text-ocab-900 sm:text-4xl dark:text-white">
               {visningsnavn}
             </h2>
-            {result.found && (
-              <p className="mt-1 text-lg italic text-muted">{result.latinName}</p>
+            {(result.found || annen) && latinNavn && (
+              <p className="mt-1 text-lg italic text-muted">{latinNavn}</p>
+            )}
+            {annen && (
+              <p className="mt-2 max-w-prose text-sm text-muted">
+                Ikke i Ocabs database – forslaget kommer fra AI-en alene
+                ({SIKKERHET_ETIKETT[sikkerhetsnivaa(annen.confidence)].toLowerCase()}).
+                {annen.hvorfor && <span className="mt-1 block">{annen.hvorfor}</span>}
+              </p>
             )}
             {result.usikkerKandidat && (
               <p className="mt-2 max-w-prose text-sm text-muted">
@@ -120,9 +144,12 @@ export default function ResultDisplay({
             )}
 
             <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
-              <span className={`rounded-full px-3 py-1 font-semibold text-white ${grad.farge}`}>
-                {grad.etikett}
-              </span>
+              {/* Alvorlighet kommer fra vår database – den finnes bare for kjente arter. */}
+              {result.found && (
+                <span className={`rounded-full px-3 py-1 font-semibold text-white ${grad.farge}`}>
+                  {grad.etikett}
+                </span>
+              )}
               {result.gruppe && <span className="text-muted">{result.gruppe}</span>}
               {result.cached && (
                 <span className="text-muted">Samme bilde som sist – lagret svar</span>
@@ -135,7 +162,7 @@ export default function ResultDisplay({
 
             {result.observasjon && (
               <p className="max-w-prose border-l-2 border-[color:var(--hairline)] pl-4 text-sm text-muted">
-                Dette er det analysen mener å se på bildet: {result.observasjon}
+                Forslaget bygger på: {result.observasjon}
               </p>
             )}
 
@@ -143,26 +170,33 @@ export default function ResultDisplay({
               <div>
                 <div className="flex items-baseline justify-between gap-4">
                   <span className="text-sm font-semibold">Sikkerhet i bestemmelsen</span>
-                  <span className="tabular-nums text-sm font-semibold">
-                    {result.confidence} %
-                  </span>
+                  <span className="text-sm font-semibold">{SIKKERHET_ETIKETT[nivaa]}</span>
                 </div>
                 <div
-                  className="mt-2 h-2 overflow-hidden rounded-full bg-[color:var(--surface-sunken)]"
+                  className="mt-2 grid grid-cols-3 gap-1"
                   role="meter"
-                  aria-valuenow={result.confidence}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
+                  aria-valuenow={nivaaTrinn}
+                  aria-valuemin={1}
+                  aria-valuemax={3}
+                  aria-valuetext={SIKKERHET_ETIKETT[nivaa]}
                   aria-label="Sikkerhet i bestemmelsen"
                 >
-                  <div
-                    className={`h-full rounded-full ${usikker ? "bg-grad-middels" : "bg-ocab-900 dark:bg-ocab-200"}`}
-                    style={{ width: `${Math.max(3, result.confidence)}%` }}
-                  />
+                  {[1, 2, 3].map((trinn) => (
+                    <div
+                      key={trinn}
+                      className={`h-2 rounded-full ${
+                        trinn > nivaaTrinn
+                          ? "bg-[color:var(--surface-sunken)]"
+                          : usikker
+                            ? "bg-grad-middels"
+                            : "bg-ocab-900 dark:bg-ocab-200"
+                      }`}
+                    />
+                  ))}
                 </div>
                 <p className="mt-2 text-xs text-muted">
                   Dette er modellens egen vurdering av bildet, ikke en måling.
-                  {usikker && " Under 60 % bør bestemmelsen bekreftes av en fagperson."}
+                  {usikker && " Ved lav eller middels sikkerhet bør bestemmelsen bekreftes av en fagperson."}
                 </p>
               </div>
             )}
@@ -178,8 +212,8 @@ export default function ResultDisplay({
                     >
                       <span className="font-semibold">{alt.name}</span>
                       <span className="italic text-muted">{alt.latinName}</span>
-                      <span className="ml-auto shrink-0 tabular-nums text-muted">
-                        {alt.confidence} %
+                      <span className="ml-auto shrink-0 text-muted">
+                        {SIKKERHET_ETIKETT[sikkerhetsnivaa(alt.confidence)]}
                       </span>
                       {alt.hvorfor && (
                         <span className="w-full text-muted">{alt.hvorfor}</span>
@@ -227,7 +261,7 @@ export default function ResultDisplay({
                     </li>
                   ))}
                 </ul>
-                <p className="mt-3 text-xs text-muted">{grad.tekst}</p>
+                {result.found && <p className="mt-3 text-xs text-muted">{grad.tekst}</p>}
               </div>
             )}
 

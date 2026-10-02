@@ -17,6 +17,12 @@ const FORSLAG = [
   "Hvorfor har jeg fått den inn?",
 ];
 
+const FORSLAG_UKJENT = [
+  "Hva kan dette være?",
+  "Hvordan tar jeg et bedre bilde?",
+  "Bør jeg ringe fagfolk?",
+];
+
 export default function AskAboutFinding({ result }: { result: AnalysisResult }) {
   const [meldinger, setMeldinger] = useState<Melding[]>([]);
   const [utkast, setUtkast] = useState("");
@@ -30,7 +36,13 @@ export default function AskAboutFinding({ result }: { result: AnalysisResult }) 
     listeRef.current?.scrollTo({ top: listeRef.current.scrollHeight, behavior: "smooth" });
   }, [meldinger, venter]);
 
-  if (!result.found) return null;
+  // Chatten finnes for alle resultater – også "Ukjent" og arter utenfor
+  // databasen, der brukeren ofte trenger hjelp mest.
+  const emne = result.found
+    ? result.name.toLowerCase()
+    : result.annenArt
+      ? result.annenArt.name.toLowerCase()
+      : "funnet";
 
   const send = async (tekst: string) => {
     const sporsmal = tekst.trim();
@@ -45,7 +57,12 @@ export default function AskAboutFinding({ result }: { result: AnalysisResult }) 
       const response = await fetch("/api/ask-about-findings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ art: result.name, messages: neste }),
+        body: JSON.stringify({
+          art: result.found ? result.name : undefined,
+          gruppe: result.gruppe,
+          annenArt: result.annenArt?.name,
+          messages: neste,
+        }),
       });
       const data = await response.json().catch(() => null);
 
@@ -83,7 +100,7 @@ export default function AskAboutFinding({ result }: { result: AnalysisResult }) 
             Spør om dette funnet
           </h2>
           <p className="mt-0.5 text-sm text-muted">
-            Svarene gjelder {result.name.toLowerCase()} og er veiledende.
+            Spør om {emne} eller om skadedyr generelt. Svarene er veiledende.
           </p>
         </div>
       </div>
@@ -120,7 +137,7 @@ export default function AskAboutFinding({ result }: { result: AnalysisResult }) 
 
       {meldinger.length === 0 && (
         <div className="flex flex-wrap gap-2 px-5 py-4">
-          {FORSLAG.map((f) => (
+          {(result.found || result.annenArt ? FORSLAG : FORSLAG_UKJENT).map((f) => (
             <button
               key={f}
               type="button"
@@ -145,7 +162,7 @@ export default function AskAboutFinding({ result }: { result: AnalysisResult }) 
           }}
           maxLength={500}
           disabled={venter}
-          placeholder={`Spør om ${result.name.toLowerCase()} …`}
+          placeholder={`Spør om ${emne} …`}
           aria-label="Skriv spørsmålet ditt"
           className="min-w-0 flex-1 rounded-full bg-[color:var(--surface-sunken)] px-4 py-2.5 text-sm outline-none disabled:opacity-50"
         />

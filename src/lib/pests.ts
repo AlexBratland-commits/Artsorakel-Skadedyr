@@ -105,6 +105,10 @@ export const PESTS: Pest[] = [
     sesong: "Trekker inn sent på høsten",
     alvorlighet: "lav",
     aliaser: ["skogmus", "liten skogsmus"],
+    forveksles: [
+      "Husmus – gråbrun nesten helt rundt uten skarpt avgrenset hvit buk, mindre øyne og ører",
+      "Stor skogmus – større, med gult bånd som går helt over brystet (liten skogmus har høyst en liten gul flekk)",
+    ],
     tiltak: [
       "Tett innganger i grunnmur, kledning og ventiler",
       "Rydd ved, løv og busker inntil veggen",
@@ -118,6 +122,9 @@ export const PESTS: Pest[] = [
     sesong: "Trekker inn sent på høsten",
     alvorlighet: "lav",
     aliaser: ["halsbåndmus", "stor skogsmus"],
+    forveksles: [
+      "Liten skogmus – mindre, og har høyst en liten gul flekk på brystet, ikke et sammenhengende bånd",
+    ],
     tiltak: [
       "Samme tiltak som for liten skogmus: tetting og feller",
       "Sjekk hytteloft etter avføring og reirmateriale",
@@ -130,6 +137,10 @@ export const PESTS: Pest[] = [
     sesong: "Topper seg i smågnagerår, ofte innendørs om høsten",
     alvorlighet: "middels",
     aliaser: ["rødmus"],
+    forveksles: [
+      "Markmus – gråbrun i stedet for rødbrun, og ørene er nesten skjult i pelsen",
+      "Skogmus – spiss snute, store øyne og ører og lang hale",
+    ],
     tiltak: [
       "Tett bygget – arten kan bære smitte som gir musepest (nephropathia epidemica)",
       "Bruk støvmaske og fukt flatene ved rengjøring av avføring – ikke tørrfeiing",
@@ -142,6 +153,10 @@ export const PESTS: Pest[] = [
     utbredelse: "Hele landet, i gress og eng",
     sesong: "Skader på plen og bark er mest synlige etter snøsmelting",
     alvorlighet: "lav",
+    forveksles: [
+      "Klatremus – tydelig rødbrun rygg og litt lengre hale",
+      "Vånd – mye større og mørkere",
+    ],
     tiltak: [
       "Gnag på bark kan drepe unge frukttrær – sett gnagerbeskyttelse rundt stammen",
       "Klipp gresset kort inn mot bed og trær før vinteren",
@@ -271,7 +286,7 @@ export const PESTS: Pest[] = [
   },
   {
     norsk: "Flaggermus", latin: "Chiroptera", slug: "flaggermus", gruppe: "Andre pattedyr",
-    kjennetegn: "Vingespenn 20–30 cm, hudvinger mellom fingrene, henger i hulrom, flyr i skumringen",
+    kjennetegn: "Brun pels, store ører, hudvinger spent ut mellom svært lange fingre, ofte funnet sammenfoldet; vingespenn 20–30 cm",
     utbredelse: "Hele landet",
     sesong: "Aktiv april–oktober, dvale om vinteren",
     alvorlighet: "lav",
@@ -362,10 +377,13 @@ export const PESTS: Pest[] = [
   },
   {
     norsk: "Amerikansk kakerlakk", latin: "Periplaneta americana", slug: "kakerlakk", gruppe: "Kakerlakker",
-    kjennetegn: "30–40 mm, rødbrun og blank, godt utviklede vinger",
+    kjennetegn: "30–40 mm, rødbrun og blank, lange vinger som dekker hele bakkroppen, lys gulaktig kant rundt ryggskjoldet",
     utbredelse: "Sjelden, knyttet til varme bygg, drivhus og havner",
     sesong: "Hele året innendørs",
     alvorlighet: "høy",
+    forveksles: [
+      "Orientalsk kakerlakk – nesten svart og matt, korte vinger",
+    ],
     tiltak: [
       "Kartlegg med limfeller i varme, fuktige rom og tekniske sjakter",
       "Tett gjennomføringer mot kjeller og avløp",
@@ -378,6 +396,9 @@ export const PESTS: Pest[] = [
     utbredelse: "Sjelden, oftest kjellere og fyrrom",
     sesong: "Hele året innendørs",
     alvorlighet: "høy",
+    forveksles: [
+      "Amerikansk kakerlakk – rødbrun og blank, større, med lange vinger",
+    ],
     tiltak: [
       "Sjekk fuktige kjellere, sluk og rørsjakter",
       "Utbedre fuktskader – arten trives i fukt",
@@ -390,6 +411,9 @@ export const PESTS: Pest[] = [
     utbredelse: "Sjelden, spres med møbler og elektronikk",
     sesong: "Hele året innendørs",
     alvorlighet: "høy",
+    forveksles: [
+      "Tysk kakerlakk – to mørke lengdestriper på ryggskjoldet i stedet for lyse tverrbånd over vingene",
+    ],
     tiltak: [
       "Sjekk bak elektronikk, bilderammer og høyt på veggen i varme rom",
       "Kontakt skadedyrbekjemper – arten sprer seg over hele boligen",
@@ -430,14 +454,22 @@ export const PESTS: Pest[] = [
   // ── Maur ─────────────────────────────────────────────────────────────
   {
     norsk: "Stokkmaur", latin: "Camponotus herculeanus", slug: "stokkmaur", gruppe: "Maur",
-    kjennetegn: "6–18 mm, svart med rødbrun forkropp, Norges største maur",
+    kjennetegn: "6–18 mm, helt svart hode, rødbrun mellomkropp og svart bakkropp, jevnt buet rygg sett fra siden. Norges største maur. Rolig og sky – trekker seg unna når den forstyrres. Legger igjen sagflis av trefibre ved lister, vinduer og terskler",
     utbredelse: "Hele landet, vanlig i skogsnære boliger",
     sesong: "Aktiv mars–oktober, sverming i mai–juni",
     alvorlighet: "høy",
     aliaser: ["stokkemaur", "tremaur"],
-    forveksles: ["Svart jordmaur – bare 3–5 mm og gjør ikke bygningsskade"],
+    forveksles: [
+      "Rød skogsmaur – tofarget hode og humpete rygg, aggressiv og sprayer maursyre, bygger tue av barnåler",
+      "Brun tremaur – fremste del av bakkroppen er rødbrun, stokkmaur har helt svart bakkropp",
+      "Svart tremaur – bare 4–6 mm, skinnende svart og lukter sitrus/appelsin når den knuses",
+      "Svart jordmaur – liten (3–5 mm), og haugene den legger igjen er fine og melaktige, ikke sagflis av trefibre",
+      "Svart jordmaur – bare 3–5 mm og gjør ikke bygningsskade",
+    ],
+    notat: "Ikke bruk gift eller andre kjemikalier før du har snakket med en godkjent skadedyrbekjemper i Ocab.",
     tiltak: [
       "Gnager ganger i fuktig konstruksjonsvirke og kan gi bygningsskade",
+      "Maur inne skyldes som oftest fukt eller vannskade – kontroller nøye rundt bad, vinduer, terskler, bunnsvill og tak der de kommer inn",
       "Se etter finmalt sagflis ved lister, terskler og vinduer",
       "Følg maurstien for å finne reiret – ofte i vegg eller i en stubbe utenfor",
       "Bør utbedres av skadedyrbekjemper, ofte dekket av boligforsikring",
@@ -445,24 +477,54 @@ export const PESTS: Pest[] = [
   },
   {
     norsk: "Brun tremaur", latin: "Camponotus ligniperda", slug: "stokkmaur", gruppe: "Maur",
-    kjennetegn: "6–18 mm, som stokkmaur, men med rødbrun bakkropp foran",
+    kjennetegn: "6–18 mm, som stokkmaur, men fremste del av bakkroppen er rødbrun og kroppen er blankere. Rolig og sky som stokkmaur",
     utbredelse: "Sør-Norge",
     sesong: "Aktiv mars–oktober",
     alvorlighet: "høy",
+    forveksles: [
+      "Stokkmaur – bakkroppen er helt svart",
+    ],
+    notat: "Ikke bruk gift eller andre kjemikalier før du har snakket med en godkjent skadedyrbekjemper i Ocab.",
     tiltak: [
       "Samme håndtering som stokkmaur – finn reiret, ikke bare stien",
+      "Maur inne skyldes som oftest fukt eller vannskade – kontroller nøye rundt bad, vinduer, terskler, bunnsvill og tak der de kommer inn",
       "Kontroller fuktskadet virke i bunnsvill og terrasse",
     ],
   },
   {
+    norsk: "Svart tremaur", latin: "Lasius fuliginosus", slug: "svart-tremaur", gruppe: "Maur",
+    kjennetegn: "4–6 mm, skinnende blank svart med bredt hode som har buet bakkant (hjerteformet). Lukter tydelig sitrus/appelsin når den knuses mellom fingrene – et sikkert kjennetegn",
+    utbredelse: "Hele landet, i gamle hule trær og i hulrom i vegger",
+    sesong: "Aktiv vår til høst",
+    alvorlighet: "middels",
+    aliaser: ["sort tremaur"],
+    forveksles: [
+      "Svart jordmaur – matt, ikke blank, med mindre hode og uten sitrus-/appelsinlukt",
+      "Stokkmaur – mye større (6–18 mm) med rødbrun mellomkropp",
+    ],
+    notat: "Ikke bruk gift eller andre kjemikalier før du har snakket med en godkjent skadedyrbekjemper i Ocab.",
+    tiltak: [
+      "Bygger reir av en papplignende masse i hulrom – let i vegger, under gulv og i gamle trær nær huset",
+      "Maur inne skyldes som oftest fukt eller vannskade – kontroller nøye rundt bad, vinduer, terskler, bunnsvill og tak der de kommer inn",
+      "Følg maurstien for å finne reiret",
+    ],
+  },
+  {
     norsk: "Svart jordmaur", latin: "Lasius niger", slug: "maur", gruppe: "Maur",
-    kjennetegn: "3–5 mm, mørk brunsvart, matt",
+    kjennetegn: "3–5 mm, mørk brunsvart og matt. Kan også legge igjen små hauger ved lister og sprekker, men det er finere og mer melaktig enn stokkmaurens sagflis av trefibre",
     utbredelse: "Hele landet, svært vanlig i hager",
     sesong: "Aktiv april–september, sverming i juli–august",
     alvorlighet: "lav",
     aliaser: ["jordmaur", "sort jordmaur"],
+    forveksles: [
+      "Svart tremaur – skinnende blank (ikke matt) med bredt hjerteformet hode, og lukter sitrus/appelsin når den knuses",
+      "Stokkmaur – mye større (6–18 mm) med rødbrun mellomkropp",
+      "Faraomaur – bare 2 mm og blek gulbrun",
+    ],
+    notat: "Ikke bruk gift eller andre kjemikalier før du har snakket med en godkjent skadedyrbekjemper i Ocab.",
     tiltak: [
       "Vask bort duftsporene med såpevann der de går inn",
+      "Maur inne skyldes som oftest fukt eller vannskade – kontroller nøye rundt bad, vinduer, terskler, bunnsvill og tak der de kommer inn",
       "Tett sprekker i grunnmur og rundt vinduer",
       "Fjern matsøl og søtsaker – arten går mest på sukker",
     ],
@@ -473,6 +535,11 @@ export const PESTS: Pest[] = [
     utbredelse: "Sjelden, i oppvarmede bygg som sykehus og blokker",
     sesong: "Hele året innendørs",
     alvorlighet: "høy",
+    forveksles: [
+      "Svart jordmaur – dobbelt så stor og mørk",
+      "Rødmaur – større og rustrød",
+    ],
+    notat: "Ikke bruk gift eller andre kjemikalier før du har snakket med en godkjent skadedyrbekjemper i Ocab.",
     tiltak: [
       "Ikke sprøyt – bestanden splitter seg og sprer seg videre i bygget",
       "Bruk kun åtebehandling gjennom godkjent skadedyrbekjemper",
@@ -485,19 +552,32 @@ export const PESTS: Pest[] = [
     utbredelse: "Hele landet, i plen og bed",
     sesong: "Aktiv mai–september",
     alvorlighet: "lav",
+    forveksles: [
+      "Rød skogsmaur – større og tofarget med rød forkropp og svart bakkropp",
+      "Faraomaur – mye mindre og blekere",
+    ],
+    notat: "Ikke bruk gift eller andre kjemikalier før du har snakket med en godkjent skadedyrbekjemper i Ocab.",
     tiltak: [
       "Stikker hvis den forstyrres – vær forsiktig ved luking",
+      "Maur inne skyldes som oftest fukt eller vannskade – kontroller nøye rundt bad, vinduer, terskler, bunnsvill og tak der de kommer inn",
       "Vann og luft opp tuer i plenen, eller flytt bedet",
     ],
   },
   {
-    norsk: "Skogmaur", latin: "Formica rufa", slug: "maur", gruppe: "Maur",
-    kjennetegn: "5–9 mm, rød forkropp og svart bakkropp, bygger store tuer",
+    norsk: "Rød skogsmaur", latin: "Formica rufa", slug: "maur", gruppe: "Maur",
+    kjennetegn: "5–9 mm, rød mellomkropp, svart bakkropp og tofarget hode (rødt og svart), humpete rygg sett fra siden. Aggressiv – angriper og sprayer maursyre når den forstyrres. Bygger store tuer av barnåler og kvister",
     utbredelse: "Hele landet i skog",
     sesong: "Aktiv april–oktober",
     alvorlighet: "lav",
+    aliaser: ["skogmaur", "rød skogmaur", "skogsmaur"],
+    forveksles: [
+      "Stokkmaur – helt svart hode og jevnt buet rygg, rolig og sky, og bygger ikke tue",
+      "Rødmaur – mindre og ensfarget rustrød",
+    ],
+    notat: "Ikke bruk gift eller andre kjemikalier før du har snakket med en godkjent skadedyrbekjemper i Ocab.",
     tiltak: [
       "Arten er nyttig i skogen og bør ikke bekjempes uten grunn",
+      "Maur inne skyldes som oftest fukt eller vannskade – kontroller nøye rundt bad, vinduer, terskler, bunnsvill og tak der de kommer inn",
       "Hold tuer på avstand fra bygg og fjern klatreveier",
     ],
   },
@@ -510,7 +590,10 @@ export const PESTS: Pest[] = [
     sesong: "Bol bygges mai–juni, mest plagsom august–september",
     alvorlighet: "middels",
     aliaser: ["veps"],
-    forveksles: ["Honningbie – lodden og brunere, uten skarpt gult mønster"],
+    forveksles: [
+      "Jordveps – tre små svarte prikker i ansiktet i stedet for ankerformet tegning",
+      "Honningbie – lodden og brunere, uten skarpt gult mønster",
+    ],
     tiltak: [
       "Ikke slå etter dyret – det utløser angrep fra resten av bolet",
       "Bol nær inngang, lekeplass eller soverom bør fjernes",
@@ -524,6 +607,9 @@ export const PESTS: Pest[] = [
     utbredelse: "Hele landet",
     sesong: "Mest plagsom august–september",
     alvorlighet: "middels",
+    forveksles: [
+      "Vanlig veps – ankerformet svart tegning i ansiktet i stedet for tre prikker",
+    ],
     tiltak: [
       "Merk hullet i bakken så ingen tråkker i det",
       "Bol i plen eller ved inngang bør fjernes av fagfolk",
@@ -535,6 +621,9 @@ export const PESTS: Pest[] = [
     utbredelse: "Sør-Norge",
     sesong: "Mai–september",
     alvorlighet: "middels",
+    forveksles: [
+      "Vanlig veps og jordveps – litt mindre, og bolet ligger oftest skjult i hulrom eller i bakken",
+    ],
     tiltak: [
       "Hold avstand og merk området hvis bolet henger lavt",
       "Bol som ikke er i veien kan stå til frosten tar det",
@@ -561,6 +650,10 @@ export const PESTS: Pest[] = [
     sesong: "April–september, sverming i mai–juni",
     alvorlighet: "lav",
     aliaser: ["bie"],
+    forveksles: [
+      "Humle – større, rundere og mye mer lodden",
+      "Veps – glatt og skarpt gul og svart, tydelig innsnevret midje",
+    ],
     tiltak: [
       "Bier skal ikke bekjempes – kontakt lokal birøkter ved sverm",
       "En sverm på veggen flytter seg som regel videre i løpet av et døgn",
@@ -572,6 +665,9 @@ export const PESTS: Pest[] = [
     utbredelse: "Hele landet",
     sesong: "April–september",
     alvorlighet: "lav",
+    forveksles: [
+      "Honningbie – mindre, slankere, brunere og mindre lodden",
+    ],
     tiltak: [
       "Humler er viktige pollinatorer og bør få stå i fred",
       "Bol i isolasjon dør ut av seg selv om høsten",
@@ -581,10 +677,13 @@ export const PESTS: Pest[] = [
   // ── Biller ───────────────────────────────────────────────────────────
   {
     norsk: "Husbukk", latin: "Hylotrupes bajulus", slug: "husbukk", gruppe: "Biller",
-    kjennetegn: "8–25 mm, brunsvart, lange antenner, to lyse flekker på dekkvingene",
+    kjennetegn: "8–25 mm, brunsvart og avlang, lange antenner, grå hårflekker på dekkvingene; ovale flygehull på 6–10 mm og fint borkaks i treverket",
     utbredelse: "Kyststrøk på Sør- og Østlandet",
     sesong: "Voksne biller svermer juni–august",
     alvorlighet: "høy",
+    forveksles: [
+      "Stripet borebille – bare 2,5–5 mm og lager runde hull på 1–2 mm, ikke ovale hull på 6–10 mm",
+    ],
     tiltak: [
       "Larvene gnager i tørt bartrevirke og kan svekke takkonstruksjonen",
       "Se etter ovale flygehull på ca. 5 × 10 mm og gnagelyd fra loftet",
@@ -607,11 +706,15 @@ export const PESTS: Pest[] = [
   },
   {
     norsk: "Brun pelsbille", latin: "Attagenus smirnovi", slug: "pelsbille", gruppe: "Biller",
-    kjennetegn: "2,5–5 mm, brun med mørkere hode, larven er gyllenbrun og tydelig hårete",
+    kjennetegn: "2,5–5 mm, ensfarget brun og avlang med mørkere hode. Larven er gyllenbrun, gulrotformet, opptil 8 mm, med en lang hårdusk bakerst",
     utbredelse: "Vanlig i byer, særlig Oslo-området",
     sesong: "Voksne biller mest synlige mai–juli",
     alvorlighet: "lav",
     aliaser: ["pelsbille", "attagenus pellio", "majorstubille"],
+    forveksles: [
+      "Museumsbille og tepperbille – runde og spraglete, ikke ensfarget brune",
+      "Fleskeklanner – mye større, svart med lyst bånd",
+    ],
     tiltak: [
       "Støvsug grundig under senger, sofaer og bak lister der støv og hår samles",
       "Larvene lever av hår, tekstilfibre og matrester i støv",
@@ -620,22 +723,47 @@ export const PESTS: Pest[] = [
   },
   {
     norsk: "Museumsbille", latin: "Anthrenus museorum", slug: "museumsbille", gruppe: "Biller",
-    kjennetegn: "2–3 mm, rund og spraglet i hvitt, brunt og svart, larven er kort og bust-hårete",
+    kjennetegn: "2–3 mm, rund, spraglet i brunt, gult og hvitt uten tydelige bånd. Larven er kort, bred og bust-hårete",
     utbredelse: "Hele landet",
     sesong: "Voksne biller mai–juli, ofte i vinduskarmer",
     alvorlighet: "lav",
-    aliaser: ["teppebille", "anthrenus"],
+    aliaser: ["anthrenus"],
+    forveksles: [
+      "Tepperbille – tre tydelige lyse bølgebånd over dekkvingene, og de to er svært vanskelige å skille på foto",
+      "Brun pelsbille – ensfarget brun og mer avlang",
+    ],
     tiltak: [
       "Sjekk ull, pels, utstoppede dyr og gamle insektsamlinger",
       "Støvsug og frys angrepne gjenstander i minst 72 timer",
     ],
   },
   {
+    norsk: "Tepperbille", latin: "Anthrenus verbasci", slug: "tepperbille", gruppe: "Biller",
+    kjennetegn: "2–3,5 mm, rund, spraglet i hvitt, gulbrunt og svart med tre lyse bølgebånd over dekkvingene. Larven er kort, bred og hårete med hårdusker bakerst",
+    utbredelse: "Hele landet, vanlig i boliger",
+    sesong: "Voksne biller vår og sommer, ofte i vinduskarmer; larver hele året",
+    alvorlighet: "lav",
+    aliaser: ["teppebille", "vanlig tepperbille"],
+    forveksles: [
+      "Museumsbille – mer jevnt spraglete uten tydelige bånd, og de to er svært vanskelige å skille på foto",
+      "Brun pelsbille – ensfarget brun og mer avlang",
+    ],
+    tiltak: [
+      "Det er larvene som gjør skade – let etter dem i ull, pels, tepper og under møbler og lister",
+      "Støvsug grundig langs lister og i hjørner, og kast posen etterpå",
+      "Frys angrepne tekstiler i minst 72 timer, eller vask på 60 °C",
+      "Sjekk fuglereir og døde insekter i vinduer og på loft – de er vanlige kilder",
+    ],
+  },
+  {
     norsk: "Fleskeklanner", latin: "Dermestes lardarius", slug: "fleskeklanner", gruppe: "Biller",
-    kjennetegn: "7–9 mm, svart med et bredt lyst bånd med mørke prikker over fremre del av dekkvingene",
+    kjennetegn: "7–9 mm, svart med et bredt lyst bånd med mørke prikker over fremre del av dekkvingene. Larven er brun og hårete, opptil 15 mm, med to små bakoverbøyde torner bakerst",
     utbredelse: "Hele landet",
     sesong: "Voksne biller vår og forsommer",
     alvorlighet: "lav",
+    forveksles: [
+      "Brun pelsbille – mye mindre og ensfarget brun",
+    ],
     tiltak: [
       "Let etter kilden: død fugl, mus eller gammel mat i hulrom, pipeløp eller ventiler",
       "Fjern kilden – da forsvinner billene av seg selv",
@@ -649,6 +777,9 @@ export const PESTS: Pest[] = [
     sesong: "Hele året innendørs",
     alvorlighet: "lav",
     aliaser: ["melorm"],
+    forveksles: [
+      "Rødbrun rismelbille – bare 3–4 mm",
+    ],
     tiltak: [
       "Gå gjennom melvarer og fuglemat – kast det som er angrepet",
       "Vask og støvsug lagerhyller, også sprekker og hjørner",
@@ -661,10 +792,30 @@ export const PESTS: Pest[] = [
     utbredelse: "Hele landet innendørs",
     sesong: "Hele året",
     alvorlighet: "lav",
-    forveksles: ["Stripet borebille – lever i treverk, ikke i mat"],
+    forveksles: [
+      "Tobakksbille – glatte dekkvinger uten lengderiller og sagtakkede antenner",
+      "Stripet borebille – lever i treverk, ikke i mat",
+    ],
     tiltak: [
       "Gå gjennom tørrvarer, krydder, kjeks og tørrfôr til dyr",
       "Kast det som er angrepet og vask skapet, også skruehull og hjørner",
+    ],
+  },
+  {
+    norsk: "Tobakksbille", latin: "Lasioderma serricorne", slug: "tobakksbille", gruppe: "Biller",
+    kjennetegn: "2–3 mm, rund og lys rødbrun, hodet bøyd inn under forkroppen, glatte dekkvinger uten lengderiller, sagtakkede antenner",
+    utbredelse: "Hele landet innendørs, kommer ofte inn med varer",
+    sesong: "Hele året innendørs",
+    alvorlighet: "lav",
+    aliaser: ["lasioderma"],
+    forveksles: [
+      "Brødbille – tydelige lengderiller på dekkvingene",
+      "Stripet borebille – lever i treverk, ikke i mat",
+    ],
+    tiltak: [
+      "Gå gjennom krydder, te, tørrvarer og tobakk",
+      "Kast angrepne varer og vask skapet grundig",
+      "Oppbevar tørrvarer i tette bokser",
     ],
   },
   {
@@ -673,9 +824,30 @@ export const PESTS: Pest[] = [
     utbredelse: "Hele landet, i mel og kornvarer",
     sesong: "Hele året innendørs",
     alvorlighet: "lav",
+    forveksles: [
+      "Sagtannet kornbille – smalere, med seks sagtenner langs hver side av forkroppen",
+      "Brødbille og tobakksbille – runde, med hodet bøyd inn under forkroppen",
+    ],
     tiltak: [
       "Kast angrepne melvarer og vask skapet grundig",
       "Oppbevar mel i tette bokser, ikke i papirposen",
+    ],
+  },
+  {
+    norsk: "Sagtannet kornbille", latin: "Oryzaephilus surinamensis", slug: "sagtannet-kornbille", gruppe: "Biller",
+    kjennetegn: "2,5–3,5 mm, smal, flat og brun, seks sagtenner langs hver side av forkroppen",
+    utbredelse: "Hele landet innendørs, kommer ofte inn med varer",
+    sesong: "Hele året innendørs",
+    alvorlighet: "lav",
+    aliaser: ["oryzaephilus"],
+    forveksles: [
+      "Rødbrun rismelbille – bredere og uten sagtenner på forkroppen",
+      "Tobakksbille – rund med hodet bøyd inn under seg",
+    ],
+    tiltak: [
+      "Gå gjennom tørrvarer: korn, frokostblanding, tørket frukt og nøtter",
+      "Kast angrepne varer og vask skapet grundig",
+      "Oppbevar tørrvarer i tette bokser",
     ],
   },
   {
@@ -684,6 +856,9 @@ export const PESTS: Pest[] = [
     utbredelse: "Hele landet, i korn og ris",
     sesong: "Hele året innendørs",
     alvorlighet: "lav",
+    forveksles: [
+      "Andre lagerbiller – mangler den lange snuten",
+    ],
     tiltak: [
       "Kast angrepet korn og ris – larvene utvikler seg inne i kornet",
       "Frys nye kornvarer i tre døgn hvis du har hatt angrep før",
@@ -693,12 +868,15 @@ export const PESTS: Pest[] = [
   // ── Møll ─────────────────────────────────────────────────────────────
   {
     norsk: "Klesmøll", latin: "Tineola bisselliella", slug: "klesmoll", gruppe: "Møll",
-    kjennetegn: "6–9 mm, ensfarget gyllen uten mønster, flyr dårlig og skyr lys",
+    kjennetegn: "6–9 mm, ensfarget glinsende gyllen-beige uten prikker, rødgul hårdusk på hodet. Larven er hvit med brunt hode, opptil 10 mm, og spinner silketråder og ganger i ull og pels",
     utbredelse: "Hele landet innendørs",
     sesong: "Hele året, mest synlig vår og sensommer",
     alvorlighet: "middels",
     aliaser: ["møll"],
-    forveksles: ["Matmøll – tofarget vinge, og holder til i matskapet"],
+    forveksles: [
+      "Pelsmøll – mørke prikker på vingene, og larven bærer en sekk",
+      "Matmøll – tofarget vinge, og holder til i matskapet",
+    ],
     tiltak: [
       "Det er larvene som spiser ull – se etter hull og larvehus i tekstilene",
       "Vask på 60 °C eller frys plagg i minst 72 timer",
@@ -708,10 +886,13 @@ export const PESTS: Pest[] = [
   },
   {
     norsk: "Pelsmøll", latin: "Tinea pellionella", slug: "pelsmoll", gruppe: "Møll",
-    kjennetegn: "6–9 mm, brungrå med tre utydelige mørke prikker på vingene",
+    kjennetegn: "6–9 mm, brungrå med tre utydelige mørke prikker på vingene. Larven bor i en flyttbar sekk av spinn og fibre som den drar med seg",
     utbredelse: "Hele landet, også utendørs i fuglereir",
     sesong: "Hele året innendørs",
     alvorlighet: "middels",
+    forveksles: [
+      "Klesmøll – ensfarget gyllen uten prikker, larven har ingen sekk",
+    ],
     tiltak: [
       "Samme tiltak som for klesmøll: vask, frys og grundig støvsuging",
       "Sjekk fuglereir på loft og i ventiler – de er ofte kilden",
@@ -719,11 +900,15 @@ export const PESTS: Pest[] = [
   },
   {
     norsk: "Matmøll", latin: "Plodia interpunctella", slug: "matmoll", gruppe: "Møll",
-    kjennetegn: "8–10 mm vingespenn, ytre halvdel av vingen kobberbrun, indre del lys grå",
+    kjennetegn: "8–10 mm lang, ytre halvdel av vingen kobberbrun, indre del lys grå. Larven er hvitaktig, opptil 12 mm, og etterlater spinn og klumper i tørrvarer",
     utbredelse: "Hele landet innendørs",
     sesong: "Hele året, raskest utvikling i varme rom",
     alvorlighet: "lav",
     aliaser: ["tørrfruktmøll", "indisk melmøll"],
+    forveksles: [
+      "Melmøll – større og grå med mørke sikksakklinjer, uten kobberbrun ytterdel",
+      "Klesmøll – ensfarget gyllen, holder til i tekstiler",
+    ],
     tiltak: [
       "Gå gjennom alle tørrvarer – se etter spinntråder i mel, nøtter og tørrfrukt",
       "Kast infisert mat og vask skapet med såpevann, også i hjørner og skruehull",
@@ -731,15 +916,36 @@ export const PESTS: Pest[] = [
       "Feromonfeller viser om du fortsatt har voksne individer igjen",
     ],
   },
+  {
+    norsk: "Melmøll", latin: "Ephestia kuehniella", slug: "melmoll", gruppe: "Møll",
+    kjennetegn: "Vingespenn 20–25 mm, grå forvinger med mørke sikksakklinjer på tvers, lyse bakvinger. Larven er hvitaktig og spinner tett spinn i mel",
+    utbredelse: "Hele landet, særlig i bakerier, møller og matlagre",
+    sesong: "Hele året innendørs",
+    alvorlighet: "lav",
+    aliaser: ["middelhavsmelmøll"],
+    forveksles: [
+      "Matmøll – mindre, og ytre halvdel av vingen er kobberbrun",
+    ],
+    tiltak: [
+      "Gå gjennom mel og kornvarer – se etter spinn og klumper",
+      "Kast angrepne varer og vask skapet grundig, også i hjørner og skruehull",
+      "Oppbevar tørrvarer i tette glass eller bokser",
+      "Angrep i bakeri eller matlager bør håndteres av godkjent skadedyrbekjemper",
+    ],
+  },
 
   // ── Fluer og mygg ────────────────────────────────────────────────────
   {
     norsk: "Husflue", latin: "Musca domestica", slug: "flue", gruppe: "Fluer og mygg",
-    kjennetegn: "6–8 mm, grå med fire mørke lengdestriper på ryggen",
+    kjennetegn: "6–8 mm, grå med fire mørke lengdestriper på ryggen. Larvene er hvite, beinløse makk",
     utbredelse: "Hele landet",
     sesong: "Mai–oktober",
     alvorlighet: "lav",
     aliaser: ["flue"],
+    forveksles: [
+      "Vindusflue – gyllen hårete forkropp uten tydelige striper",
+      "Spyflue – større, med metallisk blå bakkropp",
+    ],
     tiltak: [
       "Finn klekkestedet: avfall, kompost, gjødsel eller dødt dyr i hulrom",
       "Sett opp insektnett og hold avfallsbeholdere lukket",
@@ -748,11 +954,14 @@ export const PESTS: Pest[] = [
   },
   {
     norsk: "Spyflue", latin: "Calliphora vicina", slug: "flue", gruppe: "Fluer og mygg",
-    kjennetegn: "10–14 mm, metallisk blå bakkropp, kraftig og lydt flygende",
+    kjennetegn: "10–14 mm, kraftig, metallisk blå bakkropp med sølvskjær, oransjerøde kinn. Larvene er hvite, beinløse makk",
     utbredelse: "Hele landet",
     sesong: "Mars–november",
     alvorlighet: "lav",
     aliaser: ["kjøttflue", "blåflue"],
+    forveksles: [
+      "Husflue – mindre og grå med striper på ryggen",
+    ],
     tiltak: [
       "Let etter dødt dyr på loft, i pipeløp eller i vegghulrom",
       "Fjern kilden og luft ut – da stopper klekkingen",
@@ -760,11 +969,14 @@ export const PESTS: Pest[] = [
   },
   {
     norsk: "Vindusflue", latin: "Pollenia rudis", slug: "vindusflue", gruppe: "Fluer og mygg",
-    kjennetegn: "7–9 mm, matt grå med gyllen krøllete behåring på forkroppen, treg i bevegelsene",
+    kjennetegn: "7–9 mm, matt mørkegrå, gyllen krøllete behåring på forkroppen, vingene ligger overlappende over bakkroppen i hvile",
     utbredelse: "Hele landet",
     sesong: "Samles i vinduskarmer om høsten og på varme vinterdager",
     alvorlighet: "lav",
     aliaser: ["klyngeflue"],
+    forveksles: [
+      "Husflue – fire mørke striper på ryggen og ingen gylne hår",
+    ],
     tiltak: [
       "Overvintrer i hundrevis i hulrom og på loft – de gjør ingen skade",
       "Støvsug dem opp og tett sprekker rundt vinduer og takutstikk",
@@ -772,7 +984,7 @@ export const PESTS: Pest[] = [
   },
   {
     norsk: "Bananflue", latin: "Drosophila melanogaster", slug: "bananflue", gruppe: "Fluer og mygg",
-    kjennetegn: "2–4 mm, gulbrun med røde øyne, svermer rundt frukt",
+    kjennetegn: "2–4 mm, gulbrun med knallrøde øyne og mørke tverrstriper på bakkroppen",
     utbredelse: "Hele landet innendørs",
     sesong: "Flest sensommer og høst",
     alvorlighet: "lav",
@@ -785,11 +997,15 @@ export const PESTS: Pest[] = [
   },
   {
     norsk: "Soppmygg", latin: "Sciaridae", slug: "soppmygg", gruppe: "Fluer og mygg",
-    kjennetegn: "2–4 mm, mørk og slank med lange bein, går like mye som den flyr",
+    kjennetegn: "2–4 mm, svart eller mørkegrå og slank, lange bein og antenner, røykfargede vinger",
     utbredelse: "Hele landet innendørs",
     sesong: "Hele året, verst i fuktig jord om vinteren",
     alvorlighet: "lav",
     aliaser: ["sørgemygg", "planteflue"],
+    forveksles: [
+      "Bananflue – gulbrun med røde øyne og kompakt kropp",
+      "Avløpsflue – hårete, hjerteformede vinger",
+    ],
     tiltak: [
       "Larvene lever i fuktig potteplantejord – vann sjeldnere og la jorda tørke opp",
       "Gule limfeller i potten fanger de voksne",
@@ -797,11 +1013,14 @@ export const PESTS: Pest[] = [
   },
   {
     norsk: "Avløpsflue", latin: "Psychodidae", slug: "avlopsflue", gruppe: "Fluer og mygg",
-    kjennetegn: "2–5 mm, hjerteformede hårete vinger, sitter stille på veggen ved sluk",
+    kjennetegn: "2–5 mm, grå, kropp og hjerteformede vinger dekket av hår, ligner en bitteliten møll",
     utbredelse: "Hele landet",
     sesong: "Hele året innendørs",
     alvorlighet: "lav",
     aliaser: ["sommerfuglmygg"],
+    forveksles: [
+      "Soppmygg – smal med glatte vinger, ikke hårete",
+    ],
     tiltak: [
       "Rens sluk og vannlås mekanisk – larvene lever i slamlaget",
       "Sjekk om vannlåsen har tørket ut i lite brukte sluk",
@@ -811,7 +1030,7 @@ export const PESTS: Pest[] = [
   // ── Lus, lopper og midd ──────────────────────────────────────────────
   {
     norsk: "Kattelopp", latin: "Ctenocephalides felis", slug: "loppe", gruppe: "Lus, lopper og midd",
-    kjennetegn: "2–3 mm, mørk brun, sammentrykt fra siden, hopper langt",
+    kjennetegn: "2–3 mm, mørk rødbrun, uten vinger, sammentrykt fra siden (smal sett ovenfra), kraftige hoppebein",
     utbredelse: "Hele landet der det er katt eller hund",
     sesong: "Hele året innendørs, flest om sommeren",
     alvorlighet: "middels",
@@ -829,6 +1048,9 @@ export const PESTS: Pest[] = [
     utbredelse: "Hele landet",
     sesong: "Hele året, flest utbrudd ved skolestart",
     alvorlighet: "lav",
+    forveksles: [
+      "Kattelopp – sammentrykt fra siden og med kraftige hoppebein",
+    ],
     tiltak: [
       "Kjemmes ut med lusekam på vått hår med balsam, annenhver dag i to uker",
       "Sjekk alle i husstanden samtidig, og gi beskjed til skole eller barnehage",
@@ -848,6 +1070,24 @@ export const PESTS: Pest[] = [
       "Ved mistanke om middallergi: ta det opp med fastlegen",
     ],
   },
+  {
+    norsk: "Fuglemidd", latin: "Dermanyssus gallinae", slug: "fuglemidd", gruppe: "Lus, lopper og midd",
+    kjennetegn: "Under 1 mm, åtte bein, grå eller hvitaktig når den er sulten og rød etter blodmåltid; ofte mange sammen",
+    utbredelse: "Hele landet, der fugler hekker på eller i bygget",
+    sesong: "Vår og sommer, ofte når fugleungene har forlatt reiret",
+    alvorlighet: "middels",
+    aliaser: ["rød hønsemidd", "hønsemidd", "blodmidd"],
+    forveksles: [
+      "Skogflått – større (1–5 mm) og dråpeformet",
+      "Husstøvmidd – ikke synlig med det blotte øye",
+    ],
+    tiltak: [
+      "Let etter fuglereir under takstein, i ventiler og takrenner nær stedet midden kommer inn",
+      "Fjern reiret når hekkingen er over – aktive reir er fredet",
+      "Støvsug grundig rundt vinduer og vegger der midden sees",
+      "Midden kan bite, men lever ikke lenge på mennesker; ved mange midd bør godkjent skadedyrbekjemper kontaktes",
+    ],
+  },
 
   // ── Edderkoppdyr ─────────────────────────────────────────────────────
   {
@@ -857,6 +1097,9 @@ export const PESTS: Pest[] = [
     sesong: "Mest synlig august–oktober når hannene leter etter make",
     alvorlighet: "lav",
     aliaser: ["edderkopp", "tegenaria"],
+    forveksles: [
+      "Vevkjerring – kroppen i ett stykke og ekstremt tynne bein",
+    ],
     tiltak: [
       "Ufarlig for mennesker, og den spiser andre insekter",
       "Støvsug spinn i kjeller og bak møbler hvis du vil ha færre",
@@ -870,6 +1113,10 @@ export const PESTS: Pest[] = [
     sesong: "Mars–november, mest aktiv mai–september",
     alvorlighet: "middels",
     aliaser: ["flått", "skogsflått"],
+    forveksles: [
+      "Fuglemidd – under 1 mm, mye mindre",
+      "Edderkopp – kroppen er delt i to tydelige deler",
+    ],
     tiltak: [
       "Fjern flåtten så raskt som mulig med pinsett – dra rett ut, ikke vri",
       "Følg med på bittstedet i fire uker: ringformet utslett bør vurderes av lege",
@@ -884,6 +1131,9 @@ export const PESTS: Pest[] = [
     sesong: "Mest synlig sensommer og høst",
     alvorlighet: "lav",
     aliaser: ["langbein"],
+    forveksles: [
+      "Husedderkopp – kroppen er delt i to, og beina er tykkere og hårete",
+    ],
     tiltak: [
       "Helt ufarlig og uten gift – den er ingen edderkopp og gjør ingen skade",
       "Sett den ut hvis du ikke vil ha den inne",
@@ -893,11 +1143,15 @@ export const PESTS: Pest[] = [
   // ── Andre småkryp ────────────────────────────────────────────────────
   {
     norsk: "Støvlus", latin: "Psocoptera", slug: "stovlus", gruppe: "Andre småkryp",
-    kjennetegn: "1–2 mm, blek grå eller brun, myk kropp, beveger seg rykkvis",
+    kjennetegn: "1–2 mm, blek grå eller brun, myk kropp, stort hode med lange antenner, oftest uten vinger",
     utbredelse: "Hele landet",
     sesong: "Flest om sommeren og i nye eller fuktige bygg",
     alvorlighet: "lav",
     aliaser: ["bokelus", "bøkerens", "liposcelis"],
+    forveksles: [
+      "Fuglemidd – åtte bein, og blir rød etter blodmåltid",
+      "Hodelus – finnes i hår, ikke i bøker, mat og fuktige rom",
+    ],
     tiltak: [
       "Arten lever av muggsopp – den er et tegn på for høy luftfuktighet",
       "Luft og tørk ut rommet, og sjekk for byggfukt i nye hus",
@@ -911,6 +1165,9 @@ export const PESTS: Pest[] = [
     sesong: "Hele året, søker inn i fuktige kjellere",
     alvorlighet: "lav",
     aliaser: ["kjellerassett", "gråsugge"],
+    forveksles: [
+      "Tusenbein – lang og sylindrisk med mange flere bein",
+    ],
     tiltak: [
       "Arten trenger fukt for å overleve – tørker det opp, forsvinner den",
       "Mange inne kan bety en fuktskade i grunnmur eller under gulv",
@@ -922,6 +1179,9 @@ export const PESTS: Pest[] = [
     utbredelse: "Hele landet",
     sesong: "Flest inne om høsten",
     alvorlighet: "lav",
+    forveksles: [
+      "Skrukketroll – kort og bred med bare sju beinpar",
+    ],
     tiltak: [
       "Lever av dødt plantemateriale og gjør ingen skade inne",
       "Tett sprekker mot grunnmur og fjern løv inntil veggen",
@@ -934,6 +1194,9 @@ export const PESTS: Pest[] = [
     sesong: "Juli–oktober",
     alvorlighet: "lav",
     aliaser: ["saksedyr"],
+    forveksles: [
+      "Skjeggkre og sølvkre – tre lange haletråder i stedet for tang",
+    ],
     tiltak: [
       "Tangen er ufarlig for mennesker, og arten spiser bladlus",
       "Rist ut blomster og grønnsaker før du tar dem inn",
@@ -958,17 +1221,17 @@ export const PESTS: Pest[] = [
   // ── Ekskrementer ─────────────────────────────────────────────────────
   {
     norsk: "Brunrotte", latin: "Rattus norvegicus", slug: "rotte-ekskrementer", gruppe: "Ekskrementer",
-    kjennetegn: "15–20 mm, pølseformet med spisse ender, mørkebrun, ofte i klynger på faste toalettplasser",
+    kjennetegn: "12–20 mm, tykke og pølseformede med butte ender, mørkebrun, ofte i klynger på faste toalettplasser",
     utbredelse: "Hele landet, tettest i byer og langs kysten",
     sesong: "Hele året",
     alvorlighet: "høy",
     aliaser: ["rotteekskrementer", "rotteavføring"],
     forveksles: [
-      "Skogsmus – mye mindre (4–8 mm) og inneholder ofte synlige frørester",
+      "Mus – mye mindre (3–8 mm) og smalere, med spisse ender, mange og spredt",
       "Mår – større (5–10 cm), avlange og finnes gjerne på steiner eller i trær, ikke i klynger på gulvet",
     ],
     bekreftelse: [
-      "Pølseformet med spisse ender i begge ender",
+      "Tykke og pølseformede med butte ender – musekskrementer er smale og spisse",
       "Mørkebrun, blir gråere når den tørker",
       "Finnes ofte i klynger på ett eller få faste steder, ikke spredt",
       "Ofte langs vegger, i skap, på loft eller i kjeller",
@@ -982,53 +1245,33 @@ export const PESTS: Pest[] = [
     ],
   },
   {
-    norsk: "Liten skogsmus", latin: "Apodemus sylvaticus", slug: "liten-skogsmus-ekskrementer", gruppe: "Ekskrementer",
-    kjennetegn: "4–7 mm, spisse ender, inneholder ofte synlige frørester, spredt i skog, hage eller uthus",
-    utbredelse: "Sør- og Østlandet, vanlig i hytter og uthus",
-    sesong: "Trekker inn sent på høsten",
-    alvorlighet: "lav",
-    aliaser: ["skogmus", "skogmusekskrementer"],
+    norsk: "Mus", latin: "Mus musculus / Apodemus sp.", slug: "mus-ekskrementer", gruppe: "Ekskrementer",
+    kjennetegn: "3–8 mm, smale og stavformede med spisse ender, mørke; mange og spredt langs vegger og ganger, ikke samlet på faste toaletter. Skogmus har ofte synlige frørester. Ofte sterk, stikkende muselukt",
+    utbredelse: "Hele landet",
+    sesong: "Hele året, flest inne fra sen høst til vår",
+    alvorlighet: "middels",
+    aliaser: ["husmus", "skogmus", "skogsmus", "liten skogsmus", "stor skogsmus", "liten skogmus", "stor skogmus", "halsbåndmus", "musekskrementer", "museskitt", "museavføring"],
     forveksles: [
-      "Stor skogsmus – litt større ekskrementer (5–8 mm), ellers svært like",
-      "Flaggermus – smuldrer lett ved berøring og glinser av insektskall, mens skogsmusekskrementer er faste og inneholder frørester",
+      "Brunrotte – mye større (12–20 mm) og tykkere, med butte ender, og ofte samlet i klynger på faste steder",
+      "Flaggermus – samme størrelse, men smuldrer til glitrende pulver ved berøring og inneholder insektskall",
     ],
     bekreftelse: [
-      "4–7 mm lange, spisse i begge ender",
-      "Inneholder ofte synlige frørester",
-      "Faste og smuldrer ikke ved berøring",
-      "Som regel spredt, ikke i tette klynger",
+      "3–8 mm lange, smale, spisse i begge ender",
+      "Faste og harde – smuldrer ikke ved berøring",
+      "Mange og spredt langs vegger, i skuffer, skap og isolasjon",
+      "Ofte stikkende muselukt der de holder til",
     ],
+    notat: "Vi skiller ikke mellom husmus og skogmus på ekskrementer – tiltakene er de samme. Det viktigste er å skille mus fra rotte.",
     tiltak: [
-      "Tett innganger i grunnmur, kledning og ventiler",
-      "Rydd ved, løv og busker inntil veggen",
-      "Sett feller på loft og i kjeller før vinteren",
-    ],
-  },
-  {
-    norsk: "Stor skogsmus", latin: "Apodemus flavicollis", slug: "stor-skogsmus-ekskrementer", gruppe: "Ekskrementer",
-    kjennetegn: "5–8 mm, spisse ender, inneholder ofte synlige frørester, litt større enn liten skogsmus",
-    utbredelse: "Sørøstlandet",
-    sesong: "Trekker inn sent på høsten",
-    alvorlighet: "lav",
-    aliaser: ["halsbåndmus", "stor skogsmusekskrementer"],
-    forveksles: [
-      "Liten skogsmus – litt mindre ekskrementer (4–7 mm), ellers svært like",
-      "Flaggermus – smuldrer lett ved berøring og glinser av insektskall, mens skogsmusekskrementer er faste og inneholder frørester",
-    ],
-    bekreftelse: [
-      "5–8 mm lange, spisse i begge ender",
-      "Inneholder ofte synlige frørester",
-      "Faste og smuldrer ikke ved berøring",
-      "Som regel spredt, ikke i tette klynger",
-    ],
-    tiltak: [
-      "Samme tiltak som for liten skogsmus: tetting og feller",
-      "Sjekk hytteloft etter avføring og reirmateriale",
+      "Mus kommer gjennom svært små åpninger – tett rundt rør, kabler, ventiler og i grunnmur",
+      "Bruk hansker og munnbind, og fukt ekskrementene før opprydding – ikke tørrfei eller støvsug direkte",
+      "Sett feller langs vegger der ekskrementene ligger tettest",
+      "Ved mange funn eller mus i flere rom: kontakt Ocab",
     ],
   },
   {
     norsk: "Mink", latin: "Neogale vison", slug: "mink-ekskrementer", gruppe: "Ekskrementer",
-    kjennetegn: "5–10 cm, avlang, inneholder ofte pels eller fiskebein, finnes ofte ved vann og på steiner",
+    kjennetegn: "5–10 cm, avlang og ofte vridd, inneholder fiskebein, fiskeskjell, skall av krepsdyr eller pels; svært vond lukt; ligger ved vann – på steiner, brygger og i naust",
     utbredelse: "Hele landet, nesten alltid nær vann",
     sesong: "Hele året",
     alvorlighet: "middels",
@@ -1051,7 +1294,7 @@ export const PESTS: Pest[] = [
   },
   {
     norsk: "Mår", latin: "Martes martes", slug: "mar-ekskrementer", gruppe: "Ekskrementer",
-    kjennetegn: "5–10 cm, avlang, inneholder ofte pels, frø eller bær, finnes ofte på loft, steiner eller i trær",
+    kjennetegn: "5–10 cm, avlang og vridd i endene, inneholder ofte bær, frø, insektdeler eller pels; legges synlig som markering på stein, bjelke, mønekam eller loft. Loft alene er ikke nok – mus, rotte og flaggermus finnes også der",
     utbredelse: "Hele landet i skogsområder",
     sesong: "Hele året, mest bråk på loft om vinteren",
     alvorlighet: "middels",
@@ -1100,7 +1343,7 @@ export const PESTS: Pest[] = [
     alvorlighet: "lav",
     aliaser: ["flaggermusekskrementer", "flaggermusguano"],
     forveksles: [
-      "Musavføring – fast og smuldrer ikke, inneholder frørester i stedet for insektskall",
+      "Mus – faste og harde, smuldrer ikke, og inneholder frørester i stedet for insektskall",
     ],
     bekreftelse: [
       "3–5 mm, ligner et lite riskorn",
@@ -1172,6 +1415,8 @@ export function findGroup(name?: unknown): PestGroup | null {
  */
 const FHI_PATHS: Record<string, string> = {
   skjeggkre: "https://www.fhi.no/sk/skadedyrhandboka/smadyr-andre/skjeggkre/",
+  stokkmaur: "https://www.fhi.no/sk/skadedyrhandboka/maur/stokkmaur/",
+  "svart-tremaur": "https://www.fhi.no/sk/skadedyrhandboka/maur/svart-tremaur/",
 };
 
 const FHI_FALLBACK = "https://www.fhi.no/sk/skadedyrhandboka/";
@@ -1181,13 +1426,29 @@ export function fhiUrl(slug?: string): string {
   return FHI_FALLBACK;
 }
 
-/** Kort gruppeoversikt til steg 1 i artsbestemmelsen. */
-export const GROUP_PROMPT_LIST = GROUPS.map((g) => {
-  const eksempler = pestsInGroup(g)
-    .slice(0, 4)
+/**
+ * Gruppeoversikt til steg 1 i artsbestemmelsen. Alle artene i hver gruppe
+ * tas med – en art som ikke vises her (f.eks. veggedyr eller flaggermus)
+ * havner lett i feil gruppe, og da kan steg 2 aldri finne den.
+ * Ekskrementer er utelatt: de analyseres i et eget løp og er aldri et
+ * riktig svar når brukeren har tatt bilde av et dyr.
+ */
+/**
+ * Larver ligner ikke på det voksne dyret, og havner lett i "Andre småkryp".
+ * Disse hintene sier hvilken gruppe de hører til.
+ */
+const GROUP_HINT: Partial<Record<PestGroup, string>> = {
+  Biller: "også larver: hårete pelsbille- og tepperbillelarver, melorm",
+  Møll: "også larver: hvite larver med spinn i ull eller tørrvarer, larve i sekk",
+  "Fluer og mygg": "også larver: hvite, beinløse makk",
+};
+
+export const GROUP_PROMPT_LIST = GROUPS.filter((g) => g !== "Ekskrementer").map((g) => {
+  const arter = pestsInGroup(g)
     .map((p) => p.norsk)
     .join(", ");
-  return `- ${g}: ${eksempler}`;
+  const hint = GROUP_HINT[g] ? ` (${GROUP_HINT[g]})` : "";
+  return `- ${g}: ${arter}${hint}`;
 }).join("\n");
 
 /**
@@ -1201,7 +1462,12 @@ export const GROUP_FOCUS: Record<PestGroup, string> = {
   Fugler: "Vurder størrelse, nebbform, fjærdraktens farge og atferd (sitter stille, flyr, hakker i treverk).",
   Kakerlakker: "Vurder størrelse, farge, vingedekker, antennelengde og mønster på ryggskjoldet.",
   Kre: "Vurder størrelse, skallfarge, klør, antenner og kroppsform (langstrakt vs. sammenrullet).",
-  Maur: "Vurder størrelse, farge, kroppsform, antenner, og om den har vinger.",
+  Maur: `Gå gjennom denne nøkkelen i rekkefølge:
+1. Størrelse: over 6 mm → stokkmaur, brun tremaur eller rød skogsmaur. 3–6 mm → svart tremaur, svart jordmaur eller rødmaur. Rundt 2 mm og blek gul → faraomaur.
+2. Store maur: helt svart hode og jevnt buet rygg → stokkmaur (svart bakkropp) eller brun tremaur (rødbrun forreste del av bakkroppen). Tofarget hode (rødt og svart) og humpete rygg → rød skogsmaur.
+3. Små maur: skinnende blank svart med bredt hjerteformet hode → svart tremaur. Matt brunsvart → svart jordmaur. Ensfarget rustrød → rødmaur.
+4. Spor og atferd fra brukerens tekst: sky og rolig → stokkmaur. Hissig, angriper og sprayer maursyre, tue av barnåler → rød skogsmaur. Sagflis av trefibre ved lister og vinduer → stokkmaur. Fine, melaktige hauger → svart jordmaur. Lukter sitrus eller appelsin når den knuses → svart tremaur.
+Vurder også om den har vinger (sverming).`,
   "Veps og bier": "Vurder størrelse, farge og mønster (striper), behåring, midje (innsnøring) og vinger.",
   Biller: "Vurder størrelse, farge og mønster på dekkvingene, antenneform, bein og kroppsform.",
   Møll: "Vurder vingespenn, vingenes farge og mønster (flekker, bånd, prikker), og om den sitter stille med taklagte vinger.",
@@ -1209,7 +1475,12 @@ export const GROUP_FOCUS: Record<PestGroup, string> = {
   "Lus, lopper og midd": "Vurder størrelse, kroppsform (flat, smal, rund), bein og om den hopper.",
   Edderkoppdyr: "Vurder størrelse, farge, antall og lengde på bein, kroppsform og øyne.",
   "Andre småkryp": "Vurder størrelse, farge, kroppsform, antall bein og bevegelsesmønster.",
-  Ekskrementer: "Vurder ekskrementenes form, størrelse, farge og innhold (pels, frørester eller insektskall), i tillegg til hvor de ble funnet og om de ligger spredt eller samlet i klynge/haug.",
+  Ekskrementer: `Gå gjennom denne nøkkelen i rekkefølge. Størrelse kommer først – sted alene avgjør aldri, fordi mus, rotte, mår og flaggermus alle kan finnes på loft.
+1. Størrelse: under 1 cm → mus eller flaggermus. 1–2 cm → rotte. Over 3 cm, avlang og ofte vridd med hår eller bein → rovdyr (røyskatt, mink eller mår).
+2. Under 1 cm: smuldrer til glitrende pulver med insektskall → flaggermus. Faste og harde, ofte med frørester → mus.
+3. Mus eller rotte: mus er 3–8 mm, smale med spisse ender, mange og spredt langs vegger. Rotte er 12–20 mm, tykke med butte ender, og ligger ofte samlet på faste toalettsteder.
+4. Rovdyr – bruk innhold, størrelse og sted sammen: tynn (3–6 cm) med fine hår og små bein, i haug ved reir eller steinrøys → røyskatt. Fiskebein, fiskeskjell eller skall av krepsdyr, svært vond lukt, ved vann → mink. Bær, frø, insektdeler og hår, lagt synlig som markering på stein, bjelke, mønekam eller annet høyt sted → mår.
+Beskriv form, størrelse, farge, innhold og om de ligger spredt eller samlet.`,
 };
 
 /** Fokusinstruksjon for en gruppe – faller tilbake til en generisk tekst. */

@@ -1,6 +1,7 @@
 export const MAX_UPLOAD_BYTES = 15 * 1024 * 1024; // det vi i det hele tatt tar imot
 export const TARGET_BYTES = 1024 * 1024; // 1 MB – det vi sikter mot å sende
-const MAX_EDGE = 1600; // px på lengste side
+const MAX_EDGE = 1600; // px på lengste side – samme som serveren sender videre
+const FALLBACK_EDGE = 1280;
 
 export function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -69,18 +70,20 @@ export async function compressImage(file: File): Promise<CompressionOutcome> {
 
   try {
     const source = await decode(file);
-    let quality = 0.82;
+    let quality = 0.85;
     let canvas = drawScaled(source, MAX_EDGE);
     let blob = await toBlob(canvas, quality);
 
-    while (blob && blob.size > TARGET_BYTES && quality > 0.45) {
-      quality -= 0.12;
+    // Gå ikke under 0,75 – lavere kvalitet visker ut fine detaljer som
+    // antenner, bein og hår, og det er nettopp de som skiller artene.
+    while (blob && blob.size > TARGET_BYTES && quality > 0.75) {
+      quality -= 0.1;
       blob = await toBlob(canvas, quality);
     }
 
     if (blob && blob.size > TARGET_BYTES) {
-      canvas = drawScaled(source, 1200);
-      blob = await toBlob(canvas, 0.7);
+      canvas = drawScaled(source, FALLBACK_EDGE);
+      blob = await toBlob(canvas, 0.75);
     }
 
     if ("close" in source && typeof source.close === "function") source.close();
