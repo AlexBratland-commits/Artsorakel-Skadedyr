@@ -62,6 +62,7 @@ export const PESTS: Pest[] = [
   {
     norsk: "Brunrotte", latin: "Rattus norvegicus", slug: "rotte", gruppe: "Gnagere",
     kjennetegn: "Kraftig kropp 20–27 cm, butt snute, små ører, hale kortere enn kroppen",
+    forklaring: "Kraftig kropp med butt snute og små, tykke ører. Halen er tykk og kortere enn kroppen. Unge rotter kan være på størrelse med en stor mus, men har uforholdsmessig stort hode og store bakføtter, og den tykke halen – det skiller dem fra mus.",
     utbredelse: "Hele landet, tettest i byer og langs kysten",
     sesong: "Hele året, søker innendørs på høsten",
     alvorlighet: "høy",
@@ -92,6 +93,7 @@ export const PESTS: Pest[] = [
   {
     norsk: "Husmus", latin: "Mus musculus", slug: "mus", gruppe: "Gnagere",
     kjennetegn: "6–10 cm kropp, gråbrun, store ører, hale omtrent like lang som kroppen",
+    forklaring: "Lite hode med spiss snute og store, tynne ører i forhold til hodet. Små, spinkle føtter. Halen er tynn, nesten naken med fine ringer, og omtrent like lang som kroppen. Jevnt gråbrun pels, buken bare litt lysere. Forveksles oftest med en ung brunrotte – den har stort hode, store bakføtter, butt snute og tykkere, kortere hale.",
     utbredelse: "Hele landet, svært vanlig innendørs",
     sesong: "Hele året, flest innerapporter september–november",
     alvorlighet: "middels",
@@ -1471,7 +1473,12 @@ export const GROUP_PROMPT_LIST = GROUPS.filter((g) => g !== "Ekskrementer").map(
  * hale – ikke på antenner og vinger.
  */
 export const GROUP_FOCUS: Record<PestGroup, string> = {
-  Gnagere: "Vurder pelsfarge, størrelse, ører, snuteform og særlig halens lengde i forhold til kroppen.",
+  Gnagere: `Gjør en helhetsvurdering av kroppsproporsjonene – størrelse alene kan ikke måles sikkert på bilde.
+1. Mus eller ung rotte (den vanligste forvekslingen): en ung brunrotte har stort hode og store bakføtter i forhold til kroppen, butt snute, små ører i forhold til hodet, og en tykk hale som er kortere enn kroppen. En husmus har lite hode, spiss snute, store ører i forhold til hodet, små og spinkle føtter, og en tynn hale omtrent like lang som kroppen.
+2. Mus eller markmus og klatremus: markmus og klatremus har butt snute, små ører som nesten skjules i pelsen, og kort hale. Husmus og skogmus har spiss snute, tydelige ører og lang hale.
+3. Husmus eller skogmus: skogmus har store, utstående øyne og ører, gulbrun rygg og skarpt avgrenset hvit buk. Husmus er jevnere gråbrun med gråere buk.
+4. Bruk oppgitt størrelse og brukerens tekst sammen med bildet. Er det usikkert mellom mus og ung rotte, velg det proporsjonene peker mot og legg det andre i "alternativer".
+Døde dyr kan ligge sammenkrøllet – vurder halens tykkelse og føttenes størrelse, ikke bare lengden.`,
   "Andre pattedyr": "Vurder pelsfarge og -mønster, kroppsform, størrelse, ører og særlig halen (lengde, buskete, farge og halespiss).",
   Fugler: "Vurder størrelse, nebbform, fjærdraktens farge og atferd (sitter stille, flyr, hakker i treverk).",
   Kakerlakker: "Vurder størrelse, farge, vingedekker, antennelengde og mønster på ryggskjoldet.",

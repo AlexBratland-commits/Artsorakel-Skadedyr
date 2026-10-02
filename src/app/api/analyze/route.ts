@@ -47,6 +47,12 @@ if (!apiKey) {
 /** Synsmodell for bildeanalyse – kan overstyres med OPENROUTER_VISION_MODEL. */
 const MODEL = process.env.OPENROUTER_VISION_MODEL ?? "google/gemini-3.7-flash";
 const MAX_BYTES = 15 * 1024 * 1024;
+/**
+ * Tak på svarlengden i steg 2. Romslig, fordi noen modeller bruker tokens på
+ * å tenke før de svarer – blir taket nådd, kuttes JSON-en og svaret kan ikke
+ * leses.
+ */
+const SPECIES_MAX_TOKENS = 2000;
 /** Under denne sikkerheten behandles selv en navngitt kandidat som "Ukjent". */
 const MIN_CONFIDENCE = 30;
 /** Under denne sikkerheten merkes navnet med "Mulig " i visningen. */
@@ -345,7 +351,7 @@ export async function POST(request: NextRequest) {
           },
           imageContent,
         ],
-        { maxTokens: 700, timeoutMs: 15_000 }
+        { maxTokens: SPECIES_MAX_TOKENS, timeoutMs: 15_000 }
       );
     } else {
       // ── Steg 1: finn hovedgruppe ─────────────────────────────────────
@@ -360,7 +366,7 @@ export async function POST(request: NextRequest) {
           },
           imageContent,
         ],
-        { maxTokens: 60, timeoutMs: 10_000 }
+        { maxTokens: 300, timeoutMs: 10_000 }
       );
 
       if (!groupOutcome.ok) return modelError(groupOutcome.reason);
@@ -379,16 +385,23 @@ export async function POST(request: NextRequest) {
           },
           imageContent,
         ],
-        { maxTokens: 700, timeoutMs: 15_000 }
+        { maxTokens: SPECIES_MAX_TOKENS, timeoutMs: 15_000 }
       );
     }
 
     if (!speciesOutcome.ok) return modelError(speciesOutcome.reason);
 
-    // Et svar vi ikke klarte å lese er en feil, ikke en vurdering – det skal
-    // ikke caches, ellers får brukeren samme "Ukjent" i 24 timer.
-    const result = speciesOutcome.json ? enrich(speciesOutcome.json, gruppe) : UNKNOWN;
-    if (speciesOutcome.json && !EVAL_MODE) setCached(hash, result);
+    // Et svar vi ikke klarte å lese er en teknisk feil, ikke en vurdering.
+    // Vis det som feil med "prøv igjen" – ikke som "Ukjent", som får
+    // brukeren til å tro at dyret ikke kunne bestemmes.
+    if (!speciesOutcome.json) {
+      return NextResponse.json(
+        { error: "Fikk ikke et lesbart svar fra analysen. Prøv igjen." },
+        { status: 502 }
+      );
+    }
+    const result = enrich(speciesOutcome.json, gruppe);
+    if (!EVAL_MODE) setCached(hash, result);
 
     return NextResponse.json(result, {
       headers: { "X-RateLimit-Remaining": String(limit.remaining) },
