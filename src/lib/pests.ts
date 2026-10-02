@@ -1288,7 +1288,7 @@ export const PESTS: Pest[] = [
     aliaser: ["neovison vison", "minkekskrementer"],
     forveksles: [
       "Mår – like store, men inneholder oftere frø og bær og finnes gjerne i trær eller på loft, ikke ved vann",
-      "Røyskatt – mindre (3–6 cm) og finnes ofte i haug ved reiret",
+      "Røyskatt – mindre og tynnere (3–6 cm), med hår, fjær og små bein men uten bær og fisk, ofte i haug ved reiret – også på loft",
     ],
     bekreftelse: [
       "Avlang form, ofte 5–10 cm lang",
@@ -1312,7 +1312,7 @@ export const PESTS: Pest[] = [
     aliaser: ["skogmår", "mårekskrementer"],
     forveksles: [
       "Mink – like store, men inneholder oftere fiskebein og finnes ved vann, ikke på loft",
-      "Røyskatt – mindre (3–6 cm) og finnes ofte i haug ved reiret",
+      "Røyskatt – mindre og tynnere (3–6 cm), med hår, fjær og små bein men uten bær og fisk, ofte i haug ved reiret – også på loft",
     ],
     bekreftelse: [
       "Avlang form, ofte 5–10 cm lang, gjerne vridd i endene",
@@ -1328,18 +1328,19 @@ export const PESTS: Pest[] = [
   },
   {
     norsk: "Røyskatt", latin: "Mustela erminea", slug: "royskatt-ekskrementer", gruppe: "Ekskrementer",
-    kjennetegn: "3–6 cm, avlang, inneholder ofte pels eller bein, finnes gjerne i haug ved reiret",
-    forklaring: "Mindre og tynnere enn hos mink og mår: 3–6 cm lange og bare noen få millimeter tykke, ofte vridde og mørke. Inneholder fine hår og små beinbiter fra mus og andre smågnagere. Ligger gjerne samlet i en liten haug ved reiret, i steinrøys, vedstabel eller under uthus. Størrelse og tynnhet er det viktigste skillet mot mink og mår; formen er lik, men røyskattens er tydelig mindre.",
+    kjennetegn: "3–6 cm, tynn og vridd, inneholder hår, fjær og små beinrester fra mus, smågnagere og småfugler; ligger ofte i haug ved reiret, også på loft",
+    forklaring: "Røyskatt spiser mest mus og andre smågnagere, men også småfugler og egg. Ekskrementene inneholder derfor hår, fjær og små beinrester – det samme som mår og mink også kan ha, så innholdet alene skiller dem ikke. Det som skiller er helheten: røyskattens er tydelig mindre og tynnere (3–6 cm lange og bare noen få millimeter tykke, omtrent som en tynn blyantstrek), ofte vridde og mørke, og mangler bær og frø (mår) og fiskerester (mink). De ligger gjerne samlet i en liten haug ved reiret eller et fast oppholdssted – i steinrøys, vedstabel, under uthus, og også på loft der den jakter mus. På loft kan de forveksles med mår: mårens er større og tykkere (5–10 cm), legges synlig som markering og har ofte bær og frø. Funn av museskitt og musereir i nærheten styrker røyskatt, fordi den følger byttet sitt.",
     utbredelse: "Hele landet",
     sesong: "Hele året",
     alvorlighet: "lav",
     aliaser: ["hermelin", "royskattekskrementer"],
     forveksles: [
-      "Mink og mår – begge tydelig større (5–10 cm)",
+      "Mår – større og tykkere (5–10 cm), ofte med bær og frø, og lagt synlig som markering. Begge kan finnes på loft",
+      "Mink – større (5–10 cm), med fiskebein, fiskeskjell eller krepsdyrskall, og nesten alltid nær vann",
     ],
     bekreftelse: [
-      "Avlang og tynn, 3–6 cm lang",
-      "Kan inneholde pels og små beinrester fra byttedyr",
+      "Avlang og tynn, 3–6 cm lang og bare noen få millimeter tykk",
+      "Inneholder hår, fjær og små beinrester fra mus og småfugler",
       "Ofte funnet samlet i haug nær reiret, for eksempel i steinrøys eller under uthus",
     ],
     tiltak: [
@@ -1493,7 +1494,8 @@ Vurder også om den har vinger (sverming).`,
 2. Innhold og konsistens: insektskall som glitrer og smuldrer → flaggermus. Fiskebein, fiskeskjell, krepsdyrskall → mink. Bær og frø med synlige kjerner → mår. Fine hår og små bein i tynne ekskrementer → røyskatt. Frørester i små, harde ekskrementer → mus.
 3. Mengde og fordeling: mange samlet på ett sted → rotte (faste toaletter). Mange spredt langs vegger og i skuffer → mus. Hauger under en inngang eller klistret på vegg → flaggermus. Synlig plassert på stein, bjelke eller tak → mår eller mink.
 4. Form og ender: butte ender peker mot rotte, spisse mot mus – men dette er bare et hint og skal aldri overstyre størrelse.
-5. Sted, lukt og brukerens tekst: styrker vurderingen, men kreves ikke. Kan du se tydelige kjennetegn på bildet, skal du bestemme arten selv om brukeren ikke har skrevet noe.
+5. Sted, lukt og brukerens tekst: vurderes sammen med bildet. Bildet alene gir ofte feil – størrelse kan ikke måles uten noe å sammenligne med, og innhold synes dårlig. Avgjør ut fra helheten: bilde, oppgitt størrelse, sted og tekst.
+Hår, fjær og beinrester finnes hos røyskatt, mink og mår – da avgjør størrelse, tykkelse, øvrig innhold (bær og frø eller fisk) og sted.
 Beskriv form, størrelse, farge, innhold og om de ligger spredt eller samlet.`,
 };
 
