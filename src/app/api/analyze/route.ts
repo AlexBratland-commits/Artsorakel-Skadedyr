@@ -86,7 +86,9 @@ ${GROUP_PROMPT_LIST}
 
 REGLER
 1. Velg én og bare én gruppe fra listen over – den som passer best.
-2. Er du usikker, velg den mest sannsynlige. Ser du ikke noe dyr, svar "Ukjent".
+2. Larver hører til gruppen til det voksne dyret: hårete billelarver og melorm er Biller, møllarver er Møll, hvite beinløse makk er Fluer og mygg.
+3. Har brukeren oppgitt størrelse eller skrevet notater, bruk dem – de er ofte mer pålitelige enn bildet.
+4. Er du usikker, velg den mest sannsynlige. Ser du ikke noe dyr, svar "Ukjent".
 
 SVARFORMAT – kun gyldig JSON, ingen forklaring rundt:
 {"gruppe":"Gruppenavn fra listen"}`;
@@ -144,10 +146,15 @@ function buildSystemPrompt(speciesList: string, focus: string, notesAnimal: stri
 
 REGLER
 1. Bruk kun norske navn fra listen under. Passer ingen av dem, svarer du "Ukjent".
-2. Gjett aldri for å være hjelpsom. Er du i tvil mellom to arter, velg den som passer stedet best og senk "confidence".
-3. "confidence" er hvor sikker du faktisk er, 0–100. Uskarpt bilde, dyret langt unna eller kjennetegn som ikke synes skal gi under 50.
-4. Er dyret for lite til å artsbestemmes på foto (midd, støvlus), si det i beskrivelsen og hold confidence lav.
-5. Beskrivelsen skal peke på hva du faktisk ser på bildet: størrelse, farge, form, antall bein, vinger, antenner, haletråder. To setninger, på norsk bokmål, uten "jeg" eller "AI".
+2. Har du en rimelig teori, gi den som hovedforslag og la "confidence" vise hvor usikker du er. Et usikkert forslag vises til brukeren som "Mulig [art]" med en advarsel, og er mer nyttig enn "Ukjent". Svar "Ukjent" bare når ingen art i listen passer, eller dyret ikke synes på bildet.
+3. Er du i tvil mellom to arter, velg den som passer best med størrelse, sted og notater, og legg den andre i "alternativer".
+4. "confidence" er hvor sikker du faktisk er, 0–100. Uskarpt bilde, dyret langt unna eller kjennetegn som ikke synes skal gi under 50.
+5. Er dyret for lite til å artsbestemmes på foto (midd, støvlus), si det i beskrivelsen og hold confidence lav.
+6. Er det en larve, si det i beskrivelsen og svar med arten larven tilhører.
+7. Beskrivelsen skal peke på hva du faktisk ser på bildet: farge, form, mønster, antall bein, vinger, antenner, haletråder. To setninger, på norsk bokmål, uten "jeg" eller "AI".
+
+STØRRELSE
+Du kan ikke måle størrelse på et bilde uten noe kjent ved siden av. Har brukeren valgt en størrelse eller skrevet størrelse i notatene, er det en opplysning du skal stole på: utelukk arter som ikke passer, og ikke vurder størrelsen på nytt fra bildet. Er ingen størrelse oppgitt, bruk størrelse fra bildet bare hvis noe kjent synes (mynt, fyrstikk, finger, flis, skrue), og ellers form, farge og mønster.
 
 HVA DU SKAL SE ETTER PÅ BILDET
 ${focus}
@@ -370,7 +377,7 @@ function buildLocationText(location: string): string {
 
 function buildSizeText(storrelse: string): string {
   if (!storrelse) return "";
-  return ` Oppgitt størrelse: ${storrelse}. Bruk størrelsen til å skille arter som ligner.`;
+  return ` Brukeren har oppgitt størrelsen ${storrelse} – stol på dette og utelukk arter som ikke passer.`;
 }
 
 function buildDroppingsText(fields: { droppingSize: string }): string {
