@@ -454,17 +454,21 @@ export const PESTS: Pest[] = [
   // ── Maur ─────────────────────────────────────────────────────────────
   {
     norsk: "Stokkmaur", latin: "Camponotus herculeanus", slug: "stokkmaur", gruppe: "Maur",
-    kjennetegn: "6–18 mm, svart med rødbrun forkropp, Norges største maur",
+    kjennetegn: "6–18 mm, helt svart hode, rødbrun mellomkropp og svart bakkropp, jevnt buet rygg sett fra siden. Norges største maur. Rolig og sky – trekker seg unna når den forstyrres. Finmalt sagflis ved lister og vinduer er et typisk tegn",
     utbredelse: "Hele landet, vanlig i skogsnære boliger",
     sesong: "Aktiv mars–oktober, sverming i mai–juni",
     alvorlighet: "høy",
     aliaser: ["stokkemaur", "tremaur"],
     forveksles: [
+      "Rød skogmaur – tofarget hode og humpete rygg, aggressiv og sprayer maursyre, bygger tue av barnåler",
       "Brun tremaur – fremste del av bakkroppen er rødbrun, stokkmaur har helt svart bakkropp",
+      "Svart tremaur – bare 4–6 mm, skinnende svart og lukter appelsin når den knuses",
       "Svart jordmaur – bare 3–5 mm og gjør ikke bygningsskade",
     ],
+    notat: "Ikke bruk kjemikalier før du har snakket med en godkjent skadedyrbekjemper i Ocab.",
     tiltak: [
       "Gnager ganger i fuktig konstruksjonsvirke og kan gi bygningsskade",
+      "Maur inne henger ofte sammen med fukt eller vannskade – kontroller nøye rundt bad, vinduer, terskler, bunnsvill og tak der de kommer inn",
       "Se etter finmalt sagflis ved lister, terskler og vinduer",
       "Følg maurstien for å finne reiret – ofte i vegg eller i en stubbe utenfor",
       "Bør utbedres av skadedyrbekjemper, ofte dekket av boligforsikring",
@@ -472,16 +476,36 @@ export const PESTS: Pest[] = [
   },
   {
     norsk: "Brun tremaur", latin: "Camponotus ligniperda", slug: "stokkmaur", gruppe: "Maur",
-    kjennetegn: "6–18 mm, som stokkmaur, men med rødbrun bakkropp foran",
+    kjennetegn: "6–18 mm, som stokkmaur, men fremste del av bakkroppen er rødbrun og kroppen er blankere. Rolig og sky som stokkmaur",
     utbredelse: "Sør-Norge",
     sesong: "Aktiv mars–oktober",
     alvorlighet: "høy",
     forveksles: [
       "Stokkmaur – bakkroppen er helt svart",
     ],
+    notat: "Ikke bruk kjemikalier før du har snakket med en godkjent skadedyrbekjemper i Ocab.",
     tiltak: [
       "Samme håndtering som stokkmaur – finn reiret, ikke bare stien",
+      "Maur inne henger ofte sammen med fukt eller vannskade – kontroller nøye rundt bad, vinduer, terskler, bunnsvill og tak der de kommer inn",
       "Kontroller fuktskadet virke i bunnsvill og terrasse",
+    ],
+  },
+  {
+    norsk: "Svart tremaur", latin: "Lasius fuliginosus", slug: "svart-tremaur", gruppe: "Maur",
+    kjennetegn: "4–6 mm, skinnende blank svart med bredt hode som har buet bakkant (hjerteformet). Lukter tydelig appelsin når den knuses mellom fingrene – et sikkert kjennetegn",
+    utbredelse: "Hele landet, i gamle hule trær og i hulrom i vegger",
+    sesong: "Aktiv vår til høst",
+    alvorlighet: "middels",
+    aliaser: ["sort tremaur"],
+    forveksles: [
+      "Svart jordmaur – matt, ikke blank, med mindre hode og uten appelsinlukt",
+      "Stokkmaur – mye større (6–18 mm) med rødbrun mellomkropp",
+    ],
+    notat: "Ikke bruk kjemikalier før du har snakket med en godkjent skadedyrbekjemper i Ocab.",
+    tiltak: [
+      "Bygger reir av en papplignende masse i hulrom – let i vegger, under gulv og i gamle trær nær huset",
+      "Maur inne henger ofte sammen med fukt eller vannskade – kontroller nøye rundt bad, vinduer, terskler, bunnsvill og tak der de kommer inn",
+      "Følg maurstien for å finne reiret",
     ],
   },
   {
@@ -492,11 +516,14 @@ export const PESTS: Pest[] = [
     alvorlighet: "lav",
     aliaser: ["jordmaur", "sort jordmaur"],
     forveksles: [
-      "Stokkmaur – mye større (6–18 mm) med rødbrun forkropp",
+      "Svart tremaur – skinnende blank (ikke matt) med bredt hjerteformet hode, og lukter appelsin når den knuses",
+      "Stokkmaur – mye større (6–18 mm) med rødbrun mellomkropp",
       "Faraomaur – bare 2 mm og blek gulbrun",
     ],
+    notat: "Ikke bruk kjemikalier før du har snakket med en godkjent skadedyrbekjemper i Ocab.",
     tiltak: [
       "Vask bort duftsporene med såpevann der de går inn",
+      "Maur inne henger ofte sammen med fukt eller vannskade – kontroller nøye rundt bad, vinduer, terskler, bunnsvill og tak der de kommer inn",
       "Tett sprekker i grunnmur og rundt vinduer",
       "Fjern matsøl og søtsaker – arten går mest på sukker",
     ],
@@ -511,6 +538,7 @@ export const PESTS: Pest[] = [
       "Svart jordmaur – dobbelt så stor og mørk",
       "Rødmaur – større og rustrød",
     ],
+    notat: "Ikke bruk kjemikalier før du har snakket med en godkjent skadedyrbekjemper i Ocab.",
     tiltak: [
       "Ikke sprøyt – bestanden splitter seg og sprer seg videre i bygget",
       "Bruk kun åtebehandling gjennom godkjent skadedyrbekjemper",
@@ -524,26 +552,31 @@ export const PESTS: Pest[] = [
     sesong: "Aktiv mai–september",
     alvorlighet: "lav",
     forveksles: [
-      "Skogmaur – større og tofarget med rød forkropp og svart bakkropp",
+      "Rød skogmaur – større og tofarget med rød forkropp og svart bakkropp",
       "Faraomaur – mye mindre og blekere",
     ],
+    notat: "Ikke bruk kjemikalier før du har snakket med en godkjent skadedyrbekjemper i Ocab.",
     tiltak: [
       "Stikker hvis den forstyrres – vær forsiktig ved luking",
+      "Maur inne henger ofte sammen med fukt eller vannskade – kontroller nøye rundt bad, vinduer, terskler, bunnsvill og tak der de kommer inn",
       "Vann og luft opp tuer i plenen, eller flytt bedet",
     ],
   },
   {
-    norsk: "Skogmaur", latin: "Formica rufa", slug: "maur", gruppe: "Maur",
-    kjennetegn: "5–9 mm, rød forkropp og svart bakkropp, bygger store tuer",
+    norsk: "Rød skogmaur", latin: "Formica rufa", slug: "maur", gruppe: "Maur",
+    kjennetegn: "5–9 mm, rød mellomkropp, svart bakkropp og tofarget hode (rødt og svart), humpete rygg sett fra siden. Aggressiv – angriper og sprayer maursyre når den forstyrres. Bygger store tuer av barnåler og kvister",
     utbredelse: "Hele landet i skog",
     sesong: "Aktiv april–oktober",
     alvorlighet: "lav",
+    aliaser: ["skogmaur", "rød skogsmaur", "skogsmaur"],
     forveksles: [
-      "Stokkmaur – større og mørkere, bygger ikke tue",
+      "Stokkmaur – helt svart hode og jevnt buet rygg, rolig og sky, og bygger ikke tue",
       "Rødmaur – mindre og ensfarget rustrød",
     ],
+    notat: "Ikke bruk kjemikalier før du har snakket med en godkjent skadedyrbekjemper i Ocab.",
     tiltak: [
       "Arten er nyttig i skogen og bør ikke bekjempes uten grunn",
+      "Maur inne henger ofte sammen med fukt eller vannskade – kontroller nøye rundt bad, vinduer, terskler, bunnsvill og tak der de kommer inn",
       "Hold tuer på avstand fra bygg og fjern klatreveier",
     ],
   },
@@ -1401,6 +1434,8 @@ export function findGroup(name?: unknown): PestGroup | null {
  */
 const FHI_PATHS: Record<string, string> = {
   skjeggkre: "https://www.fhi.no/sk/skadedyrhandboka/smadyr-andre/skjeggkre/",
+  stokkmaur: "https://www.fhi.no/sk/skadedyrhandboka/maur/stokkmaur/",
+  "svart-tremaur": "https://www.fhi.no/sk/skadedyrhandboka/maur/svart-tremaur/",
 };
 
 const FHI_FALLBACK = "https://www.fhi.no/sk/skadedyrhandboka/";

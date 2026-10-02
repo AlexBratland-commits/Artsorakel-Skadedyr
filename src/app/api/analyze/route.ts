@@ -20,6 +20,7 @@ import {
   LOCATIONS,
   DROPPING_SIZES,
   type AnalysisResult,
+  type AnnenArt,
   type Candidate,
   type Severity,
 } from "@/lib/types";
@@ -93,39 +94,70 @@ REGLER
 SVARFORMAT – kun gyldig JSON, ingen forklaring rundt:
 {"gruppe":"Gruppenavn fra listen"}`;
 
+// ── Felles prompt-deler for dyr og ekskrementer ─────────────────────────
+// Samme kontekst skal gi samme konklusjon, uansett om brukeren tar bilde av
+// dyret eller av ekskrementene. Ligger her, så de to promptene ikke glir fra
+// hverandre.
+
+/** Hva modellen skal legge vekt på, og når et forslag er godt nok. */
+const BEVISKRAV = `BEVIS FØR FORSLAG
+Et forslag skal bygge på bevis, ikke gjetting. Bevis er noe du faktisk ser på bildet, eller noe brukeren har skrevet eller valgt (sted, størrelse, lukt, lyd, atferd).
+- Har du minst ett konkret bevis som peker mot en art, gi den som hovedforslag – også med lav confidence (ned mot 30). Usikre forslag vises som "Mulig [art]" med en advarsel, og hjelper brukeren mer enn "Ukjent".
+- Har du ikke noe konkret bevis, svar "Ukjent". Et feil svar som ser sikkert ut er verre enn "Ukjent".
+- Skriv bevisene kort i "observasjon", så brukeren ser hva forslaget bygger på.
+- Er du i tvil mellom to arter, velg den som passer best med det brukeren har skrevet, og legg den andre i "alternativer".`;
+
+/** Hva brukerens fritekst og sted betyr. Gjelder bare arter som står i listen. */
+const KONTEKSTREGLER = `BRUKERENS TEKST VEIER TYNGRE ENN BILDET
+Lukt, lyd, sted og atferd kan ikke leses av bildet, så det brukeren skriver er ofte den mest avgjørende kilden. Bruk disse koblingene aktivt, men bare for arter som står i listen under:
+- ved vann, brygge, sjø eller bekk / fiskelukt / fiskebein / sterk, skarp lukt / tømt hønsehus → mink
+- loft eller hytte i skog / bær eller frø i ekskrementene / funnet på stein, bjelke eller høyt oppe → mår
+- liten haug ved et hull, reir eller steinrøys → røyskatt
+- kloakk, avløp, kjeller / langs vegger / samme sted igjen og igjen, i klynge → brunrotte
+- skraping, tasling eller løping i vegg eller tak om natten → gnager
+- smuldrer til pulver / glinser av insektskall / under takutstikk, loftsluke eller sprekk i vegg → flaggermus
+- synlige frørester / i hage, skog eller uthus / spredt utover → skogmus
+- finmalt sagflis ved lister, vinduer eller terskler + store svarte maur → stokkmaur
+- maur som lukter appelsin når de knuses → svart tremaur
+- seng eller sofa / bitt på rad / små blodflekker på laken → veggedyr
+- hull i ull, pels eller tepper / små hårete larver → pelsbille, tepperbille eller klesmøll
+- spinn eller klumper i mel og tørrvarer → matmøll eller melmøll
+- små kryp som biter + fuglereir under tak eller i ventil → fuglemidd
+- ved sluk på bad → avløpsflue; rundt potteplanter → soppmygg; rundt frukt → bananflue`;
+
+/** Når ingen art i listen passer, men modellen kjenner igjen dyret. */
+const ANNEN_ART = `ARTER SOM IKKE STÅR I LISTEN
+Står dyret ikke i listen, men du kjenner det sikkert igjen, svar "found":false og fyll ut "annenArt" med det norske og latinske navnet, hvorfor du mener det, og confidence. Bruk dette bare når ingen art i listen passer – aldri som erstatning for en art som står der.`;
+
+const SVARFORMAT = `SVARFORMAT – kun gyldig JSON, ingen forklaring rundt:
+{"found":true,"name":"Norsk navn fra listen","latinName":"Latinsk navn fra listen","description":"To setninger om det du ser","observasjon":"Bevisene forslaget bygger på","confidence":0-100,"alternativer":[{"name":"Norsk navn","latinName":"Latinsk navn","confidence":0-100,"hvorfor":"Hvorfor dette kan være riktig"}]}
+
+"alternativer" er de 1–3 artene fra listen som ligner mest etter hovedforslaget, sortert fallende på confidence. Er du sikker, kan listen være tom.
+Ukjent art: {"found":false,"name":"Ukjent","latinName":"Ukjent","description":"...","observasjon":"...","confidence":0}
+Art som ikke står i listen: {"found":false,"name":"Ukjent","latinName":"Ukjent","description":"...","observasjon":"...","confidence":0,"annenArt":{"name":"Norsk navn","latinName":"Latinsk navn","confidence":0-100,"hvorfor":"..."}}`;
+
 /**
  * Egen systemprompt for ekskrementer. Husmus og svartrotte er bevisst
  * utelatt fra artslisten (Ocab jobber nesten ikke med disse på
  * ekskrement-oppdrag), og modellen får et eksplisitt forbud i tillegg –
  * som en ekstra sikring utover at artene rett og slett ikke finnes i listen
- * den får velge fra.
+ * den får velge fra. enrich() forkaster også "annenArt" som finnes i
+ * databasen, så forbudet kan ikke omgås den veien.
  */
 function buildDroppingsSystemPrompt(speciesList: string, focus: string, beskrivelseText: string): string {
-  return `Du er artsbestemmer for Ocab, et norsk skadedyrfirma. Du får ett bilde av ekskrementer (avføring) og skal bestemme hvilket dyr de stammer fra.
+  return `Du er artsbestemmer for Ocab, et norsk skadedyrfirma. Du får ett bilde av ekskrementer (avføring) og skal bestemme hvilket dyr de stammer fra. De fleste dyrene ser man sjelden – det er ekskrementene som avslører dem.
 
-VIKTIGST AV ALT: IKKE SVAR "UKJENT" HVIS DU HAR EN TEORI
-Målet ditt er å gi brukeren et konkret forslag den kan sjekke selv, ikke å være 100 % sikker før du sier noe. Det er mye mer nyttig for brukeren å få "Mulig mink" med 35 % sikkerhet enn å få "Ukjent". En feil, men markert usikker, gjetning er bedre enn ingen gjetning:
-- Har du NOEN teori, uansett hvor svak, skal du sette "found":true og en confidence som matcher usikkerheten (også helt ned mot 30).
-- "found":false skal du KUN bruke når du bokstavelig talt ikke har noen teori i det hele tatt – bildet viser noe helt annet, er helt sort/uskarpt, eller ingenting i det brukeren har skrevet og det du ser peker mot noen art i listen.
-- Er du i tvil mellom to arter, velg den som passer best med det brukeren har skrevet, og bruk "alternativer" til den andre.
+${BEVISKRAV}
 
 REGLER
-1. Bruk kun norske navn fra listen under. Passer overhodet ingen av dem, svarer du "Ukjent".
-2. Du skal ALDRI foreslå "Husmus" eller "Svartrotte", selv om ekskrementene ligner – disse artene finnes bevisst ikke i listen. Ligner funnet mest på en av dem, svar "Ukjent" og forklar i beskrivelsen at det bør sjekkes av Ocab.
-3. "confidence" er hvor sikker du faktisk er, 0–100 – bruk hele skalaen ned mot 30 for en rimelig antagelse. Under 50 vises forslaget til brukeren som "Mulig [art]" med en tydelig advarsel, så du trenger ikke være redd for å gi et lavt tall i stedet for å hoppe over svaret.
-4. Rotter (brunrotte) lager faste toaletter. Ekskrementer fra rotte finnes derfor ofte i klynger på ett eller få utvalgte steder, ikke spredt tilfeldig rundt. Bruk dette til å skille rotte fra andre arter.
-5. Flaggermus-ekskrementer smuldrer lett til pulver ved berøring og glinser av uknuste insektskall i bruddflaten. Museekskrementer (skogsmus) er faste, smuldrer ikke, og inneholder ofte synlige frørester i stedet. Bruk dette aktivt til å skille flaggermus fra skogsmus.
+1. Bruk kun norske navn fra listen under. Passer ingen av dem, svarer du "Ukjent".
+2. Du skal ALDRI foreslå "Husmus" eller "Svartrotte", verken som hovedforslag, alternativ eller annen art – de er bevisst utelatt. Ligner funnet mest på en av dem, svar "Ukjent" og forklar i beskrivelsen at det bør sjekkes av Ocab.
+3. "confidence" er hvor sikker du faktisk er, 0–100. Under 50 vises forslaget som "Mulig [art]".
+4. Rotter (brunrotte) lager faste toaletter. Ekskrementer fra rotte finnes derfor ofte i klynger på ett eller få utvalgte steder, ikke spredt tilfeldig rundt.
+5. Flaggermus-ekskrementer smuldrer lett til pulver ved berøring og glinser av uknuste insektskall i bruddflaten. Museekskrementer (skogsmus) er faste, smuldrer ikke, og inneholder ofte synlige frørester i stedet.
 6. Beskrivelsen skal peke på hva du faktisk ser på bildet: form, størrelse, farge og eventuelt innhold. To setninger, på norsk bokmål, uten "jeg" eller "AI".
 
-BRUKERENS EGEN BESKRIVELSE VEIER TYNGRE ENN BILDET
-Brukeren har som regel skrevet inn hva de ser og LUKTER i fritekst. Lukt, lyd og kontekst kan ikke leses av bildet i det hele tatt, så denne teksten er ofte den mest avgjørende kilden du har – ikke bare et tillegg til bildet. Bruk følgende koblinger aktivt (både fra fritekst og det du selv ser på bildet):
-- smuldrer / smuler / pulver / faller fra hverandre → flaggermus (svekker skogsmus, som er fast)
-- sterk lukt / skarp lukt / ved vann / brygge / fisk / fiskebein / tømt hønsehus → mink
-- i tre / på stein / bær / frø, tydelig over bakkenivå → mår
-- liten haug ved et hull, reir eller stein → røyskatt
-- i skap, langs vegg, samme sted igjen og igjen, i klynge → brunrotte
-- synlige frørester, i hage eller skog, spredt utover → liten eller stor skogsmus
-"Bedre å gjette feil enn å si Ukjent" gjelder også her: bruk beskrivelsen til å lande på ett hovedforslag selv om den ikke er 100 % entydig.
+${KONTEKSTREGLER}
 ${beskrivelseText}
 
 HVA DU SKAL SE ETTER PÅ BILDET
@@ -134,27 +166,29 @@ ${focus}
 ARTER
 ${speciesList}
 
-SVARFORMAT – kun gyldig JSON, ingen forklaring rundt:
-{"found":true,"name":"Norsk navn fra listen","latinName":"Latinsk navn fra listen","description":"To setninger om det du ser","observasjon":"Kort hva du faktisk ser på bildet","confidence":0-100,"alternativer":[{"name":"Norsk navn","latinName":"Latinsk navn","confidence":0-100,"hvorfor":"Hvorfor dette kan være riktig"}]}
+${ANNEN_ART}
 
-"alternativer" er de 1–3 artene som ligner mest etter hovedforslaget, sortert fallende på confidence. Er du sikker, kan listen være tom.
-Ukjent art (kun når INGEN art i listen passer i det hele tatt): {"found":false,"name":"Ukjent","latinName":"Ukjent","description":"...","observasjon":"...","confidence":0}`;
+${SVARFORMAT}`;
 }
 
 function buildSystemPrompt(speciesList: string, focus: string, notesAnimal: string): string {
   return `Du er artsbestemmer for Ocab, et norsk skadedyrfirma. Du får ett bilde og skal identifisere dyret.
 
+${BEVISKRAV}
+
 REGLER
 1. Bruk kun norske navn fra listen under. Passer ingen av dem, svarer du "Ukjent".
-2. Har du en rimelig teori, gi den som hovedforslag og la "confidence" vise hvor usikker du er. Et usikkert forslag vises til brukeren som "Mulig [art]" med en advarsel, og er mer nyttig enn "Ukjent". Svar "Ukjent" bare når ingen art i listen passer, eller dyret ikke synes på bildet.
-3. Er du i tvil mellom to arter, velg den som passer best med størrelse, sted og notater, og legg den andre i "alternativer".
-4. "confidence" er hvor sikker du faktisk er, 0–100. Uskarpt bilde, dyret langt unna eller kjennetegn som ikke synes skal gi under 50.
-5. Er dyret for lite til å artsbestemmes på foto (midd, støvlus), si det i beskrivelsen og hold confidence lav.
-6. Er det en larve, si det i beskrivelsen og svar med arten larven tilhører.
-7. Beskrivelsen skal peke på hva du faktisk ser på bildet: farge, form, mønster, antall bein, vinger, antenner, haletråder. To setninger, på norsk bokmål, uten "jeg" eller "AI".
+2. "confidence" er hvor sikker du faktisk er, 0–100. Uskarpt bilde, dyret langt unna eller kjennetegn som ikke synes skal gi under 50. Under 50 vises forslaget som "Mulig [art]".
+3. Er dyret for lite til å artsbestemmes på foto (midd, støvlus), si det i beskrivelsen og hold confidence lav.
+4. Er det en larve, si det i beskrivelsen og svar med arten larven tilhører.
+5. Beskrivelsen skal peke på hva du faktisk ser på bildet: farge, form, mønster, antall bein, vinger, antenner, haletråder. To setninger, på norsk bokmål, uten "jeg" eller "AI".
 
 STØRRELSE
 Du kan ikke måle størrelse på et bilde uten noe kjent ved siden av. Har brukeren valgt en størrelse eller skrevet størrelse i notatene, er det en opplysning du skal stole på: utelukk arter som ikke passer, og ikke vurder størrelsen på nytt fra bildet. Er ingen størrelse oppgitt, bruk størrelse fra bildet bare hvis noe kjent synes (mynt, fyrstikk, finger, flis, skrue), og ellers form, farge og mønster.
+
+${KONTEKSTREGLER}
+
+Brukerens notater om skadedyret: ${notesAnimal ? `"${notesAnimal}"` : "Ingen notater"}
 
 HVA DU SKAL SE ETTER PÅ BILDET
 ${focus}
@@ -162,13 +196,9 @@ ${focus}
 ARTER
 ${speciesList}
 
-Brukerens notater om skadedyret: ${notesAnimal || "Ingen notater"}
+${ANNEN_ART}
 
-SVARFORMAT – kun gyldig JSON, ingen forklaring rundt:
-{"found":true,"name":"Norsk navn fra listen","latinName":"Latinsk navn fra listen","description":"To setninger om det du ser","observasjon":"Kort hva du faktisk ser på bildet","confidence":0-100,"alternativer":[{"name":"Norsk navn","latinName":"Latinsk navn","confidence":0-100,"hvorfor":"Hvorfor dette kan være riktig"}]}
-
-"alternativer" er de 1–3 artene som ligner mest etter hovedforslaget, sortert fallende på confidence. Er du sikker, kan listen være tom.
-Ukjent art: {"found":false,"name":"Ukjent","latinName":"Ukjent","description":"...","observasjon":"...","confidence":0}`;
+${SVARFORMAT}`;
 }
 
 export async function POST(request: NextRequest) {
@@ -297,7 +327,7 @@ export async function POST(request: NextRequest) {
 
       const beskrivelseText = beskrivelse
         ? `\nBrukerens egen beskrivelse (dette er den viktigste kilden du har – vei den tyngre enn bildet alene): "${beskrivelse}"\nBruk den aktivt til å skille mellom artene under, jamfør eksemplene over.`
-        : "\nBrukeren har ikke skrevet noen fritekstbeskrivelse denne gangen – bruk da bildet, stedet og størrelsen så godt du kan, og gi likevel et beste forslag med passende confidence i stedet for å svare Ukjent.";
+        : "\nBrukeren har ikke skrevet noen fritekstbeskrivelse denne gangen – bruk bildet, stedet og størrelsen så godt du kan.";
 
       speciesOutcome = await callModel(
         buildDroppingsSystemPrompt(speciesList, focus, beskrivelseText),
@@ -529,6 +559,29 @@ function parseAlternatives(raw: unknown, gruppe: PestGroup | null): Candidate[] 
 }
 
 /**
+ * En art modellen kjenner igjen, men som ikke står i databasen. Navn som
+ * finnes i databasen forkastes – da skulle modellen brukt listen, og det
+ * hindrer også at bevisst utelatte arter (husmus på ekskrementer) slipper
+ * inn den veien.
+ */
+function parseAnnenArt(raw: unknown): AnnenArt | undefined {
+  if (typeof raw !== "object" || raw === null) return undefined;
+  const rec = raw as Record<string, unknown>;
+  const name = typeof rec.name === "string" ? rec.name.trim().slice(0, 80) : "";
+  const latinName = typeof rec.latinName === "string" ? rec.latinName.trim().slice(0, 80) : "";
+  if (!name || /^ukjent$/i.test(name)) return undefined;
+  if (findPest(name) || findPest(latinName)) return undefined;
+
+  let confidence = Number(rec.confidence);
+  if (!Number.isFinite(confidence)) return undefined;
+  confidence = Math.min(100, Math.max(0, Math.round(confidence)));
+  if (confidence < MIN_CONFIDENCE) return undefined;
+
+  const hvorfor = typeof rec.hvorfor === "string" ? rec.hvorfor.trim().slice(0, 300) : "";
+  return { name, latinName, confidence, hvorfor };
+}
+
+/**
  * Modellen kan finne på navn som ikke står i listen. Vi stoler bare på
  * identifikasjonen hvis den lar seg slå opp – ellers blir svaret Ukjent.
  * Alvorlighet, tiltak, utbredelse og sesong tar vi fra vår egen database,
@@ -554,7 +607,22 @@ function enrich(raw: Record<string, unknown>, gruppe: PestGroup | null): Analysi
   confidence = Math.min(100, Math.max(0, Math.round(confidence)));
 
   if (!pest || raw.found === false || confidence < MIN_CONFIDENCE) {
-    return { ...UNKNOWN, description: description || UNKNOWN.description };
+    const annenArt = parseAnnenArt(raw.annenArt);
+    if (annenArt) {
+      return {
+        ...UNKNOWN,
+        description: description || UNKNOWN.description,
+        observasjon,
+        annenArt,
+        tiltak: [
+          "Arten finnes ikke i Ocabs database, så vi har ingen kvalitetssikrede råd for den",
+          "Kontakt Ocab hvis du er usikker, ser mange av dem eller de gjør skade",
+          "Ta gjerne et nytt bilde nærmere dyret for å bekrefte",
+        ],
+        alternativer: parseAlternatives(raw.alternativer, gruppe),
+      };
+    }
+    return { ...UNKNOWN, description: description || UNKNOWN.description, observasjon };
   }
 
   const severity: Severity = pest.alvorlighet;

@@ -20,6 +20,14 @@ export interface Candidate {
   hvorfor: string;
 }
 
+/** En art modellen kjenner igjen, men som ikke finnes i Ocabs database. */
+export interface AnnenArt {
+  name: string;
+  latinName: string;
+  confidence: number;
+  hvorfor: string;
+}
+
 /** Det klienten faktisk får – AI-svar + berikelse fra vår egen artsdatabase. */
 export interface AnalysisResult extends AiIdentification {
   confidence: number;
@@ -40,6 +48,8 @@ export interface AnalysisResult extends AiIdentification {
   notat?: string;
   /** Satt når treffet er en usikker enkeltkandidat (confidence 30–49) – vises som "Mulig [navn]". */
   usikkerKandidat?: boolean;
+  /** Satt når ingen art i databasen passet, men modellen kjente igjen dyret. */
+  annenArt?: AnnenArt;
   /** Satt hvis svaret kom fra serverens cache (samme bilde analysert før). */
   cached?: boolean;
 }

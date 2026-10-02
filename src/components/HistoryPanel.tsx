@@ -52,7 +52,9 @@ export default function HistoryPanel({
                 <span className="size-12 shrink-0 rounded-md bg-[color:var(--surface-sunken)]" />
               )}
               <span className="min-w-0">
-                <span className="block truncate font-medium">{e.resultat.name}</span>
+                <span className="block truncate font-medium">
+                  {e.resultat.annenArt ? `Mulig ${e.resultat.annenArt.name}` : e.resultat.name}
+                </span>
                 <span className="block truncate text-xs text-muted">
                   {formatTime(e.tid)}
                   {e.sted && ` · ${stedLabel(e.sted)}`}
