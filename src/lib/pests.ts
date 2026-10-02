@@ -32,6 +32,12 @@ export interface Pest {
   gruppe: PestGroup;
   /** Kort visuell kjennetegn-tekst – dette er det modellen matcher mot. */
   kjennetegn: string;
+  /**
+   * Lengre forklaring som bare AI-en ser: hvordan arten kjennes igjen på
+   * bildet alene, hva som veier tyngst, og hvor den overlapper med andre.
+   * Vises ikke for brukeren.
+   */
+  forklaring?: string;
   utbredelse: string;
   sesong: string;
   alvorlighet: Severity;
@@ -1222,6 +1228,7 @@ export const PESTS: Pest[] = [
   {
     norsk: "Brunrotte", latin: "Rattus norvegicus", slug: "rotte-ekskrementer", gruppe: "Ekskrementer",
     kjennetegn: "12–20 mm, tykke og pølseformede med butte ender, mørkebrun, ofte i klynger på faste toalettplasser",
+    forklaring: "Størrelsen er det viktigste: voksen brunrotte gir ekskrementer på 12–20 mm, omtrent som en stor rosin, og tydelig tykkere enn en fyrstikk. Formen er pølse- eller kapselformet; endene er oftest butte, men det er bare et hint – størrelse og tykkelse veier tyngre. Ferske er mørkebrune til svarte og blanke, eldre blir grå, matte og harde. Rotter legger mange på samme sted (faste toaletter), så du ser ofte en tett klynge og få spredte. Unge rotter kan gi ekskrementer ned mot 6–10 mm, men da er de fortsatt kraftigere og tykkere enn musens. Er det usikkert mellom mus og rotte, avgjør helheten: størrelse og tykkelse først, så mengde og om de ligger samlet.",
     utbredelse: "Hele landet, tettest i byer og langs kysten",
     sesong: "Hele året",
     alvorlighet: "høy",
@@ -1231,7 +1238,8 @@ export const PESTS: Pest[] = [
       "Mår – større (5–10 cm), avlange og finnes gjerne på steiner eller i trær, ikke i klynger på gulvet",
     ],
     bekreftelse: [
-      "Tykke og pølseformede med butte ender – musekskrementer er smale og spisse",
+      "12–20 mm og tykke – størrelsen er det sikreste skillet mot mus (3–8 mm)",
+      "Ofte butte ender, men det er bare et hint – størrelsen veier tyngst",
       "Mørkebrun, blir gråere når den tørker",
       "Finnes ofte i klynger på ett eller få faste steder, ikke spredt",
       "Ofte langs vegger, i skap, på loft eller i kjeller",
@@ -1247,6 +1255,7 @@ export const PESTS: Pest[] = [
   {
     norsk: "Mus", latin: "Mus musculus / Apodemus sp.", slug: "mus-ekskrementer", gruppe: "Ekskrementer",
     kjennetegn: "3–8 mm, smale og stavformede med spisse ender, mørke; mange og spredt langs vegger og ganger, ikke samlet på faste toaletter. Skogmus har ofte synlige frørester. Ofte sterk, stikkende muselukt",
+    forklaring: "Størrelsen er det viktigste: 3–8 mm, omtrent som et riskorn, og smale – tynnere enn en fyrstikk. Formen er stavformet, ofte med spisse ender, men endene er bare et hint. Mus legger mange og spredt mens de beveger seg – langs vegger, lister, i skuffer, skap og isolasjon – ikke i store klynger på ett sted. Ferske er mørke og litt blanke, eldre blir grå, tørre og harde; de kan bli sprø, men smuldrer ikke til glitrende pulver slik flaggermus gjør. Synlige frørester tyder på skogmus, men vi skiller ikke mellom husmus og skogmus. Det viktigste skillet er mot rotte (mye større og tykkere) og mot flaggermus (samme størrelse, men smuldrer og inneholder insektskall).",
     utbredelse: "Hele landet",
     sesong: "Hele året, flest inne fra sen høst til vår",
     alvorlighet: "middels",
@@ -1256,7 +1265,7 @@ export const PESTS: Pest[] = [
       "Flaggermus – samme størrelse, men smuldrer til glitrende pulver ved berøring og inneholder insektskall",
     ],
     bekreftelse: [
-      "3–8 mm lange, smale, spisse i begge ender",
+      "3–8 mm lange og smale – størrelsen er det sikreste skillet mot rotte",
       "Faste og harde – smuldrer ikke ved berøring",
       "Mange og spredt langs vegger, i skuffer, skap og isolasjon",
       "Ofte stikkende muselukt der de holder til",
@@ -1272,6 +1281,7 @@ export const PESTS: Pest[] = [
   {
     norsk: "Mink", latin: "Neogale vison", slug: "mink-ekskrementer", gruppe: "Ekskrementer",
     kjennetegn: "5–10 cm, avlang og ofte vridd, inneholder fiskebein, fiskeskjell, skall av krepsdyr eller pels; svært vond lukt; ligger ved vann – på steiner, brygger og i naust",
+    forklaring: "Avlange, 5–10 cm og ganske tynne, ofte vridde eller i flere biter, og mørke til nesten svarte – gjerne blanke og klissete når de er ferske. Innholdet er det sikreste tegnet på bildet: fiskebein, glinsende fiskeskjell, biter av krepsdyrskall, fjær eller pels. Ligger oftest godt synlig på steiner, stokker, brygger og i naust nær vann. Lukten er svært vond og fiskeaktig – nevner brukeren det, styrker det mink, men du kan bestemme mink ut fra innhold, form og sted på bildet alene. Skillet mot mår: mink har fisk og krepsdyr og er mørkere og tynnere; mår har bær, frø og insekter oftere og er sjelden ved vann.",
     utbredelse: "Hele landet, nesten alltid nær vann",
     sesong: "Hele året",
     alvorlighet: "middels",
@@ -1295,6 +1305,7 @@ export const PESTS: Pest[] = [
   {
     norsk: "Mår", latin: "Martes martes", slug: "mar-ekskrementer", gruppe: "Ekskrementer",
     kjennetegn: "5–10 cm, avlang og vridd i endene, inneholder ofte bær, frø, insektdeler eller pels; legges synlig som markering på stein, bjelke, mønekam eller loft. Loft alene er ikke nok – mus, rotte og flaggermus finnes også der",
+    forklaring: "Avlange, 5–10 cm, ofte vridde og gjerne med en lang, tynn hale i den ene enden; noe kraftigere enn minkens. Innholdet varierer med årstiden og er det beste tegnet på bildet: om sommeren og høsten ofte bær og frø (farger dem rødlige, lilla eller blåsvarte med synlige kjerner), ellers hår, fjær, beinbiter og insektdeler. Mår legger dem synlig som markering – på steiner, stubber, bjelker, takstein, mønekam og på loft. Lukten er mindre vond enn hos mink. Loft alene er ikke nok: mus, rotte og flaggermus finnes også der, men de gir små ekskrementer under 2 cm, mens mårens er 5–10 cm. Skillet mot mink: mår har bær og frø og finnes sjelden ved vann; mink har fisk og krepsdyr.",
     utbredelse: "Hele landet i skogsområder",
     sesong: "Hele året, mest bråk på loft om vinteren",
     alvorlighet: "middels",
@@ -1318,6 +1329,7 @@ export const PESTS: Pest[] = [
   {
     norsk: "Røyskatt", latin: "Mustela erminea", slug: "royskatt-ekskrementer", gruppe: "Ekskrementer",
     kjennetegn: "3–6 cm, avlang, inneholder ofte pels eller bein, finnes gjerne i haug ved reiret",
+    forklaring: "Mindre og tynnere enn hos mink og mår: 3–6 cm lange og bare noen få millimeter tykke, ofte vridde og mørke. Inneholder fine hår og små beinbiter fra mus og andre smågnagere. Ligger gjerne samlet i en liten haug ved reiret, i steinrøys, vedstabel eller under uthus. Størrelse og tynnhet er det viktigste skillet mot mink og mår; formen er lik, men røyskattens er tydelig mindre.",
     utbredelse: "Hele landet",
     sesong: "Hele året",
     alvorlighet: "lav",
@@ -1338,6 +1350,7 @@ export const PESTS: Pest[] = [
   {
     norsk: "Flaggermus", latin: "Chiroptera", slug: "flaggermus-ekskrementer", gruppe: "Ekskrementer",
     kjennetegn: "3–5 mm, ligner musavføring, men smuldrer lett ved berøring og glinser av uknuste insektskall",
+    forklaring: "Samme størrelse som museekskrementer (3–5 mm), så størrelse alene skiller dem ikke. Det sikre tegnet er innholdet og konsistensen: de består av knuste insektskall, glinser eller glitrer i lyset, og smuldrer til pulver ved berøring. Ofte ujevn, litt knudrete overflate. De ligger samlet i hauger rett under et fast oppholdssted, eller sitter klistret på vegg, vinduskarm og fasade under en inngang ved takutstikk eller loftsluke. Museekskrementer er faste og harde, ligger spredt langs vegger og kan ha frørester i stedet for insektskall.",
     utbredelse: "Hele landet",
     sesong: "Aktiv april–oktober, dvale om vinteren",
     alvorlighet: "lav",
@@ -1475,11 +1488,12 @@ Vurder også om den har vinger (sverming).`,
   "Lus, lopper og midd": "Vurder størrelse, kroppsform (flat, smal, rund), bein og om den hopper.",
   Edderkoppdyr: "Vurder størrelse, farge, antall og lengde på bein, kroppsform og øyne.",
   "Andre småkryp": "Vurder størrelse, farge, kroppsform, antall bein og bevegelsesmønster.",
-  Ekskrementer: `Gå gjennom denne nøkkelen i rekkefølge. Størrelse kommer først – sted alene avgjør aldri, fordi mus, rotte, mår og flaggermus alle kan finnes på loft.
-1. Størrelse: under 1 cm → mus eller flaggermus. 1–2 cm → rotte. Over 3 cm, avlang og ofte vridd med hår eller bein → rovdyr (røyskatt, mink eller mår).
-2. Under 1 cm: smuldrer til glitrende pulver med insektskall → flaggermus. Faste og harde, ofte med frørester → mus.
-3. Mus eller rotte: mus er 3–8 mm, smale med spisse ender, mange og spredt langs vegger. Rotte er 12–20 mm, tykke med butte ender, og ligger ofte samlet på faste toalettsteder.
-4. Rovdyr – bruk innhold, størrelse og sted sammen: tynn (3–6 cm) med fine hår og små bein, i haug ved reir eller steinrøys → røyskatt. Fiskebein, fiskeskjell eller skall av krepsdyr, svært vond lukt, ved vann → mink. Bær, frø, insektdeler og hår, lagt synlig som markering på stein, bjelke, mønekam eller annet høyt sted → mår.
+  Ekskrementer: `Gjør en helhetsvurdering – ingen enkeltkjennetegn er 100 % sikkert. Vekt kjennetegnene i denne rekkefølgen:
+1. Størrelse og tykkelse (viktigst). Bruk oppgitt størrelse hvis brukeren har valgt en, ellers noe kjent på bildet (mynt, fyrstikk, finger, fliser). Under 1 cm → mus eller flaggermus. 1–2 cm og tykke → rotte. 3–10 cm, avlange → røyskatt, mink eller mår.
+2. Innhold og konsistens: insektskall som glitrer og smuldrer → flaggermus. Fiskebein, fiskeskjell, krepsdyrskall → mink. Bær og frø med synlige kjerner → mår. Fine hår og små bein i tynne ekskrementer → røyskatt. Frørester i små, harde ekskrementer → mus.
+3. Mengde og fordeling: mange samlet på ett sted → rotte (faste toaletter). Mange spredt langs vegger og i skuffer → mus. Hauger under en inngang eller klistret på vegg → flaggermus. Synlig plassert på stein, bjelke eller tak → mår eller mink.
+4. Form og ender: butte ender peker mot rotte, spisse mot mus – men dette er bare et hint og skal aldri overstyre størrelse.
+5. Sted, lukt og brukerens tekst: styrker vurderingen, men kreves ikke. Kan du se tydelige kjennetegn på bildet, skal du bestemme arten selv om brukeren ikke har skrevet noe.
 Beskriv form, størrelse, farge, innhold og om de ligger spredt eller samlet.`,
 };
 
@@ -1496,7 +1510,8 @@ export function groupPromptList(gruppe: string): string {
       const forveksling = p.forveksles?.length
         ? `\n    Forveksles med: ${p.forveksles.join("; ")}`
         : "";
-      return `- ${p.norsk} (${p.latin}) – ${p.kjennetegn}${forveksling}`;
+      const forklaring = p.forklaring ? `\n    Slik kjenner du den igjen: ${p.forklaring}` : "";
+      return `- ${p.norsk} (${p.latin}) – ${p.kjennetegn}${forklaring}${forveksling}`;
     })
     .join("\n");
 }
