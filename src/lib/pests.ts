@@ -62,7 +62,7 @@ export const PESTS: Pest[] = [
   {
     norsk: "Brunrotte", latin: "Rattus norvegicus", slug: "rotte", gruppe: "Gnagere",
     kjennetegn: "Kraftig kropp 20–27 cm, butt snute, små ører, hale kortere enn kroppen",
-    forklaring: "Kraftig kropp med butt snute og små, tykke ører. Halen er tykk og kortere enn kroppen. Unge rotter kan være på størrelse med en stor mus, men har uforholdsmessig stort hode og store bakføtter, og den tykke halen – det skiller dem fra mus.",
+    forklaring: "Kraftig kropp med butt snute og små, tykke ører. Halen er tykk og kortere enn kroppen. Unge rotter forveksles ofte med mus: de kan være på størrelse med en stor mus og ha gråbrun, myk pels, men halen er kraftig og tykk ved roten, og bakbeina og bakføttene er store og kraftige. Det er de sikreste tegnene – halen kan se lang ut på en ung rotte, så tykkelsen betyr mer enn lengden. Hodet er også stort i forhold til kroppen.",
     utbredelse: "Hele landet, tettest i byer og langs kysten",
     sesong: "Hele året, søker innendørs på høsten",
     alvorlighet: "høy",
@@ -1474,7 +1474,10 @@ export const GROUP_PROMPT_LIST = GROUPS.filter((g) => g !== "Ekskrementer").map(
  */
 export const GROUP_FOCUS: Record<PestGroup, string> = {
   Gnagere: `Gjør en helhetsvurdering av kroppsproporsjonene – størrelse alene kan ikke måles sikkert på bilde.
-1. Mus eller ung rotte (den vanligste forvekslingen): en ung brunrotte har stort hode og store bakføtter i forhold til kroppen, butt snute, små ører i forhold til hodet, og en tykk hale som er kortere enn kroppen. En husmus har lite hode, spiss snute, store ører i forhold til hodet, små og spinkle føtter, og en tynn hale omtrent like lang som kroppen.
+1. Mus eller ung rotte (den vanligste forvekslingen). Halens tykkelse og bakbeina veier tyngst – mer enn halens lengde og pelsfargen:
+   - Ung brunrotte: kraftig hale som er tydelig tykk ved roten, store og kraftige bakbein og bakføtter, stort hode i forhold til kroppen, butt snute og små ører i forhold til hodet. Pelsen kan være gråbrun og myk som hos mus.
+   - Husmus: tynn hale som er like tynn hele veien, små og spinkle bakføtter, lite hode, spiss snute og store ører i forhold til hodet.
+   - Er du i tvil, er det verre å kalle en rotte for mus enn omvendt. Ser halen kraftig ut eller bakbeina store, velg ung brunrotte. Ellers legg alltid den andre i "alternativer".
 2. Mus eller markmus og klatremus: markmus og klatremus har butt snute, små ører som nesten skjules i pelsen, og kort hale. Husmus og skogmus har spiss snute, tydelige ører og lang hale.
 3. Husmus eller skogmus: skogmus har store, utstående øyne og ører, gulbrun rygg og skarpt avgrenset hvit buk. Husmus er jevnere gråbrun med gråere buk.
 4. Bruk oppgitt størrelse og brukerens tekst sammen med bildet. Er det usikkert mellom mus og ung rotte, velg det proporsjonene peker mot og legg det andre i "alternativer".
