@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 
-import { findPest } from "@/lib/pests";
+import { findPest, findPestInGroup } from "@/lib/pests";
 import { checkRateLimit } from "@/lib/server-store";
 
 export const runtime = "nodejs";
@@ -61,29 +61,31 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  let body: { art?: string; messages?: ChatMessage[] };
+  let body: { art?: string; gruppe?: string; annenArt?: string; messages?: ChatMessage[] };
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: "Ugyldig forespørsel." }, { status: 400 });
   }
   // Klienten styrer innholdet – sjekk formen før vi kaller metoder på det.
+  const erTekst = (v: unknown) => v === undefined || typeof v === "string";
   if (
     typeof body !== "object" ||
     body === null ||
-    (body.art !== undefined && typeof body.art !== "string")
+    !erTekst(body.art) ||
+    !erTekst(body.gruppe) ||
+    !erTekst(body.annenArt)
   ) {
     return NextResponse.json({ error: "Ugyldig forespørsel." }, { status: 400 });
   }
 
-  // Chatten finnes bare i sammenheng med et funn. Uten art, ingen samtale.
-  const pest = findPest(body.art);
-  if (!pest) {
-    return NextResponse.json(
-      { error: "Chatten er knyttet til et artsfunn. Analyser et bilde først." },
-      { status: 400 }
-    );
-  }
+  // Samme navn kan finnes i flere grupper (Brunrotte som dyr og som
+  // ekskrementer), så gruppen avgjør hvilken oppføring vi bruker.
+  const pest =
+    (body.gruppe ? findPestInGroup(body.art, body.gruppe) : undefined) ?? findPest(body.art);
+  // Art AI-en kjente igjen, men som ikke er i databasen. Kort og uten
+  // linjeskift, siden den havner i systemprompten.
+  const annenArt = body.annenArt?.replace(/\s+/g, " ").trim().slice(0, 80) || "";
 
   if (body.messages !== undefined && !Array.isArray(body.messages)) {
     return NextResponse.json({ error: "Ugyldig forespørsel." }, { status: 400 });
@@ -101,7 +103,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Mangler spørsmål." }, { status: 400 });
   }
 
-  const system = `Du svarer på spørsmål for Ocab om ett bestemt funn: ${pest.norsk} (${pest.latin}).
+  const funn = pest
+    ? `Funnet er ${pest.norsk} (${pest.latin})${pest.gruppe === "Ekskrementer" ? ", bestemt ut fra ekskrementer" : ""}.
 
 DETTE VET VI OM ARTEN
 Kjennetegn: ${pest.kjennetegn}
@@ -110,15 +113,28 @@ Aktiv: ${pest.sesong}
 Alvorlighet: ${pest.alvorlighet}
 Anbefalte tiltak: ${pest.tiltak.join(" | ")}
 ${pest.forveksles?.length ? `Forveksles med: ${pest.forveksles.join(" | ")}` : ""}
+${pest.notat ? `Viktig: ${pest.notat}` : ""}`
+    : annenArt
+      ? `Bildeanalysen foreslo "${annenArt}", en art som ikke finnes i Ocabs database. Du har ingen kvalitetssikret informasjon om den, så svar generelt og med forbehold, og anbefal å kontakte Ocab for en sikker vurdering.`
+      : `Bildeanalysen klarte ikke å bestemme arten. Hjelp brukeren med generelle råd, med hva de kan se etter for å finne ut hva det er, og med å ta et bedre bilde (nærmere, skarpt, noe kjent ved siden av for størrelse).`;
+
+  const system = `Du er Ocabs skadedyrassistent og svarer på spørsmål etter en bildeanalyse.
+
+FUNNET
+${funn}
+
+DETTE KAN DU SVARE PÅ
+- Funnet: arten, hvor farlig den er, hva brukeren gjør nå, og når det er verdt å tilkalle fagfolk.
+- Generelle spørsmål om skadedyr i og rundt hus og hytte: forebygging, tetting, fukt, hygiene, hvordan man ser om det er flere, arter som ligner, og hva tegn som ekskrementer, gnagespor og sagflis betyr.
+- Spørsmål om noe helt annet enn skadedyr avviser du vennlig, og foreslår at de kontakter Ocab.
 
 RAMMER FOR SVARENE
-- Svar bare på spørsmål om dette funnet: arten, hvor farlig den er, hva brukeren gjør nå, når det er verdt å tilkalle fagfolk. Får du spørsmål om noe annet, si vennlig at du bare kan hjelpe med dette funnet, og foreslå at de kontakter Ocab.
-- Anbefal aldri konkrete kjemiske midler, doser eller egenbehandling med pesticider. Yrkesmessig bruk av slike midler krever godkjenning i Norge. Vis til godkjent skadedyrbekjemper.
+- Anbefal aldri gift, kjemiske midler, doser eller egenbehandling med pesticider. Si at man ikke skal bruke gift eller andre kjemikalier før man har snakket med en godkjent skadedyrbekjemper i Ocab. Yrkesmessig bruk av slike midler krever godkjenning i Norge.
 - Helsespørsmål (bitt, allergi, smitte) besvares kort og generelt, med henvisning til lege eller legevakt.
 - Spørsmål om ansvar, husleie, forsikring og fredede arter: forklar hovedregelen kort, og vis til huseier, forsikringsselskapet eller kommunen. Du gir ikke juridiske råd.
 - Er du usikker, si det. Ikke gjett på tall, priser eller frister.
 - Prisoverslag på oppdrag skal du aldri gi – be dem kontakte Ocab for befaring.
-- Svar på norsk bokmål, i vanlig samtaletone. Maks 120 ord. Ingen emoji, ingen overskrifter.`;
+- Svar på norsk bokmål, i vanlig samtaletone. Maks 150 ord. Ingen emoji, ingen overskrifter.`;
 
   try {
     const controller = new AbortController();
@@ -137,7 +153,7 @@ RAMMER FOR SVARENE
         model: MODEL,
         messages: [{ role: "system", content: system }, ...messages],
         temperature: 0.3,
-        max_tokens: 800,
+        max_tokens: 1000,
       }),
     }).finally(() => clearTimeout(timeout));
 
@@ -159,7 +175,7 @@ RAMMER FOR SVARENE
     // "stop" med kort tekst = modellen svarte kort med vilje.
     // Full tekst her, men kort i nettleseren = feil i utlistingen.
     console.log(
-      `💬 Chat om ${pest.norsk}: ${svar.length} tegn, finish_reason=${finishReason}`
+      `💬 Chat om ${pest?.norsk ?? (annenArt || "ukjent funn")}: ${svar.length} tegn, finish_reason=${finishReason}`
     );
 
     if (!svar) {

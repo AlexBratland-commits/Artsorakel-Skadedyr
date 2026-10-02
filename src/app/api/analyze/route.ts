@@ -14,6 +14,7 @@ import {
   findPest,
   findPestInGroup,
   fhiUrl,
+  type Pest,
   type PestGroup,
 } from "@/lib/pests";
 import {
@@ -109,18 +110,21 @@ Et forslag skal bygge på bevis, ikke gjetting. Bevis er noe du faktisk ser på 
 
 /** Hva brukerens fritekst og sted betyr. Gjelder bare arter som står i listen. */
 const KONTEKSTREGLER = `BRUKERENS TEKST VEIER TYNGRE ENN BILDET
-Lukt, lyd, sted og atferd kan ikke leses av bildet, så det brukeren skriver er ofte den mest avgjørende kilden. Bruk disse koblingene aktivt, men bare for arter som står i listen under:
-- ved vann, brygge, sjø eller bekk / fiskelukt / fiskebein / sterk, skarp lukt / tømt hønsehus → mink
-- loft eller hytte i skog / bær eller frø i ekskrementene / funnet på stein, bjelke eller høyt oppe → mår
-- liten haug ved et hull, reir eller steinrøys → røyskatt
-- kloakk, avløp, kjeller / langs vegger / samme sted igjen og igjen, i klynge → brunrotte
-- skraping, tasling eller løping i vegg eller tak om natten → gnager
-- smuldrer til pulver / glinser av insektskall / under takutstikk, loftsluke eller sprekk i vegg → flaggermus
-- synlige frørester / i hage, skog eller uthus / spredt utover → skogmus
-- finmalt sagflis ved lister, vinduer eller terskler + store svarte maur → stokkmaur
-- maur som lukter appelsin når de knuses → svart tremaur
-- seng eller sofa / bitt på rad / små blodflekker på laken → veggedyr
-- hull i ull, pels eller tepper / små hårete larver → pelsbille, tepperbille eller klesmøll
+Lukt, lyd, sted og atferd kan ikke leses av bildet, så det brukeren skriver er ofte den mest avgjørende kilden. Men ett stikkord alene avgjør aldri: kombiner det med størrelse, form og innhold. Mange arter kan være på samme sted – på et loft kan det for eksempel være mus, rotte, mår og flaggermus.
+Bruk disse koblingene, og bare for arter som står i listen under:
+- ved vann (brygge, naust, sjø, bekk) + fiskelukt, fiskebein eller skjell + store ekskrementer → mink
+- store, vridde ekskrementer med bær, frø eller hår, lagt synlig på stein, bjelke eller mønekam + bråk på loft om natten → mår
+- tynne ekskrementer med hår og bein, i haug ved et hull, reir eller steinrøys → røyskatt
+- 12–20 mm, butte ender, samlet på faste steder + kjeller, avløp eller kloakk → brunrotte
+- 3–8 mm, spisse ender, mange og spredt + skuffer, skap, isolasjon eller stikkende lukt → mus
+- skraping, tasling eller løping i vegg eller tak om natten → gnager (størrelsen avgjør mus eller rotte)
+- små ekskrementer som smuldrer til glitrende pulver + under takutstikk, loftsluke eller sprekk i vegg → flaggermus
+- sagflis av trefibre ved lister, vinduer eller terskler + store maur (over 6 mm) → stokkmaur
+- fine, melaktige hauger + små brunsvarte maur → svart jordmaur
+- maur som lukter sitrus eller appelsin når de knuses → svart tremaur
+- hissige maur som sprayer maursyre + tue av barnåler → rød skogsmaur
+- seng eller sofa + bitt på rad eller små blodflekker på laken → veggedyr
+- hull i ull, pels eller tepper + små hårete larver → pelsbille, tepperbille eller klesmøll
 - spinn eller klumper i mel og tørrvarer → matmøll eller melmøll
 - små kryp som biter + fuglereir under tak eller i ventil → fuglemidd
 - ved sluk på bad → avløpsflue; rundt potteplanter → soppmygg; rundt frukt → bananflue`;
@@ -137,12 +141,12 @@ Ukjent art: {"found":false,"name":"Ukjent","latinName":"Ukjent","description":".
 Art som ikke står i listen: {"found":false,"name":"Ukjent","latinName":"Ukjent","description":"...","observasjon":"...","confidence":0,"annenArt":{"name":"Norsk navn","latinName":"Latinsk navn","confidence":0-100,"hvorfor":"..."}}`;
 
 /**
- * Egen systemprompt for ekskrementer. Husmus og svartrotte er bevisst
- * utelatt fra artslisten (Ocab jobber nesten ikke med disse på
- * ekskrement-oppdrag), og modellen får et eksplisitt forbud i tillegg –
- * som en ekstra sikring utover at artene rett og slett ikke finnes i listen
- * den får velge fra. enrich() forkaster også "annenArt" som finnes i
- * databasen, så forbudet kan ikke omgås den veien.
+ * Egen systemprompt for ekskrementer. Mus artsbestemmes ikke: husmus og
+ * skogmus er samlet som "Mus", fordi Ocab bare trenger å skille mus fra
+ * rotte. Svartrotte er utelatt (sjelden i Norge) – rotteekskrementer er
+ * brunrotte. Svar som "Husmus" eller "Skogmus" blir til "Mus" via
+ * aliasene, og lookupPest() og parseAnnenArt() hindrer at svartrotte
+ * slipper inn fra dyre-listen.
  */
 function buildDroppingsSystemPrompt(speciesList: string, focus: string, beskrivelseText: string): string {
   return `Du er artsbestemmer for Ocab, et norsk skadedyrfirma. Du får ett bilde av ekskrementer (avføring) og skal bestemme hvilket dyr de stammer fra. De fleste dyrene ser man sjelden – det er ekskrementene som avslører dem.
@@ -151,10 +155,10 @@ ${BEVISKRAV}
 
 REGLER
 1. Bruk kun norske navn fra listen under. Passer ingen av dem, svarer du "Ukjent".
-2. Du skal ALDRI foreslå "Husmus" eller "Svartrotte", verken som hovedforslag, alternativ eller annen art – de er bevisst utelatt. Ligner funnet mest på en av dem, svar "Ukjent" og forklar i beskrivelsen at det bør sjekkes av Ocab.
+2. Mus skal ikke artsbestemmes: husmus, skogmus og andre mus heter bare "Mus". Det viktigste er å skille mus fra rotte. Rotteekskrementer er "Brunrotte" – foreslå aldri svartrotte.
 3. "confidence" er hvor sikker du faktisk er, 0–100. Under 50 vises forslaget som "Mulig [art]".
 4. Rotter (brunrotte) lager faste toaletter. Ekskrementer fra rotte finnes derfor ofte i klynger på ett eller få utvalgte steder, ikke spredt tilfeldig rundt.
-5. Flaggermus-ekskrementer smuldrer lett til pulver ved berøring og glinser av uknuste insektskall i bruddflaten. Museekskrementer (skogsmus) er faste, smuldrer ikke, og inneholder ofte synlige frørester i stedet.
+5. Flaggermus-ekskrementer smuldrer lett til pulver ved berøring og glinser av uknuste insektskall i bruddflaten. Museekskrementer er faste, smuldrer ikke, og inneholder ofte synlige frørester i stedet.
 6. Beskrivelsen skal peke på hva du faktisk ser på bildet: form, størrelse, farge og eventuelt innhold. To setninger, på norsk bokmål, uten "jeg" eller "AI".
 
 ${KONTEKSTREGLER}
@@ -531,6 +535,20 @@ function modelError(reason: string): NextResponse {
   }
 }
 
+/**
+ * Slår opp modellens svar i databasen, først i gruppen steg 2 jobbet mot.
+ * For dyr faller vi tilbake til hele listen i tilfelle steg 1 valgte feil
+ * gruppe. For ekskrementer gjør vi ikke det – da kunne et dyr som er bevisst
+ * utelatt der (svartrotte) slippe inn via dyre-oppføringen.
+ */
+function lookupPest(name: string, latinName: string, gruppe: PestGroup | null): Pest | undefined {
+  const iGruppe = gruppe
+    ? findPestInGroup(name, gruppe) ?? findPestInGroup(latinName, gruppe)
+    : undefined;
+  if (iGruppe || gruppe === "Ekskrementer") return iGruppe;
+  return findPest(name) ?? findPest(latinName);
+}
+
 /** Mapper modellens alternativ-liste til kjente arter, sortert fallende. */
 function parseAlternatives(raw: unknown, gruppe: PestGroup | null): Candidate[] {
   if (!Array.isArray(raw)) return [];
@@ -541,9 +559,7 @@ function parseAlternatives(raw: unknown, gruppe: PestGroup | null): Candidate[] 
     const rec = item as Record<string, unknown>;
     const name = typeof rec.name === "string" ? rec.name : "";
     const latinName = typeof rec.latinName === "string" ? rec.latinName : "";
-    const pest = (gruppe && (findPestInGroup(name, gruppe) ?? findPestInGroup(latinName, gruppe)))
-      ?? findPest(name)
-      ?? findPest(latinName);
+    const pest = lookupPest(name, latinName, gruppe);
     if (!pest) continue;
 
     let confidence = Number(rec.confidence);
@@ -561,7 +577,7 @@ function parseAlternatives(raw: unknown, gruppe: PestGroup | null): Candidate[] 
 /**
  * En art modellen kjenner igjen, men som ikke står i databasen. Navn som
  * finnes i databasen forkastes – da skulle modellen brukt listen, og det
- * hindrer også at bevisst utelatte arter (husmus på ekskrementer) slipper
+ * hindrer også at bevisst utelatte arter (svartrotte på ekskrementer) slipper
  * inn den veien.
  */
 function parseAnnenArt(raw: unknown): AnnenArt | undefined {
@@ -590,9 +606,7 @@ function parseAnnenArt(raw: unknown): AnnenArt | undefined {
 function enrich(raw: Record<string, unknown>, gruppe: PestGroup | null): AnalysisResult {
   const name = typeof raw.name === "string" ? raw.name : "";
   const latinName = String(raw.latinName ?? "");
-  const pest = (gruppe && (findPestInGroup(name, gruppe) ?? findPestInGroup(latinName, gruppe)))
-    ?? findPest(name)
-    ?? findPest(latinName);
+  const pest = lookupPest(name, latinName, gruppe);
   const description =
     typeof raw.description === "string" && raw.description.trim().length > 0
       ? raw.description.trim()

@@ -454,21 +454,22 @@ export const PESTS: Pest[] = [
   // ── Maur ─────────────────────────────────────────────────────────────
   {
     norsk: "Stokkmaur", latin: "Camponotus herculeanus", slug: "stokkmaur", gruppe: "Maur",
-    kjennetegn: "6–18 mm, helt svart hode, rødbrun mellomkropp og svart bakkropp, jevnt buet rygg sett fra siden. Norges største maur. Rolig og sky – trekker seg unna når den forstyrres. Finmalt sagflis ved lister og vinduer er et typisk tegn",
+    kjennetegn: "6–18 mm, helt svart hode, rødbrun mellomkropp og svart bakkropp, jevnt buet rygg sett fra siden. Norges største maur. Rolig og sky – trekker seg unna når den forstyrres. Legger igjen sagflis av trefibre ved lister, vinduer og terskler",
     utbredelse: "Hele landet, vanlig i skogsnære boliger",
     sesong: "Aktiv mars–oktober, sverming i mai–juni",
     alvorlighet: "høy",
     aliaser: ["stokkemaur", "tremaur"],
     forveksles: [
-      "Rød skogmaur – tofarget hode og humpete rygg, aggressiv og sprayer maursyre, bygger tue av barnåler",
+      "Rød skogsmaur – tofarget hode og humpete rygg, aggressiv og sprayer maursyre, bygger tue av barnåler",
       "Brun tremaur – fremste del av bakkroppen er rødbrun, stokkmaur har helt svart bakkropp",
-      "Svart tremaur – bare 4–6 mm, skinnende svart og lukter appelsin når den knuses",
+      "Svart tremaur – bare 4–6 mm, skinnende svart og lukter sitrus/appelsin når den knuses",
+      "Svart jordmaur – liten (3–5 mm), og haugene den legger igjen er fine og melaktige, ikke sagflis av trefibre",
       "Svart jordmaur – bare 3–5 mm og gjør ikke bygningsskade",
     ],
-    notat: "Ikke bruk kjemikalier før du har snakket med en godkjent skadedyrbekjemper i Ocab.",
+    notat: "Ikke bruk gift eller andre kjemikalier før du har snakket med en godkjent skadedyrbekjemper i Ocab.",
     tiltak: [
       "Gnager ganger i fuktig konstruksjonsvirke og kan gi bygningsskade",
-      "Maur inne henger ofte sammen med fukt eller vannskade – kontroller nøye rundt bad, vinduer, terskler, bunnsvill og tak der de kommer inn",
+      "Maur inne skyldes som oftest fukt eller vannskade – kontroller nøye rundt bad, vinduer, terskler, bunnsvill og tak der de kommer inn",
       "Se etter finmalt sagflis ved lister, terskler og vinduer",
       "Følg maurstien for å finne reiret – ofte i vegg eller i en stubbe utenfor",
       "Bør utbedres av skadedyrbekjemper, ofte dekket av boligforsikring",
@@ -483,47 +484,47 @@ export const PESTS: Pest[] = [
     forveksles: [
       "Stokkmaur – bakkroppen er helt svart",
     ],
-    notat: "Ikke bruk kjemikalier før du har snakket med en godkjent skadedyrbekjemper i Ocab.",
+    notat: "Ikke bruk gift eller andre kjemikalier før du har snakket med en godkjent skadedyrbekjemper i Ocab.",
     tiltak: [
       "Samme håndtering som stokkmaur – finn reiret, ikke bare stien",
-      "Maur inne henger ofte sammen med fukt eller vannskade – kontroller nøye rundt bad, vinduer, terskler, bunnsvill og tak der de kommer inn",
+      "Maur inne skyldes som oftest fukt eller vannskade – kontroller nøye rundt bad, vinduer, terskler, bunnsvill og tak der de kommer inn",
       "Kontroller fuktskadet virke i bunnsvill og terrasse",
     ],
   },
   {
     norsk: "Svart tremaur", latin: "Lasius fuliginosus", slug: "svart-tremaur", gruppe: "Maur",
-    kjennetegn: "4–6 mm, skinnende blank svart med bredt hode som har buet bakkant (hjerteformet). Lukter tydelig appelsin når den knuses mellom fingrene – et sikkert kjennetegn",
+    kjennetegn: "4–6 mm, skinnende blank svart med bredt hode som har buet bakkant (hjerteformet). Lukter tydelig sitrus/appelsin når den knuses mellom fingrene – et sikkert kjennetegn",
     utbredelse: "Hele landet, i gamle hule trær og i hulrom i vegger",
     sesong: "Aktiv vår til høst",
     alvorlighet: "middels",
     aliaser: ["sort tremaur"],
     forveksles: [
-      "Svart jordmaur – matt, ikke blank, med mindre hode og uten appelsinlukt",
+      "Svart jordmaur – matt, ikke blank, med mindre hode og uten sitrus-/appelsinlukt",
       "Stokkmaur – mye større (6–18 mm) med rødbrun mellomkropp",
     ],
-    notat: "Ikke bruk kjemikalier før du har snakket med en godkjent skadedyrbekjemper i Ocab.",
+    notat: "Ikke bruk gift eller andre kjemikalier før du har snakket med en godkjent skadedyrbekjemper i Ocab.",
     tiltak: [
       "Bygger reir av en papplignende masse i hulrom – let i vegger, under gulv og i gamle trær nær huset",
-      "Maur inne henger ofte sammen med fukt eller vannskade – kontroller nøye rundt bad, vinduer, terskler, bunnsvill og tak der de kommer inn",
+      "Maur inne skyldes som oftest fukt eller vannskade – kontroller nøye rundt bad, vinduer, terskler, bunnsvill og tak der de kommer inn",
       "Følg maurstien for å finne reiret",
     ],
   },
   {
     norsk: "Svart jordmaur", latin: "Lasius niger", slug: "maur", gruppe: "Maur",
-    kjennetegn: "3–5 mm, mørk brunsvart, matt",
+    kjennetegn: "3–5 mm, mørk brunsvart og matt. Kan også legge igjen små hauger ved lister og sprekker, men det er finere og mer melaktig enn stokkmaurens sagflis av trefibre",
     utbredelse: "Hele landet, svært vanlig i hager",
     sesong: "Aktiv april–september, sverming i juli–august",
     alvorlighet: "lav",
     aliaser: ["jordmaur", "sort jordmaur"],
     forveksles: [
-      "Svart tremaur – skinnende blank (ikke matt) med bredt hjerteformet hode, og lukter appelsin når den knuses",
+      "Svart tremaur – skinnende blank (ikke matt) med bredt hjerteformet hode, og lukter sitrus/appelsin når den knuses",
       "Stokkmaur – mye større (6–18 mm) med rødbrun mellomkropp",
       "Faraomaur – bare 2 mm og blek gulbrun",
     ],
-    notat: "Ikke bruk kjemikalier før du har snakket med en godkjent skadedyrbekjemper i Ocab.",
+    notat: "Ikke bruk gift eller andre kjemikalier før du har snakket med en godkjent skadedyrbekjemper i Ocab.",
     tiltak: [
       "Vask bort duftsporene med såpevann der de går inn",
-      "Maur inne henger ofte sammen med fukt eller vannskade – kontroller nøye rundt bad, vinduer, terskler, bunnsvill og tak der de kommer inn",
+      "Maur inne skyldes som oftest fukt eller vannskade – kontroller nøye rundt bad, vinduer, terskler, bunnsvill og tak der de kommer inn",
       "Tett sprekker i grunnmur og rundt vinduer",
       "Fjern matsøl og søtsaker – arten går mest på sukker",
     ],
@@ -538,7 +539,7 @@ export const PESTS: Pest[] = [
       "Svart jordmaur – dobbelt så stor og mørk",
       "Rødmaur – større og rustrød",
     ],
-    notat: "Ikke bruk kjemikalier før du har snakket med en godkjent skadedyrbekjemper i Ocab.",
+    notat: "Ikke bruk gift eller andre kjemikalier før du har snakket med en godkjent skadedyrbekjemper i Ocab.",
     tiltak: [
       "Ikke sprøyt – bestanden splitter seg og sprer seg videre i bygget",
       "Bruk kun åtebehandling gjennom godkjent skadedyrbekjemper",
@@ -552,31 +553,31 @@ export const PESTS: Pest[] = [
     sesong: "Aktiv mai–september",
     alvorlighet: "lav",
     forveksles: [
-      "Rød skogmaur – større og tofarget med rød forkropp og svart bakkropp",
+      "Rød skogsmaur – større og tofarget med rød forkropp og svart bakkropp",
       "Faraomaur – mye mindre og blekere",
     ],
-    notat: "Ikke bruk kjemikalier før du har snakket med en godkjent skadedyrbekjemper i Ocab.",
+    notat: "Ikke bruk gift eller andre kjemikalier før du har snakket med en godkjent skadedyrbekjemper i Ocab.",
     tiltak: [
       "Stikker hvis den forstyrres – vær forsiktig ved luking",
-      "Maur inne henger ofte sammen med fukt eller vannskade – kontroller nøye rundt bad, vinduer, terskler, bunnsvill og tak der de kommer inn",
+      "Maur inne skyldes som oftest fukt eller vannskade – kontroller nøye rundt bad, vinduer, terskler, bunnsvill og tak der de kommer inn",
       "Vann og luft opp tuer i plenen, eller flytt bedet",
     ],
   },
   {
-    norsk: "Rød skogmaur", latin: "Formica rufa", slug: "maur", gruppe: "Maur",
+    norsk: "Rød skogsmaur", latin: "Formica rufa", slug: "maur", gruppe: "Maur",
     kjennetegn: "5–9 mm, rød mellomkropp, svart bakkropp og tofarget hode (rødt og svart), humpete rygg sett fra siden. Aggressiv – angriper og sprayer maursyre når den forstyrres. Bygger store tuer av barnåler og kvister",
     utbredelse: "Hele landet i skog",
     sesong: "Aktiv april–oktober",
     alvorlighet: "lav",
-    aliaser: ["skogmaur", "rød skogsmaur", "skogsmaur"],
+    aliaser: ["skogmaur", "rød skogmaur", "skogsmaur"],
     forveksles: [
       "Stokkmaur – helt svart hode og jevnt buet rygg, rolig og sky, og bygger ikke tue",
       "Rødmaur – mindre og ensfarget rustrød",
     ],
-    notat: "Ikke bruk kjemikalier før du har snakket med en godkjent skadedyrbekjemper i Ocab.",
+    notat: "Ikke bruk gift eller andre kjemikalier før du har snakket med en godkjent skadedyrbekjemper i Ocab.",
     tiltak: [
       "Arten er nyttig i skogen og bør ikke bekjempes uten grunn",
-      "Maur inne henger ofte sammen med fukt eller vannskade – kontroller nøye rundt bad, vinduer, terskler, bunnsvill og tak der de kommer inn",
+      "Maur inne skyldes som oftest fukt eller vannskade – kontroller nøye rundt bad, vinduer, terskler, bunnsvill og tak der de kommer inn",
       "Hold tuer på avstand fra bygg og fjern klatreveier",
     ],
   },
@@ -1220,17 +1221,17 @@ export const PESTS: Pest[] = [
   // ── Ekskrementer ─────────────────────────────────────────────────────
   {
     norsk: "Brunrotte", latin: "Rattus norvegicus", slug: "rotte-ekskrementer", gruppe: "Ekskrementer",
-    kjennetegn: "15–20 mm, pølseformet med spisse ender, mørkebrun, ofte i klynger på faste toalettplasser",
+    kjennetegn: "12–20 mm, tykke og pølseformede med butte ender, mørkebrun, ofte i klynger på faste toalettplasser",
     utbredelse: "Hele landet, tettest i byer og langs kysten",
     sesong: "Hele året",
     alvorlighet: "høy",
     aliaser: ["rotteekskrementer", "rotteavføring"],
     forveksles: [
-      "Skogsmus – mye mindre (4–8 mm) og inneholder ofte synlige frørester",
+      "Mus – mye mindre (3–8 mm) og smalere, med spisse ender, mange og spredt",
       "Mår – større (5–10 cm), avlange og finnes gjerne på steiner eller i trær, ikke i klynger på gulvet",
     ],
     bekreftelse: [
-      "Pølseformet med spisse ender i begge ender",
+      "Tykke og pølseformede med butte ender – musekskrementer er smale og spisse",
       "Mørkebrun, blir gråere når den tørker",
       "Finnes ofte i klynger på ett eller få faste steder, ikke spredt",
       "Ofte langs vegger, i skap, på loft eller i kjeller",
@@ -1244,53 +1245,33 @@ export const PESTS: Pest[] = [
     ],
   },
   {
-    norsk: "Liten skogsmus", latin: "Apodemus sylvaticus", slug: "liten-skogsmus-ekskrementer", gruppe: "Ekskrementer",
-    kjennetegn: "4–7 mm, spisse ender, inneholder ofte synlige frørester, spredt i skog, hage eller uthus",
-    utbredelse: "Sør- og Østlandet, vanlig i hytter og uthus",
-    sesong: "Trekker inn sent på høsten",
-    alvorlighet: "lav",
-    aliaser: ["skogmus", "skogmusekskrementer"],
+    norsk: "Mus", latin: "Mus musculus / Apodemus sp.", slug: "mus-ekskrementer", gruppe: "Ekskrementer",
+    kjennetegn: "3–8 mm, smale og stavformede med spisse ender, mørke; mange og spredt langs vegger og ganger, ikke samlet på faste toaletter. Skogmus har ofte synlige frørester. Ofte sterk, stikkende muselukt",
+    utbredelse: "Hele landet",
+    sesong: "Hele året, flest inne fra sen høst til vår",
+    alvorlighet: "middels",
+    aliaser: ["husmus", "skogmus", "skogsmus", "liten skogsmus", "stor skogsmus", "liten skogmus", "stor skogmus", "halsbåndmus", "musekskrementer", "museskitt", "museavføring"],
     forveksles: [
-      "Stor skogsmus – litt større ekskrementer (5–8 mm), ellers svært like",
-      "Flaggermus – smuldrer lett ved berøring og glinser av insektskall, mens skogsmusekskrementer er faste og inneholder frørester",
+      "Brunrotte – mye større (12–20 mm) og tykkere, med butte ender, og ofte samlet i klynger på faste steder",
+      "Flaggermus – samme størrelse, men smuldrer til glitrende pulver ved berøring og inneholder insektskall",
     ],
     bekreftelse: [
-      "4–7 mm lange, spisse i begge ender",
-      "Inneholder ofte synlige frørester",
-      "Faste og smuldrer ikke ved berøring",
-      "Som regel spredt, ikke i tette klynger",
+      "3–8 mm lange, smale, spisse i begge ender",
+      "Faste og harde – smuldrer ikke ved berøring",
+      "Mange og spredt langs vegger, i skuffer, skap og isolasjon",
+      "Ofte stikkende muselukt der de holder til",
     ],
+    notat: "Vi skiller ikke mellom husmus og skogmus på ekskrementer – tiltakene er de samme. Det viktigste er å skille mus fra rotte.",
     tiltak: [
-      "Tett innganger i grunnmur, kledning og ventiler",
-      "Rydd ved, løv og busker inntil veggen",
-      "Sett feller på loft og i kjeller før vinteren",
-    ],
-  },
-  {
-    norsk: "Stor skogsmus", latin: "Apodemus flavicollis", slug: "stor-skogsmus-ekskrementer", gruppe: "Ekskrementer",
-    kjennetegn: "5–8 mm, spisse ender, inneholder ofte synlige frørester, litt større enn liten skogsmus",
-    utbredelse: "Sørøstlandet",
-    sesong: "Trekker inn sent på høsten",
-    alvorlighet: "lav",
-    aliaser: ["halsbåndmus", "stor skogsmusekskrementer"],
-    forveksles: [
-      "Liten skogsmus – litt mindre ekskrementer (4–7 mm), ellers svært like",
-      "Flaggermus – smuldrer lett ved berøring og glinser av insektskall, mens skogsmusekskrementer er faste og inneholder frørester",
-    ],
-    bekreftelse: [
-      "5–8 mm lange, spisse i begge ender",
-      "Inneholder ofte synlige frørester",
-      "Faste og smuldrer ikke ved berøring",
-      "Som regel spredt, ikke i tette klynger",
-    ],
-    tiltak: [
-      "Samme tiltak som for liten skogsmus: tetting og feller",
-      "Sjekk hytteloft etter avføring og reirmateriale",
+      "Mus kommer gjennom svært små åpninger – tett rundt rør, kabler, ventiler og i grunnmur",
+      "Bruk hansker og munnbind, og fukt ekskrementene før opprydding – ikke tørrfei eller støvsug direkte",
+      "Sett feller langs vegger der ekskrementene ligger tettest",
+      "Ved mange funn eller mus i flere rom: kontakt Ocab",
     ],
   },
   {
     norsk: "Mink", latin: "Neogale vison", slug: "mink-ekskrementer", gruppe: "Ekskrementer",
-    kjennetegn: "5–10 cm, avlang, inneholder ofte pels eller fiskebein, finnes ofte ved vann og på steiner",
+    kjennetegn: "5–10 cm, avlang og ofte vridd, inneholder fiskebein, fiskeskjell, skall av krepsdyr eller pels; svært vond lukt; ligger ved vann – på steiner, brygger og i naust",
     utbredelse: "Hele landet, nesten alltid nær vann",
     sesong: "Hele året",
     alvorlighet: "middels",
@@ -1313,7 +1294,7 @@ export const PESTS: Pest[] = [
   },
   {
     norsk: "Mår", latin: "Martes martes", slug: "mar-ekskrementer", gruppe: "Ekskrementer",
-    kjennetegn: "5–10 cm, avlang, inneholder ofte pels, frø eller bær, finnes ofte på loft, steiner eller i trær",
+    kjennetegn: "5–10 cm, avlang og vridd i endene, inneholder ofte bær, frø, insektdeler eller pels; legges synlig som markering på stein, bjelke, mønekam eller loft. Loft alene er ikke nok – mus, rotte og flaggermus finnes også der",
     utbredelse: "Hele landet i skogsområder",
     sesong: "Hele året, mest bråk på loft om vinteren",
     alvorlighet: "middels",
@@ -1362,7 +1343,7 @@ export const PESTS: Pest[] = [
     alvorlighet: "lav",
     aliaser: ["flaggermusekskrementer", "flaggermusguano"],
     forveksles: [
-      "Musavføring – fast og smuldrer ikke, inneholder frørester i stedet for insektskall",
+      "Mus – faste og harde, smuldrer ikke, og inneholder frørester i stedet for insektskall",
     ],
     bekreftelse: [
       "3–5 mm, ligner et lite riskorn",
@@ -1481,7 +1462,12 @@ export const GROUP_FOCUS: Record<PestGroup, string> = {
   Fugler: "Vurder størrelse, nebbform, fjærdraktens farge og atferd (sitter stille, flyr, hakker i treverk).",
   Kakerlakker: "Vurder størrelse, farge, vingedekker, antennelengde og mønster på ryggskjoldet.",
   Kre: "Vurder størrelse, skallfarge, klør, antenner og kroppsform (langstrakt vs. sammenrullet).",
-  Maur: "Vurder størrelse, farge, kroppsform, antenner, og om den har vinger.",
+  Maur: `Gå gjennom denne nøkkelen i rekkefølge:
+1. Størrelse: over 6 mm → stokkmaur, brun tremaur eller rød skogsmaur. 3–6 mm → svart tremaur, svart jordmaur eller rødmaur. Rundt 2 mm og blek gul → faraomaur.
+2. Store maur: helt svart hode og jevnt buet rygg → stokkmaur (svart bakkropp) eller brun tremaur (rødbrun forreste del av bakkroppen). Tofarget hode (rødt og svart) og humpete rygg → rød skogsmaur.
+3. Små maur: skinnende blank svart med bredt hjerteformet hode → svart tremaur. Matt brunsvart → svart jordmaur. Ensfarget rustrød → rødmaur.
+4. Spor og atferd fra brukerens tekst: sky og rolig → stokkmaur. Hissig, angriper og sprayer maursyre, tue av barnåler → rød skogsmaur. Sagflis av trefibre ved lister og vinduer → stokkmaur. Fine, melaktige hauger → svart jordmaur. Lukter sitrus eller appelsin når den knuses → svart tremaur.
+Vurder også om den har vinger (sverming).`,
   "Veps og bier": "Vurder størrelse, farge og mønster (striper), behåring, midje (innsnøring) og vinger.",
   Biller: "Vurder størrelse, farge og mønster på dekkvingene, antenneform, bein og kroppsform.",
   Møll: "Vurder vingespenn, vingenes farge og mønster (flekker, bånd, prikker), og om den sitter stille med taklagte vinger.",
@@ -1489,7 +1475,12 @@ export const GROUP_FOCUS: Record<PestGroup, string> = {
   "Lus, lopper og midd": "Vurder størrelse, kroppsform (flat, smal, rund), bein og om den hopper.",
   Edderkoppdyr: "Vurder størrelse, farge, antall og lengde på bein, kroppsform og øyne.",
   "Andre småkryp": "Vurder størrelse, farge, kroppsform, antall bein og bevegelsesmønster.",
-  Ekskrementer: "Vurder ekskrementenes form, størrelse, farge og innhold (pels, frørester eller insektskall), i tillegg til hvor de ble funnet og om de ligger spredt eller samlet i klynge/haug.",
+  Ekskrementer: `Gå gjennom denne nøkkelen i rekkefølge. Størrelse kommer først – sted alene avgjør aldri, fordi mus, rotte, mår og flaggermus alle kan finnes på loft.
+1. Størrelse: under 1 cm → mus eller flaggermus. 1–2 cm → rotte. Over 3 cm, avlang og ofte vridd med hår eller bein → rovdyr (røyskatt, mink eller mår).
+2. Under 1 cm: smuldrer til glitrende pulver med insektskall → flaggermus. Faste og harde, ofte med frørester → mus.
+3. Mus eller rotte: mus er 3–8 mm, smale med spisse ender, mange og spredt langs vegger. Rotte er 12–20 mm, tykke med butte ender, og ligger ofte samlet på faste toalettsteder.
+4. Rovdyr – bruk innhold, størrelse og sted sammen: tynn (3–6 cm) med fine hår og små bein, i haug ved reir eller steinrøys → røyskatt. Fiskebein, fiskeskjell eller skall av krepsdyr, svært vond lukt, ved vann → mink. Bær, frø, insektdeler og hår, lagt synlig som markering på stein, bjelke, mønekam eller annet høyt sted → mår.
+Beskriv form, størrelse, farge, innhold og om de ligger spredt eller samlet.`,
 };
 
 /** Fokusinstruksjon for en gruppe – faller tilbake til en generisk tekst. */
