@@ -37,8 +37,15 @@ const SEVERITY: Record<Severity, { etikett: string, farge: string, tekst: string
   },
 };
 
+/** Overskrift når funnet ikke kunne bestemmes (godkjent tekst, F1). */
+const IKKE_IDENTIFISERT = "Kunne ikke identifisere funnet sikkert";
+
 const OCAB_TELEFON = "+4740003527"; // ← bytt til riktig nummer
 const OCAB_SKADEDYR = "https://www.ocab.no/skade/skadedyr/";
+
+function nivaaTrinnFor(confidence: number): number {
+  return { lav: 1, middels: 2, høy: 3 }[sikkerhetsnivaa(confidence)];
+}
 
 export default function ResultDisplay({
   result,
@@ -65,7 +72,9 @@ export default function ResultDisplay({
     ? `Mulig ${annen.name}`
     : result.found && result.usikkerKandidat
       ? `Mulig ${result.name}`
-      : result.name;
+      : !result.found
+        ? IKKE_IDENTIFISERT
+        : result.name;
   const latinNavn = annen ? annen.latinName : result.latinName;
 
   const delingstekst = result.found
@@ -212,9 +221,13 @@ export default function ResultDisplay({
                     >
                       <span className="font-semibold">{alt.name}</span>
                       <span className="italic text-muted">{alt.latinName}</span>
-                      <span className="ml-auto shrink-0 text-muted">
-                        {SIKKERHET_ETIKETT[sikkerhetsnivaa(alt.confidence)]}
-                      </span>
+        {/* F7: vis bare nivået når det er lavere enn hovedforslagets,
+                          så to forslag aldri begge står som «Høy sikkerhet». */}
+                      {(!result.found || nivaaTrinnFor(alt.confidence) < nivaaTrinn) && (
+                        <span className="ml-auto shrink-0 text-muted">
+                          {SIKKERHET_ETIKETT[sikkerhetsnivaa(alt.confidence)]}
+                        </span>
+                      )}
                       {alt.hvorfor && (
                         <span className="w-full text-muted">{alt.hvorfor}</span>
                       )}
@@ -280,6 +293,12 @@ export default function ResultDisplay({
                   ))}
                 </ul>
               </div>
+            )}
+
+            {result.forbehold && (
+              <p className="rounded-lg border-l-2 border-grad-middels bg-[color:var(--surface-sunken)] px-4 py-3 text-sm">
+                {result.forbehold}
+              </p>
             )}
 
             {result.notat && (

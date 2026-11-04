@@ -46,6 +46,8 @@ export interface AnalysisResult extends AiIdentification {
   bekreftelse?: string[];
   /** Kort, viktig varsel som fremheves i resultatvisningen. */
   notat?: string;
+  /** Faglig forbehold ved bestemmelsen, f.eks. brunrotte/svartrotte på ekskrementer. */
+  forbehold?: string;
   /** Satt når treffet er en usikker enkeltkandidat (confidence 30–49) – vises som "Mulig [navn]". */
   usikkerKandidat?: boolean;
   /** Satt når ingen art i databasen passet, men modellen kjente igjen dyret. */

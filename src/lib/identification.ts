@@ -1,6 +1,7 @@
 import {
   findPest,
   findPestInGroup,
+  pestsInGroup,
   fhiUrl,
   type Pest,
   type PestGroup,
@@ -18,6 +19,37 @@ import type { AnalysisResult, AnnenArt, Candidate, Severity } from "@/lib/types"
 export const MIN_CONFIDENCE = 30;
 /** Under denne sikkerheten merkes navnet med "Mulig " i visningen. */
 export const LOW_CONFIDENCE_LABEL = 50;
+
+/**
+ * F1: forklaring når et ekskrementfunn ikke kan bestemmes sikkert (godkjent tekst).
+ * Overskriften «Kunne ikke identifisere funnet sikkert» settes i visningen.
+ */
+export const EKSKREMENT_UKJENT_TEKST =
+  "Bildet eller opplysningene gir ikke tilstrekkelig grunnlag for å bestemme hvilket dyr sporene stammer fra. Prøv et tydeligere bilde med målestokk.";
+
+/** F4: faglig forbehold for rotteekskrementer (godkjent i leveranse B). */
+export const ROTTE_FORBEHOLD =
+  "Ekskrementer alene gir ikke alltid sikkert grunnlag for å skille brunrotte fra svartrotte. I Norge er brunrotte langt vanligst.";
+
+/** Høyeste sikkerhet når arten bare er utledet av et generelt ord som «rotte» (under «Høy»). */
+const MAKS_VED_GENERELT_NAVN = 79;
+
+/**
+ * F3: tolker modellens sikkerhet robust. «85%», «85 %», «0,85» og 0.85 gir 85.
+ * Mangler tallet eller er det uleselig, gir det MIN_CONFIDENCE (lav – «Mulig …»)
+ * i stedet for et oppdiktet tall.
+ */
+export function tolkSikkerhet(verdi: unknown): number {
+  let n: number;
+  if (typeof verdi === "number") n = verdi;
+  else if (typeof verdi === "string") {
+    const t = verdi.trim().replace(/\s*%$/, "").replace(",", ".");
+    n = t === "" ? NaN : Number(t);
+  } else n = NaN;
+  if (!Number.isFinite(n)) return MIN_CONFIDENCE;
+  if (n > 0 && n < 1) n *= 100; // andel (0,85) i stedet for prosent
+  return Math.min(100, Math.max(0, Math.round(n)));
+}
 
 export const UNKNOWN: AnalysisResult = {
   found: false,
@@ -67,8 +99,27 @@ export function lookupPest(name: string, latinName: string, gruppe: PestGroup | 
   const iGruppe = gruppe
     ? findPestInGroup(name, gruppe) ?? findPestInGroup(latinName, gruppe)
     : undefined;
-  if (iGruppe || gruppe === "Ekskrementer") return iGruppe;
+  if (iGruppe) return iGruppe;
+  if (gruppe === "Ekskrementer") return viaDyreart(name, latinName);
   return findPest(name) ?? findPest(latinName);
+}
+
+/**
+ * F4: et generelt navn som «Rotte» finnes ikke blant ekskrementene, men som
+ * kallenavn på en dyreart (Brunrotte). Finnes det en ekskrementoppføring med
+ * samme latinske navn, brukes den. Svartrotte har ingen ekskrementoppføring og
+ * slipper derfor ikke inn denne veien. Artsbiblioteket er uendret.
+ */
+function viaDyreart(name: string, latinName: string): Pest | undefined {
+  const dyr = findPest(name) ?? findPest(latinName);
+  if (!dyr || dyr.gruppe === "Ekskrementer") return undefined;
+  return pestsInGroup("Ekskrementer").find((p) => p.latin === dyr.latin);
+}
+
+/** Var navnet modellen brukte noe annet enn artens eget norske eller latinske navn? */
+function erGenereltNavn(name: string, latinName: string, pest: Pest): boolean {
+  const n = (x: string) => x.toLowerCase().trim();
+  return n(name) !== n(pest.norsk) && n(latinName) !== n(pest.latin);
 }
 
 /** Mapper modellens alternativ-liste til kjente arter, sortert fallende. */
@@ -128,7 +179,8 @@ export function parseAnnenArt(raw: unknown): AnnenArt | undefined {
 export function enrich(raw: Record<string, unknown>, gruppe: PestGroup | null): AnalysisResult {
   const name = typeof raw.name === "string" ? raw.name : "";
   const latinName = String(raw.latinName ?? "");
-  const pest = lookupPest(name, latinName, gruppe);
+  const erEkskrementer = gruppe === "Ekskrementer";
+  let pest = lookupPest(name, latinName, gruppe);
   const description =
     typeof raw.description === "string" && raw.description.trim().length > 0
       ? raw.description.trim()
@@ -138,11 +190,26 @@ export function enrich(raw: Record<string, unknown>, gruppe: PestGroup | null): 
       ? raw.observasjon.trim()
       : undefined;
 
-  let confidence = Number(raw.confidence);
-  if (!Number.isFinite(confidence)) confidence = 55;
-  confidence = Math.min(100, Math.max(0, Math.round(confidence)));
+  let confidence = tolkSikkerhet(raw.confidence);
 
-  if (!pest || raw.found === false || confidence < MIN_CONFIDENCE) {
+  // F2: står arten i biblioteket, men utenfor gruppen steg 1 valgte, kan
+  // modellen ha meldt den som «annen art». Da godtas den fra biblioteket –
+  // bare dyrearter, aldri ekskrementoppføringer, og bare med nok sikkerhet.
+  if (raw.found === false) pest = undefined;
+  if (!pest && !erEkskrementer) {
+    const korrigert = artFraAnnenArt(raw.annenArt);
+    if (korrigert) {
+      pest = korrigert.pest;
+      confidence = korrigert.confidence;
+    }
+  }
+
+  if (!pest || confidence < MIN_CONFIDENCE) {
+    // F1: på ekskrementer vises ingen artsnavn utenfor biblioteket – bare den
+    // godkjente forklaringen. Det AI-en faktisk observerte, beholdes.
+    if (erEkskrementer) {
+      return { ...UNKNOWN, description: EKSKREMENT_UKJENT_TEKST, observasjon };
+    }
     const annenArt = parseAnnenArt(raw.annenArt);
     if (annenArt) {
       return {
@@ -160,6 +227,12 @@ export function enrich(raw: Record<string, unknown>, gruppe: PestGroup | null): 
     }
     return { ...UNKNOWN, description: description || UNKNOWN.description, observasjon };
   }
+
+  // F4: «rotte» alene gir ikke en sikker bestemmelse.
+  if (erEkskrementer && pest.latin === "Rattus norvegicus" && erGenereltNavn(name, latinName, pest)) {
+    confidence = Math.min(confidence, MAKS_VED_GENERELT_NAVN);
+  }
+  const forbehold = erEkskrementer && pest.latin === "Rattus norvegicus" ? ROTTE_FORBEHOLD : undefined;
 
   const severity: Severity = pest.alvorlighet;
   const alternativer = parseAlternatives(raw.alternativer, gruppe).filter(
@@ -184,7 +257,20 @@ export function enrich(raw: Record<string, unknown>, gruppe: PestGroup | null): 
     usikkerKandidat: confidence < LOW_CONFIDENCE_LABEL,
     bekreftelse: pest.bekreftelse,
     notat: pest.notat,
+    forbehold,
     fhiUrl: fhiUrl(pest.slug),
   };
+}
+
+/** F2: «annen art» som likevel står i biblioteket (som dyr). */
+function artFraAnnenArt(raw: unknown): { pest: Pest; confidence: number } | undefined {
+  if (typeof raw !== "object" || raw === null) return undefined;
+  const rec = raw as Record<string, unknown>;
+  const name = typeof rec.name === "string" ? rec.name : "";
+  const latinName = typeof rec.latinName === "string" ? rec.latinName : "";
+  const pest = findPest(name) ?? findPest(latinName);
+  if (!pest || pest.gruppe === "Ekskrementer") return undefined;
+  const confidence = tolkSikkerhet(rec.confidence);
+  return confidence >= MIN_CONFIDENCE && rec.confidence !== undefined ? { pest, confidence } : undefined;
 }
 

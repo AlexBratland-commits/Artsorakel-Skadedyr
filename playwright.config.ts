@@ -24,7 +24,7 @@ export default defineConfig({
   reporter: [["list"]],
   use: { ...devices["Pixel 7"], trace: "retain-on-failure" },
   projects: [
-    { name: "åpen", testMatch: /app\.spec\.ts/, use: { baseURL: "http://localhost:3201" } },
+    { name: "åpen", testMatch: /(app|ekskrementer)\.spec\.ts/, use: { baseURL: "http://localhost:3201" } },
     { name: "tilgangskode", testMatch: /tilgang\.spec\.ts/, use: { baseURL: "http://localhost:3202" } },
     { name: "upstash-nede", testMatch: /upstash-nede\.spec\.ts/, use: { baseURL: "http://localhost:3203" } },
   ],

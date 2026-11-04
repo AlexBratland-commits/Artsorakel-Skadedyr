@@ -410,6 +410,8 @@ async function analyser(request: NextRequest): Promise<NextResponse> {
       utfall: utfallFor(result),
       art: result.found ? result.name : undefined,
       gruppe: result.gruppe,
+      // F2: arten lå i en annen gruppe enn steg 1 valgte – måler hvor ofte det skjer.
+      gruppe_korrigert: result.found && gruppe !== "Ekskrementer" && gruppe !== null && result.gruppe !== gruppe ? true : undefined,
       nivaa: result.found ? sikkerhetsnivaa(result.confidence) : undefined,
       cached: false,
       ai_kall: forbruk.length,
