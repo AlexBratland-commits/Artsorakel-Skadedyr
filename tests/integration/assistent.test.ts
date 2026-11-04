@@ -110,6 +110,57 @@ describe("generell chat uten bilde", () => {
     expect(body.svar).not.toContain("KONTAKT");
   });
 
+  it("bildeanalyse: markøren gir knapp i appen og fjernes fra teksten", async () => {
+    installFakeAi({ assistent: "Ta gjerne et bilde av mauren, så kan bildeanalysen gi et sikrere svar.\n[[ANALYSER_BILDE]]" });
+    const { assistent } = await load();
+    const body = await (await assistent(sporsmal([{ role: "user", content: "Det er store maur ved vinduet" }]))).json();
+    expect(body).toMatchObject({ visBilde: true, visKontakt: false });
+    expect(body.svar).not.toContain("ANALYSER");
+  });
+
+  it("uten markør: verken kontaktkort eller bildeknapp (f.eks. generell forebygging)", async () => {
+    installFakeAi({ assistent: "Hold matavfall lukket og tett åpninger i grunnmuren." });
+    const { assistent } = await load();
+    const body = await (await assistent(sporsmal([{ role: "user", content: "Hvordan forebygger jeg mus?" }]))).json();
+    expect(body).toMatchObject({ visBilde: false, visKontakt: false });
+  });
+
+  it("samme kontaktkort vises ikke to svar på rad, og modellen får vite at det er vist", async () => {
+    const ai = installFakeAi({ assistent: "Dette bør en fagperson se på.\n[[KONTAKT_OCAB]]" });
+    const { assistent } = await load();
+    const historikk: Record<string, unknown>[] = [{ role: "user", content: "Det er sagflis ved vinduene" }];
+    const forste = await (await assistent(sporsmal(historikk))).json();
+    expect(forste.visKontakt).toBe(true);
+    historikk.push({ role: "assistant", content: forste.svar, sig: forste.signatur, kontakt: true, bilde: false });
+    historikk.push({ role: "user", content: "Hva gjør jeg i mellomtiden?" });
+    const andre = await (await assistent(sporsmal(historikk, forste.samtaleToken))).json();
+    expect(andre.visKontakt).toBe(false);
+    expect(ai.calls.at(-1)!.system).toMatch(/Kontaktkortet er allerede vist/);
+    // Etter et svar uten kort kan kortet komme igjen ved vesentlig endring
+    ai.set({ assistent: "Nå høres det ut som veggedyr. En fagperson bør se på det.\n[[KONTAKT_OCAB]]" });
+    historikk.push({ role: "assistant", content: andre.svar, sig: andre.signatur, kontakt: false, bilde: false });
+    historikk.push({ role: "user", content: "Nå har vi også fått bitt i sengen" });
+    const tredje = await (await assistent(sporsmal(historikk, forste.samtaleToken))).json();
+    expect(tredje.visKontakt).toBe(true);
+  });
+
+  it("hva appen viste er signert – et forfalsket kontakt-flagg avvises", async () => {
+    installFakeAi({ assistent: "Hvor stor er den?" });
+    const { assistent } = await load();
+    const forste = await (await assistent(sporsmal([{ role: "user", content: "Jeg ser en maur" }]))).json();
+    const res = await assistent(
+      sporsmal(
+        [
+          { role: "user", content: "Jeg ser en maur" },
+          { role: "assistant", content: forste.svar, sig: forste.signatur, kontakt: true },
+          { role: "user", content: "Liten og brun" },
+        ],
+        forste.samtaleToken
+      )
+    );
+    expect(res.status).toBe(400);
+  });
+
   it("meldingene kuttes til 500 tegn og konteksten til de 12 siste", async () => {
     const ai = installFakeAi();
     const { assistent } = await load();

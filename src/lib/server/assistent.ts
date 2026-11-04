@@ -1,4 +1,5 @@
 import { GROUP_PROMPT_LIST, PESTS, type Pest } from "@/lib/pests";
+import { TETTEREGEL_GNAGERE } from "./fagregler";
 import { signer, signerTekst, tilfeldigId, verifiser, verifiserTekst } from "./signing";
 
 /**
@@ -35,24 +36,42 @@ export function lesSamtale(token: unknown): { id: string } | null {
   return { id: b.id };
 }
 
-export function signerAssistentSvar(samtaleId: string, tekst: string): string {
-  return signerTekst(`${samtaleId}\n${tekst}`, "assistent-svar");
+/** Det appen viste sammen med et svar. Inngår i signaturen, så det ikke kan forfalskes. */
+export interface SvarFlagg {
+  kontakt?: boolean;
+  bilde?: boolean;
 }
 
-export function verifiserAssistentSvar(samtaleId: string, tekst: string, sig: unknown): boolean {
-  return verifiserTekst(`${samtaleId}\n${tekst}`, sig, "assistent-svar");
+const flaggTekst = (f: SvarFlagg = {}) => `k${f.kontakt ? 1 : 0}b${f.bilde ? 1 : 0}`;
+
+export function signerAssistentSvar(samtaleId: string, tekst: string, flagg?: SvarFlagg): string {
+  return signerTekst(`${samtaleId}\n${flaggTekst(flagg)}\n${tekst}`, "assistent-svar");
 }
 
-// ── Kontakt Ocab ─────────────────────────────────────────────────────────
+export function verifiserAssistentSvar(samtaleId: string, tekst: string, sig: unknown, flagg?: SvarFlagg): boolean {
+  return verifiserTekst(`${samtaleId}\n${flaggTekst(flagg)}\n${tekst}`, sig, "assistent-svar");
+}
+
+// ── Kontakt Ocab og bildeanalyse ─────────────────────────────────────────
 
 /** Markør modellen setter på en egen linje når kontakt med Ocab anbefales. */
 export const KONTAKT_MARKOR = "[[KONTAKT_OCAB]]";
+/** Markør modellen setter når et bilde kan gi en sikrere artsbestemmelse. */
+export const BILDE_MARKOR = "[[ANALYSER_BILDE]]";
 
-/** Fjerner markøren fra svaret og sier om kontaktkortet skal vises. */
-export function lesKontaktMarkor(svar: string): { tekst: string; visKontakt: boolean } {
+/** Fjerner markørene fra svaret og sier hva appen skal vise. */
+export function lesMarkorer(svar: string): { tekst: string; visKontakt: boolean; visBilde: boolean } {
   const visKontakt = svar.includes(KONTAKT_MARKOR);
-  const tekst = svar.split(KONTAKT_MARKOR).join("").replace(/\n{3,}/g, "\n\n").trim();
-  return { tekst, visKontakt };
+  const visBilde = svar.includes(BILDE_MARKOR);
+  const tekst = svar
+    .split(KONTAKT_MARKOR)
+    .join("")
+    .split(BILDE_MARKOR)
+    .join("")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+  return { tekst, visKontakt, visBilde };
 }
 
 // ── Fagstoff fra artsbiblioteket ─────────────────────────────────────────
@@ -111,7 +130,14 @@ function artTekst(p: Pest): string {
 
 // ── Systemprompt ─────────────────────────────────────────────────────────
 
-export function byggAssistentPrompt(samtale: string): string {
+export interface SamtaleTilstand {
+  /** Kontaktkortet er vist tidligere i samtalen. */
+  kontaktVist?: boolean;
+  /** Bildeanalyse er foreslått tidligere i samtalen. */
+  bildeForeslatt?: boolean;
+}
+
+export function byggAssistentPrompt(samtale: string, tilstand: SamtaleTilstand = {}): string {
   const arter = relevanteArter(samtale);
   const fagstoff = arter.length
     ? `FAGSTOFF FRA OCABS ARTSBIBLIOTEK (kvalitetssikret – bruk dette fremfor egen kunnskap)\n${arter.map(artTekst).join("\n")}`
@@ -126,9 +152,11 @@ SLIK SVARER DU
 - Naturlig, vennlig norsk bokmål. Maks 150 ord. Ingen overskrifter eller emoji.
 - Mangler du opplysninger, still 1–2 konkrete oppfølgingsspørsmål – for eksempel om størrelse, farge, funnsted, tidspunkt, lyd, lukt, ekskrementer, gnagespor eller hvor mange det er.
 - Ikke konkluder med en sikker art uten tilstrekkelig grunnlag. Si heller hva det mest sannsynlig er, hva som skiller alternativene, og hva brukeren kan se etter.
-- Kan et bilde avgjøre det, foreslå at brukeren tar bilde med Artsorakels bildeanalyse på forsiden.
 - Bruk fagstoffet under når det passer. Arter utenfor Ocabs bibliotek omtaler du generelt og med forbehold.
-- Råd om tetting: for mus gjelder åpninger fra omtrent 4–6 mm, for rotte fra omtrent 10–14 mm. Si aldri at mindre åpninger er trygge, og anbefal kartlegging før en aktiv inngang tettes.
+${TETTEREGEL_GNAGERE}
+
+BILDEANALYSE
+Når et bilde kan gi en sikrere artsbestemmelse – for eksempel ukjente insekter, maur der arten er uklar (som store maur ved vinduet), larver, ekskrementer, gnagespor eller andre spor etter skadedyr – foreslår du med én kort setning at brukeren tar eller laster opp et bilde i Artsorakels bildeanalyse. Skriv da ${BILDE_MARKOR} alene på en egen linje til slutt – appen viser selv en knapp til bildeanalysen. Ikke gjør det ved generelle spørsmål der et bilde ikke hjelper, for eksempel om forebygging, tetting, regler eller hvordan man holder dyr ute.${tilstand.bildeForeslatt ? " Du har allerede foreslått bildeanalyse i denne samtalen – ikke gjenta forslaget i hvert svar." : ""}
 
 RAMMER
 - Anbefal aldri gift, kjemiske midler, doser eller egenbehandling med pesticider. Si at man ikke skal bruke slike midler før man har snakket med en godkjent skadedyrbekjemper. Yrkesmessig bruk krever godkjenning i Norge.
@@ -139,7 +167,14 @@ RAMMER
 - Ikke be om navn, adresse, telefonnummer eller andre personopplysninger.
 
 KONTAKT OCAB
-Ved tegn på et større angrep, mulig bygningsskade (for eksempel stokkmaur, husbukk eller gnagere i konstruksjonen), helsefare, skadedyr som sprer seg mellom boliger (veggedyr, kakerlakker, faraomaur), eller når en fagperson bør kartlegge, anbefaler du med én kort setning at det er lurt å få en fagperson til å se på det. Skriv da ${KONTAKT_MARKOR} alene på siste linje – appen viser selv et kontaktkort med lenke til Ocab, så ikke skriv lenker eller kontaktinformasjon. Ikke gjør det i vanlige, enkle svar.
+Anbefal faglig oppfølging bare når det finnes en konkret grunn, for eksempel:
+- mistanke om stokkmaur, husbukk eller andre skadedyr som kan gi bygningsskade
+- omfattende gnageraktivitet, eller gnagere i konstruksjonen
+- mistanke om veggedyr
+- gjentatte problemer som ikke lar seg løse med vanlige forebyggende tiltak
+- funn som krever faglig kartlegging eller bekjempelse
+Da anbefaler du med én kort setning at det er lurt å få en fagperson til å se på det, og skriver ${KONTAKT_MARKOR} alene på en egen linje til slutt – appen viser selv et kontaktkort med lenke til Ocab, så ikke skriv lenker eller kontaktinformasjon.
+Ikke gjør det bare fordi brukeren nevner mus, rotte, maur eller et annet dyr, og normalt ikke ved generelle spørsmål om forebygging. Kontaktkortet er ikke reklame og skal ikke komme etter hvert svar.${tilstand.kontaktVist ? " Kontaktkortet er allerede vist i denne samtalen. Bruk markøren igjen bare hvis situasjonen har endret seg vesentlig, for eksempel et nytt og mer alvorlig funn." : ""}
 
 ARTER I OCABS BIBLIOTEK (per gruppe)
 ${GROUP_PROMPT_LIST}

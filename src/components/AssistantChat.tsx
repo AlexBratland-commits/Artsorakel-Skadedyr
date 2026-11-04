@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ExternalLink, MessageCircle, RotateCcw, Send, X } from "lucide-react";
+import { Camera, ExternalLink, MessageCircle, RotateCcw, Send, X } from "lucide-react";
 import { nettverksfeil } from "@/lib/client-errors";
 
 /**
@@ -28,6 +29,15 @@ interface Melding {
   content: string;
   sig?: string;
   visKontakt?: boolean;
+  visBilde?: boolean;
+}
+
+/** Fører brukeren til den vanlige bildeopplastingen på forsiden. */
+function gaTilBildeanalyse() {
+  const mal = document.getElementById("bildeopplasting");
+  if (!mal) return;
+  mal.scrollIntoView({ behavior: "smooth", block: "start" });
+  mal.querySelector<HTMLElement>("button:not([disabled])")?.focus({ preventScroll: true });
 }
 
 interface Lagret {
@@ -56,6 +66,7 @@ export default function AssistantChat() {
   const knappRef = useRef<HTMLButtonElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const listeRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLElement>(null);
   const lastet = useRef(false);
 
   // Hent tidligere samtale fra denne nettleseren (bare på klienten).
@@ -101,6 +112,41 @@ export default function AssistantChat() {
     };
   }, [apen, lukk]);
 
+  // iPhone: tastaturet krymper ikke layout-viewporten, så et panel med
+  // «inset: 0» havner delvis bak tastaturet. Følg den synlige delen av
+  // skjermen i stedet, så skrivefeltet alltid er synlig.
+  useEffect(() => {
+    const vv = window.visualViewport;
+    const panel = panelRef.current;
+    if (!apen || !vv || !panel) return;
+    const mobil = window.matchMedia("(max-width: 639px)");
+    const tilpass = () => {
+      if (!mobil.matches) {
+        panel.style.height = "";
+        panel.style.top = "";
+        return;
+      }
+      panel.style.height = `${vv.height}px`;
+      panel.style.top = `${vv.offsetTop}px`;
+      listeRef.current?.scrollTo({ top: listeRef.current.scrollHeight });
+    };
+    tilpass();
+    vv.addEventListener("resize", tilpass);
+    vv.addEventListener("scroll", tilpass);
+    return () => {
+      vv.removeEventListener("resize", tilpass);
+      vv.removeEventListener("scroll", tilpass);
+      panel.style.height = "";
+      panel.style.top = "";
+    };
+  }, [apen]);
+
+  const analyserBilde = () => {
+    setApen(false);
+    // Vent til chatten er lukket og siden kan rulles igjen.
+    requestAnimationFrame(() => requestAnimationFrame(gaTilBildeanalyse));
+  };
+
   const nySamtale = () => {
     setMeldinger([]);
     setSamtaleToken(undefined);
@@ -126,7 +172,9 @@ export default function AssistantChat() {
         signal: controller.signal,
         body: JSON.stringify({
           samtaleToken,
-          messages: neste.map(({ role, content, sig }) => ({ role, content, sig })),
+          messages: neste.map(({ role, content, sig, visKontakt, visBilde }) =>
+            role === "assistant" ? { role, content, sig, kontakt: !!visKontakt, bilde: !!visBilde } : { role, content }
+          ),
         }),
       });
       const data = await res.json().catch(() => null);
@@ -141,7 +189,16 @@ export default function AssistantChat() {
       if (!res.ok) throw new Error(data?.error ?? "Fikk ikke svar. Prøv igjen.");
       if (typeof data?.svar !== "string" || !data.svar) throw new Error("Tomt svar. Prøv igjen.");
       setSamtaleToken(data.samtaleToken);
-      setMeldinger([...neste, { role: "assistant", content: data.svar, sig: data.signatur, visKontakt: !!data.visKontakt }]);
+      setMeldinger([
+        ...neste,
+        {
+          role: "assistant",
+          content: data.svar,
+          sig: data.signatur,
+          visKontakt: !!data.visKontakt,
+          visBilde: !!data.visBilde,
+        },
+      ]);
     } catch (error) {
       setMeldinger((m) => (m.at(-1)?.role === "user" && m.at(-1)?.content === sporsmal ? m.slice(0, -1) : m));
       setUtkast(sporsmal);
@@ -171,17 +228,18 @@ export default function AssistantChat() {
       {apen && (
         <section
           id="assistent-panel"
+          ref={panelRef}
           role="dialog"
           aria-labelledby="assistent-tittel"
           className="no-print fixed inset-0 z-50 flex flex-col bg-[color:var(--surface)] sm:inset-auto sm:bottom-4 sm:right-4 sm:h-[min(640px,calc(100dvh-2rem))] sm:w-[400px] sm:overflow-hidden sm:rounded-card sm:border sm:hairline sm:shadow-lifted"
         >
-          <header className="flex items-center gap-3 bg-ocab-900 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] text-white dark:bg-ocab-950">
-            <MessageCircle className="size-5 shrink-0 text-ocab-200" aria-hidden />
+          <header className="flex items-center gap-2 bg-ocab-900 py-1.5 pl-4 pr-1.5 pt-[max(0.375rem,env(safe-area-inset-top))] text-white sm:gap-3 sm:py-3 sm:pr-2 dark:bg-ocab-950">
+            <MessageCircle className="hidden size-5 shrink-0 text-ocab-200 sm:block" aria-hidden />
             <div className="min-w-0 flex-1">
               <h2 id="assistent-tittel" className="text-base font-semibold leading-tight">
                 Spør Artsorakel
               </h2>
-              <p className="text-xs text-ocab-200">Fagassistent for skadedyr</p>
+              <p className="hidden text-xs text-ocab-200 sm:block">Fagassistent for skadedyr</p>
             </div>
             <button
               type="button"
@@ -235,6 +293,16 @@ export default function AssistantChat() {
                 >
                   {m.content}
                 </p>
+                {m.visBilde && (
+                  <button
+                    type="button"
+                    onClick={analyserBilde}
+                    className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-ocab-900/20 px-3.5 py-2 text-sm font-semibold text-ocab-900 transition hover:bg-ocab-50 dark:border-white/15 dark:text-ocab-200 dark:hover:bg-white/5"
+                  >
+                    <Camera className="size-4" aria-hidden />
+                    Analyser bilde
+                  </button>
+                )}
                 {m.visKontakt && (
                   <div className="mt-2 max-w-[88%] rounded-xl border border-ocab-500/30 bg-ocab-50 p-4 text-sm dark:border-ocab-200/20 dark:bg-ocab-900/30">
                     <p className="leading-relaxed">
@@ -304,16 +372,26 @@ export default function AssistantChat() {
             </button>
           </form>
 
-          <footer className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-t hairline px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2.5 text-xs leading-relaxed text-muted">
-            <p className="max-w-[17rem]">
+          <footer className="flex items-center justify-between gap-3 px-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] text-xs leading-snug text-muted sm:border-t sm:hairline sm:pt-2.5 sm:leading-relaxed">
+            {/* Kort på mobil, full tekst på PC. Begge viser til personvernsiden. */}
+            <p className="sm:hidden">
+              Sendes til AI. Ikke skriv personopplysninger.{" "}
+              <Link href="/personvern" className="underline underline-offset-2">
+                Personvern
+              </Link>
+            </p>
+            <p className="hidden max-w-[17rem] sm:block">
               Meldinger sendes til en AI-tjeneste. Ikke skriv navn, adresse eller andre
-              personopplysninger. Samtalen lagres bare i denne nettleseren.
+              personopplysninger. Samtalen lagres bare i denne nettleseren.{" "}
+              <Link href="/personvern" className="underline underline-offset-2">
+                Personvern
+              </Link>
             </p>
             <a
               href={OCAB_KONTAKT}
               target="_blank"
               rel="noopener noreferrer"
-              className="font-medium text-ocab-700 underline underline-offset-4 dark:text-ocab-200"
+              className="shrink-0 font-medium text-ocab-700 underline underline-offset-4 dark:text-ocab-200"
             >
               Kontakt Ocab
             </a>

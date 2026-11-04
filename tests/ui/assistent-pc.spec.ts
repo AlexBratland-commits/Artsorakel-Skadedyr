@@ -9,3 +9,11 @@ test("PC: chatten er et vindu nederst til høyre, ikke hele skjermen", async ({ 
   expect(boks.x + boks.width).toBeGreaterThan(vindu.width - 40);
   expect(boks.height).toBeLessThan(vindu.height);
 });
+
+test("PC: full personverntekst og undertittel i chatten", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Spør Artsorakel" }).click();
+  const chat = page.getByRole("dialog", { name: "Spør Artsorakel" });
+  await expect(chat.getByText(/Meldinger sendes til en AI-tjeneste/)).toBeVisible();
+  await expect(chat.getByText("Fagassistent for skadedyr")).toBeVisible();
+});

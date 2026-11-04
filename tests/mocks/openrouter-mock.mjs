@@ -13,6 +13,8 @@ if (process.env.ARTSORAKEL_TEST_MOCK_AI === "1") {
       const sist = String(body.messages.at(-1)?.content ?? "").toLowerCase();
       const svar = sist.includes("sagflis")
         ? "Sagflis ved vinduer kan tyde på stokkmaur, som kan skade treverk. Det er lurt å få en fagperson til å se på det.\n[[KONTAKT_OCAB]]"
+        : sist.includes("store maur")
+          ? "Store maur ved vinduet kan være stokkmaur, men også andre arter. Ta gjerne et bilde, så kan bildeanalysen gi et sikrere svar.\n[[ANALYSER_BILDE]]"
         : sist.includes("krafsing")
           ? "Krafsing på loftet kan komme fra mus, rotte eller mår. Når på døgnet hører du det, og har du sett ekskrementer?"
           : "Takk. Ekskrementer på 3–8 mm tyder oftest på mus. Ligger de spredt langs veggene?";

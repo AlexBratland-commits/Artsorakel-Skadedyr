@@ -17,7 +17,7 @@ test("samtale uten bilde: velkomst, forslag, oppfølgingsspørsmål og flere mel
   await page.getByRole("button", { name: "Spør Artsorakel" }).click();
   const chat = page.getByRole("dialog", { name: "Spør Artsorakel" });
   await expect(chat.getByText(/Hei! Jeg er Artsorakels fagassistent/)).toBeVisible();
-  await expect(chat.getByText(/Meldinger sendes til en AI-tjeneste/)).toBeVisible();
+  await expect(chat.getByText(/Sendes til AI\. Ikke skriv personopplysninger/)).toBeVisible();
   await chat.getByRole("button", { name: "Jeg hører krafsing på loftet" }).click();
   await expect(chat.getByText(/Når på døgnet hører du det/)).toBeVisible();
   await chat.getByLabel("Skriv spørsmålet ditt til Artsorakel").fill("Om natten, og jeg har sett små ekskrementer");
@@ -53,6 +53,52 @@ test("kontaktkort ved behov, og «Kontakt Ocab» er alltid tilgjengelig", async 
   await expect(chat.getByRole("link", { name: "Kontakt Ocab" })).toHaveCount(2);
   // Samtalen fortsetter etter kontaktkortet
   await expect(chat.getByLabel("Skriv spørsmålet ditt til Artsorakel")).toBeEnabled();
+});
+
+test("kontaktkortet gjentas ikke i neste svar", async ({ page }) => {
+  await page.getByRole("button", { name: "Spør Artsorakel" }).click();
+  const chat = page.getByRole("dialog", { name: "Spør Artsorakel" });
+  const felt = chat.getByLabel("Skriv spørsmålet ditt til Artsorakel");
+  await felt.fill("Det er sagflis ved vinduene");
+  await felt.press("Enter");
+  await expect(chat.getByText(/Ocab kan hjelpe deg med å kartlegge problemet/)).toHaveCount(1);
+  await felt.fill("Det er fortsatt sagflis ved vinduene i dag");
+  await felt.press("Enter");
+  await expect(chat.getByText(/Sagflis ved vinduer kan tyde på stokkmaur/)).toHaveCount(2);
+  await expect(chat.getByText(/Ocab kan hjelpe deg med å kartlegge problemet/)).toHaveCount(1);
+});
+
+test("«Analyser bilde» vises når et bilde hjelper, og fører til bildeopplastingen", async ({ page }) => {
+  await page.getByRole("button", { name: "Spør Artsorakel" }).click();
+  const chat = page.getByRole("dialog", { name: "Spør Artsorakel" });
+  // Generelt spørsmål: ingen bildeknapp
+  await chat.getByRole("button", { name: "Hvordan sikrer jeg huset mot gnagere?" }).click();
+  await expect(chat.getByText(/tyder oftest på mus/)).toBeVisible();
+  await expect(chat.getByRole("button", { name: "Analyser bilde" })).toHaveCount(0);
+  const felt = chat.getByLabel("Skriv spørsmålet ditt til Artsorakel");
+  await felt.fill("Det er store maur ved vinduet");
+  await felt.press("Enter");
+  await expect(chat.getByText("[[ANALYSER_BILDE]]")).toHaveCount(0);
+  await chat.getByRole("button", { name: "Analyser bilde" }).click();
+  await expect(page.getByRole("dialog", { name: "Spør Artsorakel" })).toHaveCount(0);
+  await expect(page.locator("#bildeopplasting")).toBeInViewport();
+  await expect(page.locator("#bildeopplasting button").first()).toBeFocused();
+  // Samtalen er tatt vare på
+  await page.getByRole("button", { name: "Spør Artsorakel" }).click();
+  await expect(chat.getByRole("button", { name: "Analyser bilde" })).toBeVisible();
+});
+
+test("mobil: kompakt toppfelt, kort personverntekst og synlig skrivefelt", async ({ page }) => {
+  await page.getByRole("button", { name: "Spør Artsorakel" }).click();
+  const chat = page.getByRole("dialog", { name: "Spør Artsorakel" });
+  const topp = await chat.locator("header").boundingBox();
+  expect(topp!.height).toBeLessThanOrEqual(56);
+  await expect(chat.getByText("Sendes til AI. Ikke skriv personopplysninger.")).toBeVisible();
+  await expect(chat.getByRole("link", { name: "Personvern" })).toBeVisible();
+  // Lav skjerm (som med tastaturet oppe): skrivefeltet er fortsatt synlig
+  await page.setViewportSize({ width: 412, height: 420 });
+  await expect(chat.getByLabel("Skriv spørsmålet ditt til Artsorakel")).toBeInViewport();
+  await expect(chat.getByRole("button", { name: "Lukk chatten" })).toBeInViewport();
 });
 
 test("irrelevante spørsmål avvises høflig", async ({ page }) => {

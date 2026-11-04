@@ -207,13 +207,15 @@ export default function Home() {
             }}
           />
         ) : (
-          <ImageUploader
-            onImageSelect={velgBilde}
-            imagePreview={preview}
-            fileName={file?.name}
-            fileSize={file?.size}
-            disabled={analyserer}
-          />
+          <div id="bildeopplasting" className="scroll-mt-4">
+            <ImageUploader
+              onImageSelect={velgBilde}
+              imagePreview={preview}
+              fileName={file?.name}
+              fileSize={file?.size}
+              disabled={analyserer}
+            />
+          </div>
         )}
 
         {tilgang === "ok" && file && !result && (

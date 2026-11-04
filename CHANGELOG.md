@@ -11,6 +11,13 @@ artsbiblioteket er uendret.
 - Samme chatmodell, delte grenser og samme kostnadsramme som funn-chatten. Ingen nye miljøvariabler.
 - Historikk: tre siste på forsiden, og «Se alle tidligere funn».
 - Personvern: nytt avsnitt om chatten (til godkjenning).
+- Tetteråd for gnagere: ny hovedregel (sikre åpninger, undersøk om det er gnagere inne, fangst
+  eller bekjempelse, skadedyrbekjemper ved omfattende aktivitet) i artsbiblioteket og begge
+  chattene. Den gamle regelen om ikke å tette en aktiv inngang er fjernet. Størrelsene er beholdt.
+- Spør Artsorakel: knappen «Analyser bilde» når et bilde kan gi sikrere artsbestemmelse.
+- Kontaktkortet vises bare ved konkrete grunner, og ikke to svar på rad.
+- Mobil: mer kompakt toppfelt og personverntekst i chatten, og skrivefeltet holdes synlig over
+  tastaturet på iPhone.
 
 ## Uutgitt – justeringer etter test i Preview
 

@@ -13,7 +13,7 @@ import { sjekkSikkerhetsoppsett } from "@/lib/server/oppsett";
 import {
   byggAssistentPrompt,
   lagSamtale,
-  lesKontaktMarkor,
+  lesMarkorer,
   lesSamtale,
   signerAssistentSvar,
   verifiserAssistentSvar,
@@ -41,6 +41,11 @@ const SAMTALE_TTL = 7 * 24 * 3600;
 interface Melding {
   role: "user" | "assistant";
   content: string;
+}
+
+interface Vist {
+  kontakt: boolean;
+  bilde: boolean;
 }
 
 function ugyldig(error = "Ugyldig forespørsel.", kode?: string): NextResponse {
@@ -102,18 +107,28 @@ async function svar(request: NextRequest): Promise<NextResponse> {
   const samtaleToken = ny?.token ?? (body.samtaleToken as string);
 
   const meldinger: Melding[] = [];
+  // Hva appen viste sammen med hvert tidligere svar (signert sammen med teksten).
+  const vist: Vist[] = [];
   for (const m of body.messages.slice(-MAX_TURNS)) {
     if (typeof m !== "object" || m === null) return ugyldig();
-    const { role, content, sig } = m as { role?: unknown; content?: unknown; sig?: unknown };
+    const { role, content, sig, kontakt, bilde } = m as {
+      role?: unknown;
+      content?: unknown;
+      sig?: unknown;
+      kontakt?: unknown;
+      bilde?: unknown;
+    };
     if (typeof content !== "string") return ugyldig();
     if (role === "user") {
       meldinger.push({ role: "user", content: rensTekst(content, MAX_MESSAGE_CHARS) });
     } else if (role === "assistant") {
-      if (content.length > MAX_ASSISTANT_CHARS || !verifiserAssistentSvar(samtaleId, content, sig)) {
+      const flagg = { kontakt: kontakt === true, bilde: bilde === true };
+      if (content.length > MAX_ASSISTANT_CHARS || !verifiserAssistentSvar(samtaleId, content, sig, flagg)) {
         loggHendelse("chat_avvist", { rute: "assistent", grunn: "usignert_svar" });
         return ugyldig("Samtalen kunne ikke bekreftes. Start en ny samtale.", "samtale_ugyldig");
       }
       meldinger.push({ role: "assistant", content: content.slice(0, MAX_MESSAGE_CHARS) });
+      vist.push(flagg);
     } else {
       return ugyldig();
     }
@@ -123,19 +138,20 @@ async function svar(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Mangler spørsmål." }, { status: 400 });
   }
 
-  const svarMed = (tekst: string, visKontakt: boolean, avkuttet = false) =>
+  const svarMed = (tekst: string, visKontakt: boolean, visBilde: boolean, avkuttet = false) =>
     NextResponse.json({
       svar: tekst,
-      signatur: signerAssistentSvar(samtaleId, tekst),
+      signatur: signerAssistentSvar(samtaleId, tekst, { kontakt: visKontakt, bilde: visBilde }),
       samtaleToken,
       visKontakt,
+      visBilde,
       avkuttet,
     });
 
   // Helt irrelevante spørsmål: fast svar, uten AI-kall.
   if (erHeltUtenforFaget(sporsmal.content)) {
     loggHendelse("assistent", { utfall: "utenfor_faget", tur: meldinger.length });
-    return svarMed(UTENFOR_FAGET_SVAR, false);
+    return svarMed(UTENFOR_FAGET_SVAR, false, false);
   }
 
   const perSamtale = await sjekkGrenser([
@@ -147,12 +163,13 @@ async function svar(request: NextRequest): Promise<NextResponse> {
 
   // Fagstoff hentes fra det brukeren har skrevet i samtalen.
   const brukertekst = meldinger.filter((m) => m.role === "user").map((m) => m.content).join("\n");
+  const tilstand = { kontaktVist: vist.some((v) => v.kontakt), bildeForeslatt: vist.some((v) => v.bilde) };
   const ai = await kallOpenRouter({
     apiKey,
     rute: "chat",
     steg: "assistent",
     model: chatModel(),
-    messages: [{ role: "system", content: byggAssistentPrompt(brukertekst) }, ...meldinger],
+    messages: [{ role: "system", content: byggAssistentPrompt(brukertekst, tilstand) }, ...meldinger],
     temperature: 0.3,
     maxTokens: 800,
     timeoutMs: 20_000,
@@ -168,14 +185,19 @@ async function svar(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  const { tekst, visKontakt } = lesKontaktMarkor(ai.content);
+  const markert = lesMarkorer(ai.content);
+  const { tekst, visBilde } = markert;
+  // Samme kontaktkort to svar på rad vises ikke – modellen har fått beskjed om
+  // at kortet allerede er vist, og skal bare gjenta det ved vesentlig endring.
+  const visKontakt = markert.visKontakt && !vist.at(-1)?.kontakt;
   loggHendelse("assistent", {
     utfall: "svar",
     svar_tegn: tekst.length,
     finish: ai.finishReason,
     tur: meldinger.length,
     kontakt: visKontakt || undefined,
+    bilde: visBilde || undefined,
   });
   if (!tekst) return NextResponse.json({ error: "Fikk ikke svar akkurat nå. Prøv igjen om litt." }, { status: 502 });
-  return svarMed(tekst, visKontakt, ai.finishReason === "length");
+  return svarMed(tekst, visKontakt, visBilde, ai.finishReason === "length");
 }

@@ -175,7 +175,9 @@ describe("spørsmål utenfor skadedyrfaget", () => {
     const system = ai.calls.find((c) => c.kind === "chat")!.system;
     expect(system).toMatch(/fra omtrent 4–6 mm/);
     expect(system).toMatch(/10–14 mm/);
-    expect(system).toMatch(/aktiv inngang/);
+    expect(system).toContain("Sikre åpninger der mus og rotter kan komme inn, slik at nye dyr hindres adgang.");
+    expect(system).toMatch(/Tetting skal ikke vente til alle dyr er fjernet/);
+    expect(system).not.toMatch(/aktiv inngang/);
     expect(system).toMatch(/svarer du IKKE på innholdsmessig/);
   });
 });
