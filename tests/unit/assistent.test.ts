@@ -136,3 +136,15 @@ describe("regresjon: store maur og sagflis ved vinduskarmen", () => {
     expect(p).toMatch(/Mistanke om stokkmaur i bygningen er en konkret grunn til faglig oppfølging/);
   });
 });
+
+describe("isopor: ingen antakelse om at isolasjonen ligger i veggen", () => {
+  it("begge chattene får regelen, og fuktformuleringen er beholdt", async () => {
+    const { MAUR_FUKT_REGEL } = await import("@/lib/server/fagregler");
+    expect(MAUR_FUKT_REGEL).toMatch(/ikke anta at isolasjonen ligger i veggen/);
+    expect(MAUR_FUKT_REGEL).toMatch(/Isopor finnes ofte i gulvkonstruksjoner, særlig under betonggulv/);
+    expect(MAUR_FUKT_REGEL).toMatch(/ikke konkluder med hvor reiret ligger/);
+    const p = byggAssistentPrompt("Små maur kommer ut, og det ligger hvitt isoporstøv på gulvet");
+    expect(p).toContain(MAUR_FUKT_REGEL);
+    expect(p).toContain("Mauraktivitet i bygningskonstruksjoner kan være knyttet til fukt, råte eller tidligere vannskader.");
+  });
+});
