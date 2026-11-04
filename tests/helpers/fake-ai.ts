@@ -6,7 +6,7 @@ import { vi } from "vitest";
  */
 
 export interface FakeCall {
-  kind: "group" | "species" | "chat";
+  kind: "group" | "species" | "chat" | "assistent";
   url: string;
   body: {
     model: string;
@@ -24,6 +24,8 @@ export interface FakeAiOptions {
   group?: unknown;
   species?: unknown;
   chat?: string;
+  /** Svar fra «Spør Artsorakel» (generell assistent). */
+  assistent?: string;
   /** Overstyr hele svaret (status, innhold) for spesielle tester. */
   respond?: (call: FakeCall) => Response | Promise<Response>;
   usage?: Record<string, number>;
@@ -31,6 +33,7 @@ export interface FakeAiOptions {
 
 function classify(system: string): FakeCall["kind"] {
   if (system.includes("grovsorterer")) return "group";
+  if (system.includes("Du er Spør Artsorakel")) return "assistent";
   if (system.includes("skadedyrassistent")) return "chat";
   return "species";
 }
@@ -60,7 +63,9 @@ export function installFakeAi(options: FakeAiOptions = {}) {
     const content =
       call.kind === "group"
         ? JSON.stringify(state.group ?? { gruppe: "Gnagere" })
-        : call.kind === "chat"
+        : call.kind === "assistent"
+          ? (state.assistent ?? "Testsvar fra assistenten.")
+          : call.kind === "chat"
           ? (state.chat ?? "Testsvar fra falsk AI.")
           : JSON.stringify(
               state.species ?? {
