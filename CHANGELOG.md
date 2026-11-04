@@ -28,8 +28,8 @@ Artsbiblioteket, promptene og AI-modellene er uendret.
 
 ### Ferdigstilling av leveranse A
 - Vercel Production/Preview bruker aldri tellere i minnet. Mangler Upstash, avvises AI-kall.
-- Påkrevde innstillinger i Vercel Production/Preview: `ARTSORAKEL_HEMMELIGHET`,
-  `ARTSORAKEL_TILGANGSKODE` og Upstash. Ellers `503 ikke_konfigurert`.
+- Påkrevde innstillinger i Vercel Production/Preview: `ARTSORAKEL_HEMMELIGHET`
+  og Upstash. Ellers `503 ikke_konfigurert`. Tilgangskoden er valgfri.
 - Tom OpenRouter-saldo gir en egen norsk melding.
 - Veiledningen anbefaler ikke å slå av sikkerhetsfunksjoner som nødløsning.
 

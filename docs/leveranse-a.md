@@ -70,6 +70,13 @@ beløpet ligge over det et vanlig kall koster. Det ser du i loggene etter noen d
 **Saldoen i OpenRouter** (uten automatisk påfyll) er den siste barrieren, fordi den ikke avhenger
 av at appen virker.
 
+### Tilgangskoden er valgfri (etter ønske fra eier)
+
+Appen er delt med flere ansatte uten innlogging, og det beholdes. Uten
+`ARTSORAKEL_TILGANGSKODE` er appen åpen. Settes variabelen, kreves koden. Upstash,
+`ARTSORAKEL_HEMMELIGHET`, bruksgrensene og alt øvrig vern er uendret og påkrevd. Vurderingen av
+vernet når appen er åpen står i [veiledningen](veiledning-vercel-openrouter.md#når-appen-er-åpen-uten-tilgangskode).
+
 ### Ferdigstilling (etter gjennomgang av PR #6)
 
 **Ingen tellere i minnet i Vercel Production/Preview.** Mangler Upstash der, feiler alle tellinger
@@ -77,11 +84,11 @@ og AI-kall avvises. Tidligere ble minnet brukt stille med bare en advarsel i log
 utvikling og `vercel dev` bruker fortsatt minnet.
 
 **Påkrevde sikkerhetsinnstillinger i Vercel Production/Preview** (`src/lib/server/oppsett.ts`):
-`ARTSORAKEL_HEMMELIGHET`, `ARTSORAKEL_TILGANGSKODE` og Upstash. Mangler én, svarer alle API-er
+`ARTSORAKEL_HEMMELIGHET` og Upstash. Mangler én, svarer alle API-er
 `503 ikke_konfigurert` med meldingen *«Artsorakel er ikke ferdig satt opp på serveren. Kontakt
 den som administrerer appen.»* Loggen viser bare *navnet* på det som mangler. Signeringen bruker
-heller ingen nøkkel avledet fra OpenRouter-nøkkelen i disse miljøene. Åpen drift uten kode krever
-det bevisste valget `ARTSORAKEL_APEN_TILGANG=1`.
+heller ingen nøkkel avledet fra OpenRouter-nøkkelen i disse miljøene. Tilgangskoden er
+valgfri (se under).
 
 **Tom OpenRouter-saldo** (HTTP 402) gir en egen norsk melding (`503 ai_saldo`) i stedet for
 «Analysen feilet». Saldoen uten automatisk påfyll er den siste kostnadsbarrieren. Ingen nye
@@ -141,7 +148,7 @@ CI-oppsettet i leveranse B vil installere Redis, slik at testene alltid kjøres.
 ## Tilbakerulling
 
 - **Alt:** Vercels *Instant Rollback* til forrige produksjonsversjon, eller `git revert` av commitene.
-- **Tilgangskoden:** Påkrevd i Vercel. Bytt kode ved å legge den nye ved siden av den gamle (kommaseparert).
+- **Tilgangskoden:** Valgfri. Uten `ARTSORAKEL_TILGANGSKODE` er appen åpen, som i dag. Settes den, kreves kode.
 - **Upstash:** I Vercel er Upstash påkrevd. Å fjerne det stopper analysene, og det er ingen nødløsning.
 - **Kostnadsramme og grenser:** Kan justeres med miljøvariabler uten ny kode (se `.env.example`).
 - **Sikkerhetsheadere:** Ligger i egen commit og kan reverteres for seg.
