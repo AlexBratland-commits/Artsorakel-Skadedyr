@@ -1,6 +1,6 @@
 # Leveranse B – plan: logikkfeil, regresjonstester, CI og vedlikeholdbarhet
 
-**Status: PLAN – ikke påbegynt.** Ingen kode er endret i denne grenen ennå.
+**Status: GJENNOMFØRT** – se [leveranse-b.md](leveranse-b.md). Planen under er beholdt som referanse.
 
 - Gren: `claude/leveranse-b-kodefeil-tester`. Den bygger på leveranse A
   ([PR #6](https://github.com/AlexBratland-commits/Artsorakel-Skadedyr/pull/6)) og flyttes over på

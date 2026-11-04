@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Artsorakel
 
-## Getting Started
+Artsorakel er Ocabs interne verktøy for å bestemme norske skadedyr og spor etter dem,
+som ekskrementer, ut fra et bilde. Det er et **spesialistverktøy**, ikke en generell
+artsdatabase. Artsbiblioteket er bevisst avgrenset til arter som er relevante for profesjonell
+skadedyrbekjempelse i Norge.
 
-First, run the development server:
+Appen bruker en AI-modell via OpenRouter. Svaret kontrolleres alltid mot artsbiblioteket, og
+alvorlighet, tiltak og forvekslinger hentes fra biblioteket, ikke fra AI-en.
+
+## Viktig før du endrer noe
+
+- **AI-modell, prompter og artsbibliotek endres ikke** uten godkjenning fra fagansvarlig.
+  Grunnlinjetestene (`tests/integration/analyze-contract.test.ts`) feiler hvis promptene endres.
+- Faglige forslag samles i [docs/faglige-endringsforslag.md](docs/faglige-endringsforslag.md).
+- Produksjon endres bare ved merge til `main`. Vercel deployer, og CI deployer aldri.
+
+## Kom i gang lokalt
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm ci
+cp .env.example .env.local   # legg inn OPENROUTER_API_KEY
+npm run dev                  # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Lokalt brukes tellere i minnet. I Vercel Production og Preview **kreves** Upstash,
+`ARTSORAKEL_HEMMELIGHET` og `ARTSORAKEL_TILGANGSKODE`. Se [.env.example](.env.example).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Tester
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Kommando | Hva |
+|---|---|
+| `npm run typecheck` | TypeScript |
+| `npm run lint` | ESLint |
+| `npm test` | Enhets- og integrasjonstester (Vitest). Bruker **falsk AI**. Testene mot ekte Redis krever `redis-server`. |
+| `npm run test:ui` | Bygger appen og kjører UI-tester (Playwright) mot falsk AI |
+| `npm run eval` | Måler treffsikkerhet med **ekte AI** og egne fasitbilder (koster penger). Se `scripts/eval.mjs`. |
 
-## Learn More
+Testene med falsk AI viser at *applikasjonslogikken* er riktig. Bare `npm run eval` med fasitbilder
+sier noe om hvor treffsikker AI-en faktisk er.
 
-To learn more about Next.js, take a look at the following resources:
+CI (GitHub Actions) kjører alt unntatt `eval` ved hver push og pull request.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Struktur
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Sted | Innhold |
+|---|---|
+| `src/app/api/analyze/route.ts` | Bildeanalysen: validering, grenser og promptene (låst av tester) |
+| `src/lib/identification.ts` | Tolkning av AI-svaret og oppslag i artsbiblioteket |
+| `src/lib/pests.ts` | Artsbiblioteket (krever faglig godkjenning) |
+| `src/lib/server/` | Sikkerhet, tilgangskode, grenser (Upstash), AI-klient og logging |
+| `src/app/api/ask-about-findings/route.ts` | Chat om et analysert funn |
+| `docs/` | Leveranserapporter, veiledning for Vercel og faglige forslag |
 
-## Deploy on Vercel
+## Drift
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Se [docs/veiledning-vercel-openrouter.md](docs/veiledning-vercel-openrouter.md).
+Skal Artsorakel lanseres offisielt eller brukes i større skala, skal løsningen overleveres til
+Ocabs IT-avdeling for vurdering av sikkerhet, personvern, tilgangsstyring og drift.
