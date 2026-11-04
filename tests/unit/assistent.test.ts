@@ -119,9 +119,12 @@ describe("regresjon: store maur og sagflis ved vinduskarmen", () => {
     const p = byggAssistentPrompt(SPORSMAL);
     expect(p).toMatch(/Dette er ingen regel om at store maur er stokkmaur/);
     expect(p).not.toMatch(/brun tremaur (er|blir) (alltid|bare) (liten|små)/i);
-    const sp = "Store maur ved vinduet, blanke, og fremste del av bakkroppen er rødbrun";
+    const sp = "Små brune maur, ca. 4 mm, med lysere gulbrun mellomkropp, og litt treflis ved en sprekk";
     expect(relevanteArter(sp).map((a) => a.norsk)).toContain("Brun tremaur");
-    expect(byggAssistentPrompt(sp)).toMatch(/rødbrun fremre del av bakkroppen og blankere kropp hos brun tremaur, nevn den/);
+    const p2 = byggAssistentPrompt(sp);
+    expect(p2).toMatch(/Peker kjennetegnene mot en annen art, nevn den/);
+    expect(p2).toMatch(/Brun tremaur \(Lasius brunneus\) er en liten maur \(arbeidere 3,2–4,5 mm\)/);
+    expect(p2).toMatch(/Brun tremaur \(Lasius brunneus, Maur\): Arbeidere 3,2–4,5 mm/);
     expect(relevanteArter("Er det brun tremaur jeg har?").map((a) => a.norsk)).toContain("Brun tremaur");
   });
 

@@ -50,9 +50,8 @@ svar der stokkmaur og brun tremaur ble fremstilt som omtrent like aktuelle.
   artsbestemmelse.» Deretter anbefales bildeanalyse, og assistenten spør etter størrelse, farge og
   funnsted. «Trelevende maur» og «trefiberrik sagflis» brukes ikke. Det er ingen regel om at store
   maur er stokkmaur – brun tremaur og andre arter nevnes når kjennetegnene peker dit.
-- **Artsbiblioteket er ikke endret.** Størrelsesopplysningene for stokkmaur og brun tremaur
-  (begge «6–18 mm», uten skille mellom arbeidere og dronninger) er til faglig gjennomgang – se
-  rapporten i pull requesten.
+- Brun tremaur var feilaktig registrert som jordstokkmaur. Det er rettet etter FHI – se
+  [faglig-rettelse-maur.md](faglig-rettelse-maur.md).
 - Ikke endret: funn-chatten, bildeidentifiseringen og modellene.
 
 ## Når vises kontaktkortet og «Analyser bilde»?

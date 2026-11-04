@@ -16,6 +16,10 @@ artsbiblioteket er uendret.
   chattene. Den gamle regelen om ikke å tette en aktiv inngang er fjernet. Størrelsene er beholdt.
 - Spør Artsorakel: knappen «Analyser bilde» når et bilde kan gi sikrere artsbestemmelse.
 - Kontaktkortet vises bare ved konkrete grunner, og ikke to svar på rad.
+- Faglig rettelse (FHI): brun tremaur er *Lasius brunneus*, ikke *Camponotus ligniperda*
+  (jordstokkmaur). Rettet størrelse, utseende, utbredelse, tiltak og FHI-lenke for brun tremaur,
+  størrelse og latinsk navn for stokkmaur, maur-nøkkelen og assistentens eksempel. Se
+  [docs/faglig-rettelse-maur.md](docs/faglig-rettelse-maur.md).
 - Spør Artsorakel: store maur og utkast/sagflis ved en bygningskonstruksjon gir mistanke om
   stokkmaur, med forbehold om at andre maurarter ikke kan utelukkes (bare chat-instruksen er endret).
 - Mobil: mer kompakt toppfelt og personverntekst i chatten, og skrivefeltet holdes synlig over

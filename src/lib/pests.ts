@@ -465,15 +465,25 @@ export const PESTS: Pest[] = [
 
   // ── Maur ─────────────────────────────────────────────────────────────
   {
-    norsk: "Stokkmaur", latin: "Camponotus herculeanus", slug: "stokkmaur", gruppe: "Maur",
-    kjennetegn: "6–18 mm, helt svart hode, rødbrun mellomkropp og svart bakkropp, jevnt buet rygg sett fra siden. Norges største maur. Rolig og sky – trekker seg unna når den forstyrres. Legger igjen sagflis av trefibre ved lister, vinduer og terskler",
-    utbredelse: "Hele landet, vanlig i skogsnære boliger",
+    // Kilde: FHI skadedyrhåndboka, https://www.fhi.no/sk/skadedyrhandboka/maur/stokkmaur/
+    // Stokkmaur omfatter flere Camponotus-arter – vanligst skogstokkmaur
+    // (C. herculeanus) og jordstokkmaur (C. ligniperda). Jordstokkmaur er IKKE brun tremaur.
+    norsk: "Stokkmaur", latin: "Camponotus spp.", slug: "stokkmaur", gruppe: "Maur",
+    kjennetegn: "Arbeidere ca. 5–14 mm, dronninger opptil 18 mm. Norges største maur. Tofarget rødbrun og svart: helt svart hode, rødbrun mellomkropp og svart bakkropp (hos jordstokkmaur er fremste del av bakkroppen rødbrun), jevnt buet rygg sett fra siden. Rolig og sky – trekker seg unna når den forstyrres. Legger igjen sagflis av trefibre ved lister, vinduer og terskler",
+    utbredelse: "Hele landet, vanlig i skogsnære boliger. Angrep i bygninger er vanligst i Sør-Norge",
     sesong: "Aktiv mars–oktober, sverming i mai–juni",
     alvorlighet: "høy",
-    aliaser: ["stokkemaur", "tremaur"],
+    aliaser: [
+      "stokkemaur",
+      "skogstokkmaur",
+      "jordstokkmaur",
+      "Camponotus herculeanus",
+      "Camponotus ligniperda",
+      "Camponotus",
+    ],
     forveksles: [
       "Rød skogsmaur – tofarget hode og humpete rygg, aggressiv og sprayer maursyre, bygger tue av barnåler",
-      "Brun tremaur – fremste del av bakkroppen er rødbrun, stokkmaur har helt svart bakkropp",
+      "Brun tremaur – mye mindre (arbeidere 3,2–4,5 mm), brun med gulbrun mellomkropp og gulbrune bein",
       "Svart tremaur – bare 4–6 mm, skinnende svart og lukter sitrus/appelsin når den knuses",
       "Svart jordmaur – liten (3–5 mm), og haugene den legger igjen er fine og melaktige, ikke sagflis av trefibre",
       "Svart jordmaur – bare 3–5 mm og gjør ikke bygningsskade",
@@ -489,19 +499,25 @@ export const PESTS: Pest[] = [
     ],
   },
   {
-    norsk: "Brun tremaur", latin: "Camponotus ligniperda", slug: "stokkmaur", gruppe: "Maur",
-    kjennetegn: "6–18 mm, som stokkmaur, men fremste del av bakkroppen er rødbrun og kroppen er blankere. Rolig og sky som stokkmaur",
-    utbredelse: "Sør-Norge",
-    sesong: "Aktiv mars–oktober",
-    alvorlighet: "høy",
+    // Kilde: FHI skadedyrhåndboka, https://www.fhi.no/sk/skadedyrhandboka/maur/brun-tremaur/
+    // Brun tremaur er Lasius brunneus (tidligere «brun jordmaur») – en liten maur,
+    // ikke en stokkmaur. Ikke bland den med jordstokkmaur (Camponotus ligniperda).
+    norsk: "Brun tremaur", latin: "Lasius brunneus", slug: "brun-tremaur", gruppe: "Maur",
+    kjennetegn: "Arbeidere 3,2–4,5 mm, dronninger 8–9 mm. Brun, med gulbrun mellomkropp og gulbrune bein. Første antenneledd er glatt, uten børster. Het tidligere brun jordmaur",
+    utbredelse: "Sørlig art: fra Agder til Østlandet, med hovedutbredelse i lavlandet rundt Oslo",
+    sesong: "Aktiv vår til høst",
+    alvorlighet: "middels",
+    aliaser: ["brun jordmaur", "Lasius brunneus"],
     forveksles: [
-      "Stokkmaur – bakkroppen er helt svart",
+      "Svart jordmaur – mørk brunsvart, uten den gulbrune mellomkroppen og de gulbrune beina",
+      "Stokkmaur – mye større (arbeidere ca. 5–14 mm) med helt svart hode",
     ],
     notat: "Ikke bruk gift eller andre kjemikalier før du har snakket med en godkjent skadedyrbekjemper i Ocab.",
     tiltak: [
-      "Samme håndtering som stokkmaur – finn reiret, ikke bare stien",
-      "Maur inne skyldes som oftest fukt eller vannskade – kontroller nøye rundt bad, vinduer, terskler, bunnsvill og tak der de kommer inn",
-      "Kontroller fuktskadet virke i bunnsvill og terrasse",
+      "Lever vanligvis i gamle, solrike trær som eik, lind eller furu, men kan bygge reir innendørs i treverk eller isolasjon",
+      "Se etter utkast av trefliser fra sprekker – inne er reirgangene omtrent 5 mm brede",
+      "Ser du maurene på kjøkkenbenken, kan reiret være innendørs – følg maurstien for å finne det",
+      "Reir innendørs bør bekjempes av skadedyrbekjemper",
     ],
   },
   {
@@ -1440,6 +1456,7 @@ export function findGroup(name?: unknown): PestGroup | null {
 const FHI_PATHS: Record<string, string> = {
   skjeggkre: "https://www.fhi.no/sk/skadedyrhandboka/smadyr-andre/skjeggkre/",
   stokkmaur: "https://www.fhi.no/sk/skadedyrhandboka/maur/stokkmaur/",
+  "brun-tremaur": "https://www.fhi.no/sk/skadedyrhandboka/maur/brun-tremaur/",
   "svart-tremaur": "https://www.fhi.no/sk/skadedyrhandboka/maur/svart-tremaur/",
 };
 
@@ -1495,9 +1512,9 @@ Døde dyr kan ligge sammenkrøllet – vurder halens tykkelse og føttenes stør
   Kakerlakker: "Vurder størrelse, farge, vingedekker, antennelengde og mønster på ryggskjoldet.",
   Kre: "Vurder størrelse, skallfarge, klør, antenner og kroppsform (langstrakt vs. sammenrullet).",
   Maur: `Gå gjennom denne nøkkelen i rekkefølge:
-1. Størrelse: over 6 mm → stokkmaur, brun tremaur eller rød skogsmaur. 3–6 mm → svart tremaur, svart jordmaur eller rødmaur. Rundt 2 mm og blek gul → faraomaur.
-2. Store maur: helt svart hode og jevnt buet rygg → stokkmaur (svart bakkropp) eller brun tremaur (rødbrun forreste del av bakkroppen). Tofarget hode (rødt og svart) og humpete rygg → rød skogsmaur.
-3. Små maur: skinnende blank svart med bredt hjerteformet hode → svart tremaur. Matt brunsvart → svart jordmaur. Ensfarget rustrød → rødmaur.
+1. Størrelse: over 6 mm → stokkmaur eller rød skogsmaur. 3–6 mm → svart tremaur, svart jordmaur, brun tremaur eller rødmaur. Rundt 2 mm og blek gul → faraomaur.
+2. Store maur: helt svart hode og jevnt buet rygg → stokkmaur (bakkroppen kan være svart, eller ha rødbrun forreste del hos jordstokkmaur). Tofarget hode (rødt og svart) og humpete rygg → rød skogsmaur.
+3. Små maur: skinnende blank svart med bredt hjerteformet hode → svart tremaur. Matt brunsvart → svart jordmaur. Brun med gulbrun mellomkropp og gulbrune bein → brun tremaur. Ensfarget rustrød → rødmaur.
 4. Spor og atferd fra brukerens tekst: sky og rolig → stokkmaur. Hissig, angriper og sprayer maursyre, tue av barnåler → rød skogsmaur. Sagflis av trefibre ved lister og vinduer → stokkmaur. Fine, melaktige hauger → svart jordmaur. Lukter sitrus eller appelsin når den knuses → svart tremaur.
 Vurder også om den har vinger (sverming).`,
   "Veps og bier": "Vurder størrelse, farge og mønster (striper), behåring, midje (innsnøring) og vinger.",

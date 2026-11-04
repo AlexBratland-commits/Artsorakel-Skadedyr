@@ -175,7 +175,7 @@ describe("generell chat uten bilde", () => {
     const kall = ai.calls.find((c) => c.kind === "assistent")!;
     expect(kall.system).toMatch(/MAUR OG UTKAST\/SAGFLIS/);
     expect(body.svar).toMatch(/^Dette kan tyde på stokkmaur\./);
-    expect(kall.system).toMatch(/Stokkmaur \(Camponotus herculeanus/);
+    expect(kall.system).toMatch(/Stokkmaur \(Camponotus spp\./);
     // Bare chatmodellen kalles – ingen bildeidentifisering
     expect(ai.calls.every((c) => c.kind === "assistent")).toBe(true);
   });
