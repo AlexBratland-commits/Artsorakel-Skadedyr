@@ -31,6 +31,15 @@ export function kostnadsrammeNaadd(rute: string): NextResponse {
   );
 }
 
+export const SALDO_MELDING =
+  "AI-tjenesten er midlertidig stoppet fordi saldoen er brukt opp. Kontakt den som administrerer Artsorakel.";
+
+/** OpenRouter-saldoen er tom (HTTP 402). Saldoen er siste kostnadsbarriere. */
+export function saldoBruktOpp(rute: string): NextResponse {
+  loggHendelse("ai_saldo_tom", { rute });
+  return NextResponse.json({ error: SALDO_MELDING, kode: "ai_saldo" }, { status: 503 });
+}
+
 /** Kjører en handler og gjør LagerUtilgjengelig om til et norsk 503-svar. */
 export async function medGrensekontroll(rute: string, handler: () => Promise<NextResponse>): Promise<NextResponse> {
   try {

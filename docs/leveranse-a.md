@@ -51,7 +51,7 @@ Testet mot **ekte Redis 7.0**:
 |---|---|---|---|
 | 1. Antallsgrenser | Forespørsler per enhet, per IP og per døgn | Misbruk og at én bruker tar alt. **Sier ingenting om kroner.** | Appen (Upstash) |
 | 2. Kostnadsramme | Dollar per døgn for alle AI-kall | At dagens forbruk løper løpsk, uansett årsak | Appen (Upstash) |
-| 3. Kredittak | Dollar på API-nøkkelen | Alt, også feil i appen. **Siste barriere.** | OpenRouter |
+| 3. Saldo | Forhåndsbetalt saldo, uten automatisk påfyll | Alt, også feil i appen. **Siste barriere.** | OpenRouter |
 
 Slik virker kostnadsrammen:
 1. Før hvert AI-kall holdes et beløp av, standard 0,02 USD. Det skjer i samme udelte operasjon som
@@ -67,8 +67,27 @@ Slik virker kostnadsrammen:
 
 Rammen kan overskrides bare hvis ett enkelt kall koster mer enn det avholdte beløpet. Derfor bør
 beløpet ligge over det et vanlig kall koster. Det ser du i loggene etter noen dager.
-**Kredittaket i OpenRouter skal alltid være satt**, fordi det er den eneste grensen som ikke avhenger
+**Saldoen i OpenRouter** (uten automatisk påfyll) er den siste barrieren, fordi den ikke avhenger
 av at appen virker.
+
+### Ferdigstilling (etter gjennomgang av PR #6)
+
+**Ingen tellere i minnet i Vercel Production/Preview.** Mangler Upstash der, feiler alle tellinger
+og AI-kall avvises. Tidligere ble minnet brukt stille med bare en advarsel i loggen. Lokal
+utvikling og `vercel dev` bruker fortsatt minnet.
+
+**Påkrevde sikkerhetsinnstillinger i Vercel Production/Preview** (`src/lib/server/oppsett.ts`):
+`ARTSORAKEL_HEMMELIGHET`, `ARTSORAKEL_TILGANGSKODE` og Upstash. Mangler én, svarer alle API-er
+`503 ikke_konfigurert` med meldingen *«Artsorakel er ikke ferdig satt opp på serveren. Kontakt
+den som administrerer appen.»* Loggen viser bare *navnet* på det som mangler. Signeringen bruker
+heller ingen nøkkel avledet fra OpenRouter-nøkkelen i disse miljøene. Åpen drift uten kode krever
+det bevisste valget `ARTSORAKEL_APEN_TILGANG=1`.
+
+**Tom OpenRouter-saldo** (HTTP 402) gir en egen norsk melding (`503 ai_saldo`) i stedet for
+«Analysen feilet». Saldoen uten automatisk påfyll er den siste kostnadsbarrieren. Ingen nye
+budsjettsystemer er lagt til. Den eksisterende kostnadsrammen og loggingen er beholdt uendret.
+
+**Veiledningen** anbefaler ikke lenger å slå av Upstash eller tilgangskoden som nødløsning.
 
 ## Endringer i API-kontrakten
 
@@ -94,7 +113,7 @@ av at appen virker.
 |---|---|
 | TypeScript (`npm run typecheck`) | 0 feil |
 | ESLint (`npm run lint`) | 0 feil, 0 advarsler |
-| Enhets- og integrasjonstester (`npm test`) | **94 av 94 bestått** (13 filer), 10 av dem mot ekte Redis |
+| Enhets- og integrasjonstester (`npm test`) | **105 av 105 bestått** (14 filer), 10 av dem mot ekte Redis |
 | UI-tester i Chromium på mobilvisning (`npm run test:ui`) | **7 av 7 bestått**, også «Upstash nede» |
 | Produksjonsbygg | OK |
 | Ren installasjon med npm 10 (som Vercel) | OK |
@@ -122,9 +141,8 @@ CI-oppsettet i leveranse B vil installere Redis, slik at testene alltid kjøres.
 ## Tilbakerulling
 
 - **Alt:** Vercels *Instant Rollback* til forrige produksjonsversjon, eller `git revert` av commitene.
-- **Tilgangskoden:** Fjern `ARTSORAKEL_TILGANGSKODE`. Da er appen åpen igjen, som før.
-- **Upstash:** Fjerner du begge variablene, brukes tellere i minnet igjen (svakere). Er Upstash nede
-  over lengre tid, er dette nødløsningen for å holde appen i gang.
+- **Tilgangskoden:** Påkrevd i Vercel. Bytt kode ved å legge den nye ved siden av den gamle (kommaseparert).
+- **Upstash:** I Vercel er Upstash påkrevd. Å fjerne det stopper analysene, og det er ingen nødløsning.
 - **Kostnadsramme og grenser:** Kan justeres med miljøvariabler uten ny kode (se `.env.example`).
 - **Sikkerhetsheadere:** Ligger i egen commit og kan reverteres for seg.
 
@@ -135,7 +153,7 @@ CI-oppsettet i leveranse B vil installere Redis, slik at testene alltid kjøres.
   virker analysen, virker Upstash.
 - **Om OpenRouter oppgir kostnaden i svaret, er ikke bekreftet.** Se etter `kostnad_kilde` i loggene
   etter første analyse. Står det `reservert`, legg inn prisene (se veiledningen), eller la det stå.
-  Anslaget er da forsiktig, og kredittaket gjelder uansett.
+  Anslaget er da forsiktig, og saldoen gjelder uansett.
 - **Vercel-oppførsel er ikke testet på Vercel.** Det gjelder `x-real-ip` og HSTS, som settes ved bygg.
   Bekreftes i forhåndsvisningen.
 - **Ekte AI-kall er ikke kjørt.** Snapshotene viser at forespørslene er identiske med før.

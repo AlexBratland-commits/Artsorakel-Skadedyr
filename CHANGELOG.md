@@ -20,11 +20,18 @@ Artsbiblioteket, promptene og AI-modellene er uendret.
 - Antallsgrenser: per enhet, per IP og per døgn. Hindrer misbruk, men sier ingenting om kroner.
 - Kostnadsramme i USD per døgn: beløpet reserveres før hvert AI-kall og avregnes mot faktisk
   kostnad etterpå. Når rammen er nådd, avvises nye AI-kall.
-- OpenRouter-kredittak: siste barriere, utenfor appen (se docs/veiledning-vercel-openrouter.md).
+- OpenRouter-saldo uten automatisk påfyll: siste barriere, utenfor appen.
 - Alle tellere er atomiske Lua-skript i Redis. Testet med samtidige forespørsler mot ekte Redis.
 - Er Upstash satt opp, men nede, avvises AI-kall midlertidig med norsk melding (ingen reserve i minnet).
 - Rettet: en teller kunne i sjeldne tilfeller bli liggende uten utløpstid.
 - IP-adresser lagres bare som anonymisert verdi (HMAC) i Upstash.
+
+### Ferdigstilling av leveranse A
+- Vercel Production/Preview bruker aldri tellere i minnet. Mangler Upstash, avvises AI-kall.
+- Påkrevde innstillinger i Vercel Production/Preview: `ARTSORAKEL_HEMMELIGHET`,
+  `ARTSORAKEL_TILGANGSKODE` og Upstash. Ellers `503 ikke_konfigurert`.
+- Tom OpenRouter-saldo gir en egen norsk melding.
+- Veiledningen anbefaler ikke å slå av sikkerhetsfunksjoner som nødløsning.
 
 ### Stabilitet og drift
 - Logging av forbruk per AI-kall (tokens, kostnad, tid) uten personopplysninger.

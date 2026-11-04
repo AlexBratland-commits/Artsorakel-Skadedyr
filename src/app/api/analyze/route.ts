@@ -34,7 +34,8 @@ import { gjenkjennBildeformat, TILLATTE_SHARP_FORMATER } from "@/lib/server/imag
 import { lagChatBillett } from "@/lib/server/chat-ticket";
 import { loggHendelse } from "@/lib/server/log";
 import { LagerUtilgjengelig } from "@/lib/server/store";
-import { grensekontrollUtilgjengelig, kostnadsrammeNaadd, medGrensekontroll } from "@/lib/server/svar";
+import { grensekontrollUtilgjengelig, kostnadsrammeNaadd, medGrensekontroll, saldoBruktOpp } from "@/lib/server/svar";
+import { sjekkSikkerhetsoppsett } from "@/lib/server/oppsett";
 import { sikkerhetsnivaa } from "@/lib/types";
 
 export const runtime = "nodejs"; // sharp krever Node-runtime, ikke Edge
@@ -208,6 +209,9 @@ ${SVARFORMAT}`;
 }
 
 export async function POST(request: NextRequest) {
+  // Vercel Production/Preview: stopp hvis en sikkerhetsinnstilling mangler.
+  const ikkeKlar = sjekkSikkerhetsoppsett("analyze");
+  if (ikkeKlar) return ikkeKlar;
   // Svarer ikke Upstash, avvises forespørselen med et norsk 503-svar.
   return medGrensekontroll("analyze", () => analyser(request));
 }
@@ -578,6 +582,8 @@ function modelError(reason: string): NextResponse {
       return kostnadsrammeNaadd("analyze");
     case "grensekontroll":
       return grensekontrollUtilgjengelig("analyze");
+    case "saldo":
+      return saldoBruktOpp("analyze");
     case "timeout":
       return NextResponse.json(
         { error: "Analysen tok for lang tid. Prøv igjen." },

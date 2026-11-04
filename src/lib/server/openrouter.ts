@@ -23,7 +23,9 @@ export type AiFeil =
   /** Dagens kostnadsramme er brukt opp – kallet ble ikke gjort. */
   | "kostnadsramme"
   /** Upstash svarer ikke – kallet ble ikke gjort (fail closed). */
-  | "grensekontroll";
+  | "grensekontroll"
+  /** OpenRouter-saldoen er brukt opp (HTTP 402). */
+  | "saldo";
 
 export interface Forbruk {
   tokensInn?: number;
@@ -111,7 +113,8 @@ export async function kallOpenRouter(kall: AiKall): Promise<AiSvar> {
         .then((d) => String(d?.error?.message ?? "").slice(0, 160))
         .catch(() => "");
       console.error(`❌ OpenRouter svarte ${response.status}${detalj ? `: ${detalj}` : ""}`);
-      const reason: AiFeil = response.status === 429 ? "rate_limit" : "http";
+      const reason: AiFeil =
+        response.status === 429 ? "rate_limit" : response.status === 402 ? "saldo" : "http";
       // Feilsvar faktureres ikke av OpenRouter – reservasjonen frigis.
       const avregnet = await avregn({ type: "ikke_fakturert" });
       logg(reason, { status: response.status, kostnad_kilde: avregnet?.kilde });

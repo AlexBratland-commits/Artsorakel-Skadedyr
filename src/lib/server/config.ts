@@ -46,6 +46,16 @@ export function siteUrl(): string {
   return process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 }
 
+/**
+ * Kjører appen i Vercel Production eller Preview? Da gjelder strenge krav:
+ * Upstash, signeringshemmelighet og tilgangskode må være satt (oppsett.ts),
+ * og tellere i minnet brukes aldri. Lokal utvikling (og `vercel dev`) er unntatt.
+ */
+export function erVercelDrift(): boolean {
+  const miljo = process.env.VERCEL_ENV;
+  return miljo === "production" || miljo === "preview";
+}
+
 /** Kjører appen på Vercel? (Vercel setter VERCEL=1.) */
 export function erVercel(): boolean {
   return process.env.VERCEL === "1";

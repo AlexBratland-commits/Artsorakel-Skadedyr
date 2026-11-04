@@ -1,3 +1,5 @@
+import { erVercelDrift } from "./config";
+
 /**
  * Tellere for bruksgrenser, døgnbudsjett og kostnadsramme.
  *
@@ -12,6 +14,9 @@
  * håndheve et felles budsjett.
  *
  * Uten Upstash-oppsett (lokal utvikling) brukes tellere i minnet.
+ *
+ * I Vercel Production og Preview brukes ALDRI tellere i minnet – mangler
+ * Upstash der, avvises AI-kall (se ManglendeLager).
  *
  * Upstash brukes via REST-API-et, uten ekstra pakker:
  * https://upstash.com/docs/redis/features/restapi
@@ -188,11 +193,29 @@ export function upstashOppsett(): { url: string; token: string } | null {
   return url && token ? { url, token } : null;
 }
 
+/**
+ * Brukes i Vercel Production/Preview når Upstash mangler: alle tellinger
+ * feiler, så API-ene avviser AI-kall (fail closed) i stedet for å telle i
+ * minnet per instans.
+ */
+export class ManglendeLager implements TellerLager {
+  readonly navn = "upstash" as const;
+  async okn(): Promise<Teller> {
+    throw new LagerUtilgjengelig("Upstash er ikke satt opp i dette Vercel-miljøet");
+  }
+  async reserver(): Promise<Reservasjonsresultat> {
+    throw new LagerUtilgjengelig("Upstash er ikke satt opp i dette Vercel-miljøet");
+  }
+}
+
 export function tellerLager(): TellerLager {
   if (lager) return lager;
   const oppsett = upstashOppsett();
   if (oppsett) {
     lager = new UpstashLager(oppsett.url, oppsett.token);
+  } else if (erVercelDrift()) {
+    console.error("❌ Upstash mangler i Vercel Production/Preview – AI-kall avvises til det er satt opp");
+    lager = new ManglendeLager();
   } else {
     if (process.env.NODE_ENV === "production") {
       console.warn(

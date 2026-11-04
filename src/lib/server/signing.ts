@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { openRouterApiKey } from "./config";
+import { erVercelDrift, openRouterApiKey } from "./config";
 
 /**
  * Signering av små verdier (tilgangscookie, chat-billett, chatsvar) med
@@ -17,6 +17,9 @@ let reserveHemmelighet: string | undefined;
 function grunnhemmelighet(): string {
   const egen = process.env.ARTSORAKEL_HEMMELIGHET?.trim();
   if (egen) return egen;
+  // I Vercel Production/Preview kreves en egen hemmelighet (oppsett.ts
+  // stopper API-ene før vi kommer hit). Ingen stille reserve der.
+  if (erVercelDrift()) throw new Error("ARTSORAKEL_HEMMELIGHET mangler");
   const api = openRouterApiKey();
   if (api) return `avledet-fra-openrouter:${api}`;
   // Ingen hemmelighet tilgjengelig (lokal kjøring uten oppsett): tilfeldig per prosess.
