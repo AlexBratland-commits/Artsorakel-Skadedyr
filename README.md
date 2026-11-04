@@ -23,8 +23,9 @@ cp .env.example .env.local   # legg inn OPENROUTER_API_KEY
 npm run dev                  # http://localhost:3000
 ```
 
-Lokalt brukes tellere i minnet. I Vercel Production og Preview **kreves** Upstash,
-`ARTSORAKEL_HEMMELIGHET` og `ARTSORAKEL_TILGANGSKODE`. Se [.env.example](.env.example).
+Lokalt brukes tellere i minnet. I Vercel Production og Preview **kreves** Upstash og
+`ARTSORAKEL_HEMMELIGHET`. Tilgangskoden (`ARTSORAKEL_TILGANGSKODE`) er valgfri.
+Se [.env.example](.env.example).
 
 ## Tester
 
@@ -48,7 +49,7 @@ CI (GitHub Actions) kjører alt unntatt `eval` ved hver push og pull request.
 | `src/app/api/analyze/route.ts` | Bildeanalysen: validering, grenser og promptene (låst av tester) |
 | `src/lib/identification.ts` | Tolkning av AI-svaret og oppslag i artsbiblioteket |
 | `src/lib/pests.ts` | Artsbiblioteket (krever faglig godkjenning) |
-| `src/lib/server/` | Sikkerhet, tilgangskode, grenser (Upstash), AI-klient og logging |
+| `src/lib/server/` | Sikkerhet, valgfri tilgangskode, grenser (Upstash), AI-klient og logging |
 | `src/app/api/ask-about-findings/route.ts` | Chat om et analysert funn |
 | `docs/` | Leveranserapporter, veiledning for Vercel og faglige forslag |
 
