@@ -19,6 +19,11 @@ import { UpstashLager } from "@/lib/server/store";
 
 let r: TestRedis;
 
+// I CI skal testene mot ekte Redis aldri hoppes over i det stille.
+it.runIf(Boolean(process.env.CI))("redis-server er installert i CI", () => {
+  expect(harRedis).toBe(true);
+});
+
 describe.skipIf(!harRedis)("Upstash-tellere mot ekte Redis", () => {
   beforeAll(async () => {
     r = await startRedisMedUpstashRest();
