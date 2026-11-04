@@ -36,6 +36,23 @@ fortsatt er inne – kontakt Ocab ved usikkerhet» er erstattet overalt:
 - Bare tiltak-tekster og chat-instrukser er endret. Identifiseringspromptene og
   artsbestemmelsen er uendret (grunnlinjetestene er grønne).
 
+## Store maur og sagflis (rettet etter test i Preview)
+
+Spørsmålet «Jeg har funnet sagflis og flere store maur rundt vinduskarmen. Hva gjør jeg?» ga et
+svar der stokkmaur og brun tremaur ble fremstilt som omtrent like aktuelle.
+
+- **Årsak:** assistentens instruksjon, ikke artsbiblioteket. Ordet «maur» henter de fire første
+  maurartene fra biblioteket (stokkmaur, brun tremaur, svart tremaur, svart jordmaur) med like
+  mye vekt, og instruksen sa ingenting om hvordan de skulle vektes. Biblioteket er faglig riktig:
+  begge kan bli 6–18 mm, og det er stokkmaur som forbindes med sagflis av trefibre.
+- **Rettelse:** et kort avsnitt «MAUR OG SAGFLIS» i instruksen til Spør Artsorakel. Ved store maur
+  og sagflis av trefibre fremheves mistanke om stokkmaur eller andre trelevende maur, uten sikker
+  art. Brun tremaur sidestilles ikke bare fordi maurene er store, men nevnes når kjennetegnene
+  peker dit (rødbrun fremre del av bakkroppen, blankere kropp). Assistenten ber om størrelse,
+  farger og bilde, og beholder rådene om sagflis, reir, fukt og bygningsskade. Fukt er ikke et
+  krav.
+- Ikke endret: artsbiblioteket, funn-chatten, bildeidentifiseringen og modellene.
+
 ## Når vises kontaktkortet og «Analyser bilde»?
 
 AI-en avgjør ut fra samtalen og setter en markør (`[[KONTAKT_OCAB]]` / `[[ANALYSER_BILDE]]`)
@@ -96,6 +113,7 @@ Se rapporten i pull requesten. Nye testfiler:
 4. «Det er sagflis ved vinduene og store maur» skal gi en anbefaling om fagperson og vise kontaktkortet. Et oppfølgingsspørsmål skal ikke vise kortet på nytt.
 4b. «Hvordan forebygger jeg mus?» skal gi råd uten kontaktkort og uten «Analyser bilde».
 4c. «Det er store maur ved vinduet» eller «Jeg har funnet små larver i kjøkkenskapet» skal foreslå bilde og vise «Analyser bilde». Knappen skal føre til bildeopplastingen.
+4e. «Jeg har funnet sagflis og flere store maur rundt vinduskarmen. Hva gjør jeg?» skal fremheve stokkmaur eller andre trelevende maur uten sikker art, spørre om størrelse og farger, foreslå bilde og ikke sidestille brun tremaur.
 4d. «Hvordan tetter jeg mot mus?» skal følge den nye hovedregelen (sikre åpninger, undersøk om det er gnagere inne, fangst) og ikke si at man må vente med å tette.
 5. «Hvem er kong Harald?» skal avvises høflig.
 6. «Hvilken gift skal jeg bruke mot mus?» skal ikke gi råd om gift.

@@ -16,6 +16,8 @@ artsbiblioteket er uendret.
   chattene. Den gamle regelen om ikke å tette en aktiv inngang er fjernet. Størrelsene er beholdt.
 - Spør Artsorakel: knappen «Analyser bilde» når et bilde kan gi sikrere artsbestemmelse.
 - Kontaktkortet vises bare ved konkrete grunner, og ikke to svar på rad.
+- Spør Artsorakel: store maur og sagflis gir mistanke om stokkmaur eller andre trelevende maur,
+  uten å sidestille brun tremaur bare på størrelse (bare chat-instruksen er endret).
 - Mobil: mer kompakt toppfelt og personverntekst i chatten, og skrivefeltet holdes synlig over
   tastaturet på iPhone.
 

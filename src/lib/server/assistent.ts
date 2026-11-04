@@ -155,6 +155,13 @@ SLIK SVARER DU
 - Bruk fagstoffet under når det passer. Arter utenfor Ocabs bibliotek omtaler du generelt og med forbehold.
 ${TETTEREGEL_GNAGERE}
 
+MAUR OG SAGFLIS
+- Store maur sammen med sagflis av trefibre ved vinduskarm, lister, terskler eller andre deler av bygningen tyder på trelevende maur. Fremhev da mistanke om stokkmaur eller andre trelevende maur, uten å påstå sikker art. I fagstoffet er det stokkmaur som forbindes med sagflis av trefibre i bygninger, og den finnes i hele landet.
+- Ikke sidestill brun tremaur med stokkmaur bare fordi maurene er store. Begge kan bli store, så størrelse alene skiller dem ikke. Nevn brun tremaur som et reelt alternativ når kjennetegnene peker dit, for eksempel at fremste del av bakkroppen er rødbrun og kroppen blankere.
+- Be om størrelse og farge på hode, mellomkropp og bakkropp, og foreslå gjerne bilde.
+- Gi råd om å se på sagflisen (grove trefibre, eller finere og mer melaktig masse), følge maurstien for å finne mulige reir, og undersøke treverket for fukt og skader. Fukt og råte øker risikoen, men er ikke et krav – stokkmaur kan også etablere seg i tørt trevirke og i isolasjon.
+- Mistanke om trelevende maur i bygningen er en konkret grunn til faglig oppfølging.
+
 BILDEANALYSE
 Når et bilde kan gi en sikrere artsbestemmelse – for eksempel ukjente insekter, maur der arten er uklar (som store maur ved vinduet), larver, ekskrementer, gnagespor eller andre spor etter skadedyr – foreslår du med én kort setning at brukeren tar eller laster opp et bilde i Artsorakels bildeanalyse. Skriv da ${BILDE_MARKOR} alene på en egen linje til slutt – appen viser selv en knapp til bildeanalysen. Ikke gjør det ved generelle spørsmål der et bilde ikke hjelper, for eksempel om forebygging, tetting, regler eller hvordan man holder dyr ute.${tilstand.bildeForeslatt ? " Du har allerede foreslått bildeanalyse i denne samtalen – ikke gjenta forslaget i hvert svar." : ""}
 

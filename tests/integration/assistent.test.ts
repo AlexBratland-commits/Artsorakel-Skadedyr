@@ -161,6 +161,24 @@ describe("generell chat uten bilde", () => {
     expect(res.status).toBe(400);
   });
 
+  it("regresjon: sagflis og store maur ved vinduskarmen – trelevende maur, bilde og kontaktkort", async () => {
+    const ai = installFakeAi({
+      assistent:
+        "Sagflis og store maur ved vinduskarmen gir mistanke om stokkmaur eller andre trelevende maur. Hvor store er de, og hvilken farge har bakkroppen? Ta gjerne et bilde.\n[[ANALYSER_BILDE]]\n[[KONTAKT_OCAB]]",
+    });
+    const { assistent } = await load();
+    const body = await (
+      await assistent(sporsmal([{ role: "user", content: "Jeg har funnet sagflis og flere store maur rundt vinduskarmen. Hva gjør jeg?" }]))
+    ).json();
+    expect(body).toMatchObject({ visBilde: true, visKontakt: true });
+    expect(body.svar).not.toMatch(/\[\[/);
+    const kall = ai.calls.find((c) => c.kind === "assistent")!;
+    expect(kall.system).toMatch(/MAUR OG SAGFLIS/);
+    expect(kall.system).toMatch(/Stokkmaur \(Camponotus herculeanus/);
+    // Bare chatmodellen kalles – ingen bildeidentifisering
+    expect(ai.calls.every((c) => c.kind === "assistent")).toBe(true);
+  });
+
   it("meldingene kuttes til 500 tegn og konteksten til de 12 siste", async () => {
     const ai = installFakeAi();
     const { assistent } = await load();
