@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { findPest, findPestInGroup } from "@/lib/pests";
 import { chatModel, openRouterApiKey } from "@/lib/server/config";
-import { TETTEREGEL_GNAGERE } from "@/lib/server/fagregler";
+import { MAUR_FUKT_REGEL, TETTEREGEL_GNAGERE } from "@/lib/server/fagregler";
 import { kallOpenRouter } from "@/lib/server/openrouter";
 import { forStorForesporsel, ipNokkel, klientIp, sjekkOpprinnelse } from "@/lib/server/request-guards";
 import { lesTilgang, tilgangNektet } from "@/lib/server/access";
@@ -180,6 +180,7 @@ RAMMER FOR SVARENE
 - Helsespørsmål (bitt, allergi, smitte) besvares kort og generelt, med henvisning til lege eller legevakt.
 - Spørsmål om ansvar, husleie, forsikring og fredede arter: forklar hovedregelen kort, og vis til huseier, forsikringsselskapet eller kommunen. Du gir ikke juridiske råd.
 ${TETTEREGEL_GNAGERE}
+${MAUR_FUKT_REGEL}
 - Er du usikker, si det. Ikke gjett på tall, priser eller frister.
 - Prisoverslag på oppdrag skal du aldri gi – be dem kontakte Ocab for befaring.
 - Svar på norsk bokmål, i vanlig samtaletone. Maks 150 ord. Ingen emoji, ingen overskrifter.`;

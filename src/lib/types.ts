@@ -72,6 +72,11 @@ export interface HistoryEntry {
   thumb: string;
   sted: string;
   resultat: AnalysisResult;
+  /**
+   * Versjon av artsdataene da funnet ble lagret. Mangler på funn lagret før
+   * versjon 2 (faglig rettelse av maurarter). Funnet selv endres aldri.
+   */
+  artsdata?: number;
 }
 
 export const LOCATIONS = [

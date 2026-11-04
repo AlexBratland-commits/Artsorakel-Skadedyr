@@ -131,7 +131,8 @@ describe("regresjon: store maur og sagflis ved vinduskarmen", () => {
   it("råd om reir, fukt og bygningsskade beholdes – fukt er ikke et krav", () => {
     const p = byggAssistentPrompt(SPORSMAL);
     expect(p).toMatch(/følge maurstien for å finne mulige reir/);
-    expect(p).toMatch(/Fukt og råte øker risikoen, men er ikke et krav/);
+    expect(p).toContain("Mauraktivitet i bygningskonstruksjoner kan være knyttet til fukt, råte eller tidligere vannskader.");
+    expect(p).toMatch(/fravær av synlig fukt utelukker stokkmaur/);
     expect(p).toMatch(/Mistanke om stokkmaur i bygningen er en konkret grunn til faglig oppfølging/);
   });
 });

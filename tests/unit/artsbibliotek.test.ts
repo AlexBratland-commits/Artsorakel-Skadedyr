@@ -60,7 +60,7 @@ describe("artsbiblioteket", () => {
       const forste = f.map((x) => x.split("–")[0].trim().toLowerCase());
       return forste.filter((x, i) => forste.indexOf(x) !== i).map((x) => `${p.norsk}: ${x}`);
     });
-    // Kjent funn til faglig godkjenning (docs/faglige-endringsforslag.md, punkt 9)
-    expect(funn).toEqual(["Stokkmaur: svart jordmaur"]);
+    // Dobbeltlinjen for stokkmaur/svart jordmaur er slått sammen (godkjent av fagansvarlig)
+    expect(funn).toEqual([]);
   });
 });

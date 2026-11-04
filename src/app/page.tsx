@@ -17,7 +17,7 @@ import { useToast } from "@/components/Toast";
 
 import { compressImage, formatBytes, makeThumbnail } from "@/lib/image-tools";
 import { nettverksfeil } from "@/lib/client-errors";
-import { addToHistory, clearHistory, readHistory, removeFromHistory } from "@/lib/history";
+import { addToHistory, clearHistory, harEldreArtsdata, readHistory, removeFromHistory } from "@/lib/history";
 import {
   LOCATIONS,
   DROPPING_SIZES,
@@ -37,6 +37,8 @@ export default function Home() {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [result, setResult] = useState<AnalysisResult | null>(null);
+  // Funnet som vises er åpnet fra historikken og lagret med eldre artsdata.
+  const [eldreArtsdata, setEldreArtsdata] = useState(false);
   const [analyserer, setAnalyserer] = useState(false);
   const [fremdrift, setFremdrift] = useState(0);
   const [sted, setSted] = useState("");
@@ -80,6 +82,7 @@ export default function Home() {
       previewUrl.current = null;
     }
     setResult(null);
+    setEldreArtsdata(false);
     setFile(valgt);
 
     if (valgt) {
@@ -102,6 +105,7 @@ export default function Home() {
 
     setAnalyserer(true);
     setResult(null);
+    setEldreArtsdata(false);
     setFremdrift(8);
 
     // Fremdriften er et estimat, ikke en måling – den stopper på 90 %
@@ -157,6 +161,7 @@ export default function Home() {
       const analysis = data as AnalysisResult;
       setFremdrift(100);
       setResult(analysis);
+      setEldreArtsdata(false);
 
       const thumb = await makeThumbnail(klar);
       setHistorikk(addToHistory(analysis, thumb, sted));
@@ -411,7 +416,7 @@ export default function Home() {
           </div>
         )}
 
-        <ResultDisplay result={result} onReset={nyttBilde} />
+        <ResultDisplay result={result} onReset={nyttBilde} eldreArtsdata={eldreArtsdata} />
 
         {/* Ny samtale for hver analyse: billetten er unik per analyse (F10). */}
         {result && (
@@ -428,6 +433,7 @@ export default function Home() {
           entries={historikk}
           onOpen={(e) => {
             setResult(e.resultat);
+            setEldreArtsdata(harEldreArtsdata(e));
             setPreview(e.thumb || null);
             setFile(null);
           }}

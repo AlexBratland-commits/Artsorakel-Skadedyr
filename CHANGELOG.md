@@ -20,6 +20,10 @@ artsbiblioteket er uendret.
   (jordstokkmaur). Rettet størrelse, utseende, utbredelse, tiltak og FHI-lenke for brun tremaur,
   størrelse og latinsk navn for stokkmaur, maur-nøkkelen og assistentens eksempel. Se
   [docs/faglig-rettelse-maur.md](docs/faglig-rettelse-maur.md).
+- Faglig kvalitetssikring av maur: godkjent formulering om fukt, råte og vannskader i
+  bygningskonstruksjoner (stokkmaur, brun tremaur, svart tremaur, svart jordmaur og begge chattene),
+  rettede størrelser og forvekslinger, ingen løfter om forsikringsdekning, og et diskret varsel ved
+  eldre lagrede funn.
 - Spør Artsorakel: store maur og utkast/sagflis ved en bygningskonstruksjon gir mistanke om
   stokkmaur, med forbehold om at andre maurarter ikke kan utelukkes (bare chat-instruksen er endret).
 - Mobil: mer kompakt toppfelt og personverntekst i chatten, og skrivefeltet holdes synlig over

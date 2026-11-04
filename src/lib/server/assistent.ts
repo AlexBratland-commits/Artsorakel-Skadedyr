@@ -1,5 +1,5 @@
 import { GROUP_PROMPT_LIST, PESTS, type Pest } from "@/lib/pests";
-import { TETTEREGEL_GNAGERE } from "./fagregler";
+import { MAUR_FUKT_REGEL, TETTEREGEL_GNAGERE } from "./fagregler";
 import { signer, signerTekst, tilfeldigId, verifiser, verifiserTekst } from "./signing";
 
 /**
@@ -160,7 +160,8 @@ MAUR OG UTKAST/SAGFLIS
 - Anbefal deretter bildeanalyse i Artsorakel, og spør etter størrelse, farge og funnsted.
 - Ikke bruk uttrykkene «trelevende maur» eller «trefiberrik sagflis» i svaret.
 - Dette er ingen regel om at store maur er stokkmaur. Peker kjennetegnene mot en annen art, nevn den. Brun tremaur (Lasius brunneus) er en liten maur (arbeidere 3,2–4,5 mm) med gulbrun mellomkropp og bein, og kan også kaste ut trefliser fra sprekker. Den er ikke det samme som jordstokkmaur (Camponotus ligniperda), som er en stokkmaur.
-- Gi gjerne råd om å følge maurstien for å finne mulige reir, og om å undersøke treverket for fukt og skader. Fukt og råte øker risikoen, men er ikke et krav – stokkmaur kan også etablere seg i tørt trevirke og i isolasjon.
+- Gi gjerne råd om å følge maurstien for å finne mulige reir.
+${MAUR_FUKT_REGEL}
 - Mistanke om stokkmaur i bygningen er en konkret grunn til faglig oppfølging.
 
 BILDEANALYSE

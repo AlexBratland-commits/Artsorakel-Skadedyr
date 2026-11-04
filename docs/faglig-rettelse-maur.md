@@ -48,12 +48,48 @@ artsdataene er endret. Prompttekstene ellers er byte-for-byte uendret.
   slettes. Det kan ikke rettes automatisk, fordi vi ikke vet om bildet viste en stokkmaur eller en
   brun tremaur. Funn-chatten for et nytt funn bruker de rettede dataene.
 
-## Forslag til andre arter (ikke endret – til godkjenning)
+## Runde 2: faglig kvalitetssikring (godkjente føringer fra fagansvarlig)
 
-1. Svart tremaur og svart jordmaur: «Stokkmaur – mye større (6–18 mm)» → «arbeidere ca. 5–14 mm».
-2. Svart jordmaur: legg til forveksling «Brun tremaur – gulbrun mellomkropp og bein».
-3. Stokkmaur: to nesten like forvekslinger med svart jordmaur kan slås sammen.
-4. Stokkmaur: FHI nevner sotstokkmaur (sjelden, helt svart). Vurder å nevne den i kjennetegnene.
-5. Flere maurarter har tiltaket «Maur inne skyldes som oftest fukt eller vannskade». Bør
-   kontrolleres mot FHI, som sier at tørre, godt vedlikeholdte bygg har færre maurproblemer.
-6. Stokkmaur: «ofte dekket av boligforsikring» bør kontrolleres.
+FHI-sidene kunne fortsatt ikke åpnes fra utviklingsmiljøet (proxyen avviser www.fhi.no).
+Artsnavnene fra runde 1 er beholdt.
+
+**Forvekslinger og størrelser (stokkmaur, brun tremaur, svart tremaur, svart jordmaur):**
+- Svart tremaur og svart jordmaur: «Stokkmaur – mye større (6–18 mm)» → «arbeidere ca. 5–14 mm,
+  dronninger opptil 18 mm».
+- Brun tremaur lagt inn som forveksling hos stokkmaur, svart tremaur og svart jordmaur (gulbrun
+  mellomkropp og gulbrune bein). Brun tremaur sammenlignes med svart tremaur.
+- Stokkmaur: de to linjene om svart jordmaur er slått sammen til én.
+
+**Maur og fukt:** den godkjente formuleringen
+«Mauraktivitet i bygningskonstruksjoner kan være knyttet til fukt, råte eller tidligere
+vannskader. Det anbefales derfor å undersøke om det finnes underliggende fuktproblemer. Maur kan
+imidlertid også etablere seg i tørre konstruksjoner. Ved mistanke om maurreir i bygningen bør en
+profesjonell skadedyrbekjemper vurdere forholdene og behovet for videre undersøkelser.»
+- står ordrett i tiltakene for de fire artene. Hos stokkmaur erstatter den den eldre fuktteksten,
+  og den har forrang. Hos svart tremaur og svart jordmaur erstatter den «Maur inne skyldes som
+  oftest fukt eller vannskade …». Svart jordmaur har i tillegg en linje som skiller maur som bare
+  kommer inn etter mat, fra reir i konstruksjonen.
+- Begge chattene har felles regler (`src/lib/server/fagregler.ts`): formuleringen ved mistanke om
+  reir i konstruksjoner, skille mellom tilfeldige maur og etablerte reir, ingen påstand om at alle
+  maurproblemer skyldes vannskade eller at fravær av synlig fukt utelukker stokkmaur, ikke
+  bagatellisere etablerte angrep (også brun tremaur), ingen giftinstruksjoner.
+
+**Brun tremaur:** alvorlighet «middels» beholdt. Tiltaket er nå «Reir inne i
+bygningskonstruksjoner bør undersøkes – et etablert angrep kan kreve profesjonell bekjempelse».
+
+**Forsikring:** «ofte dekket av boligforsikring» hos stokkmaur er erstattet med «Om skaden dekkes
+av forsikringen, avhenger av vilkårene i den enkelte forsikringsavtalen.» Begge chattene skal ikke
+love forsikringsdekning.
+
+**Gamle funn:** nye funn lagres med artsdataversjon 2. Funn uten versjon viser «Artsopplysninger
+kan ha blitt oppdatert siden denne analysen ble utført.» når de åpnes fra historikken. Funnet og
+artsnavnet endres ikke.
+
+## Gjenstår – til senere godkjenning (ikke endret)
+
+1. Rødmaur og rød skogsmaur har fortsatt «Maur inne skyldes som oftest fukt eller vannskade …».
+2. Skjeggkre: «skjeggkre dekkes ofte av boligforsikring».
+3. Sotstokkmaur – vurderes i en egen gjennomgang av artsbiblioteket.
+4. Størrelsene for svart tremaur (4–6 mm) og svart jordmaur (3–5 mm) er ikke kontrollert mot FHI,
+   og skiller ikke mellom arbeidere og dronninger.
+5. Utbredelse for svart tremaur («Hele landet») er ikke kontrollert mot FHI.

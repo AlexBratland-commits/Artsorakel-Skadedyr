@@ -223,4 +223,4 @@ Art som ikke står i listen: {"found":false,"name":"Ukjent","latinName":"Ukjent"
 ]
 `;
 
-exports[`/api/analyze – kontrakt og uendrede prompter > ukjent gruppe i steg 1 gir steg 2 med full artsliste (dagens oppførsel, F5) 1`] = `24765`;
+exports[`/api/analyze – kontrakt og uendrede prompter > ukjent gruppe i steg 1 gir steg 2 med full artsliste (dagens oppførsel, F5) 1`] = `25185`;
