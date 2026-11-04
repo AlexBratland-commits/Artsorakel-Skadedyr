@@ -23,7 +23,7 @@ describe("brun tremaur er Lasius brunneus – aldri jordstokkmaur", () => {
     expect(brun().slug).toBe("brun-tremaur");
     expect(fhiUrl(brun().slug)).toBe("https://www.fhi.no/sk/skadedyrhandboka/maur/brun-tremaur/");
     expect(brun().kjennetegn).toMatch(/Arbeidere 3,2–4,5 mm, dronninger 8–9 mm/);
-    expect(brun().kjennetegn).toMatch(/gulbrun mellomkropp og gulbrune bein/);
+    expect(brun().kjennetegn).toMatch(/lysebrun mellomkropp og mørkere brunt hode og bakkropp/);
     expect(brun().aliaser).toContain("brun jordmaur");
   });
 
@@ -65,9 +65,8 @@ describe("stokkmaur etter FHI", () => {
 describe("bildeidentifiseringens artsdata og nøkkel", () => {
   it("maur-nøkkelen plasserer brun tremaur blant de små maurene", () => {
     const n = GROUP_FOCUS.Maur;
-    expect(n).toMatch(/over 6 mm → stokkmaur eller rød skogsmaur\./);
-    expect(n).toMatch(/3–6 mm → svart tremaur, svart jordmaur, brun tremaur eller rødmaur/);
-    expect(n).toMatch(/Brun med gulbrun mellomkropp og gulbrune bein → brun tremaur/);
+    expect(n).toMatch(/brun tremaur 3,2–4,5 mm/);
+    expect(n).toMatch(/lysebrun mellomkropp og mørkere hode og bakkropp → brun tremaur/);
     expect(n).not.toMatch(/brun tremaur \(rødbrun/);
   });
 

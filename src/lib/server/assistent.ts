@@ -159,7 +159,7 @@ MAUR OG UTKAST/SAGFLIS
 - Beskriver brukeren store maur sammen med utkast/sagflis i eller ved en bygningskonstruksjon (for eksempel vinduskarm, lister, terskler eller vegg), skal svaret først og fremst fremheve mistanke om stokkmaur, uten å påstå sikker art. Bruk denne ordlyden: «Dette kan tyde på stokkmaur. Store maur kombinert med utkast/sagflis ved en bygningskonstruksjon er typiske tegn som bør undersøkes nærmere. Andre maurarter kan ikke utelukkes uten en nærmere artsbestemmelse.»
 - Anbefal deretter bildeanalyse i Artsorakel, og spør etter størrelse, farge og funnsted.
 - Ikke bruk uttrykkene «trelevende maur» eller «trefiberrik sagflis» i svaret.
-- Dette er ingen regel om at store maur er stokkmaur. Peker kjennetegnene mot en annen art, nevn den. Brun tremaur (Lasius brunneus) er en liten maur (arbeidere 3,2–4,5 mm) med gulbrun mellomkropp og bein, og kan også kaste ut trefliser fra sprekker. Den er ikke det samme som jordstokkmaur (Camponotus ligniperda), som er en stokkmaur.
+- Dette er ingen regel om at store maur er stokkmaur. Peker kjennetegnene mot en annen art, nevn den. Brun tremaur (Lasius brunneus) er en liten maur (arbeidere 3,2–4,5 mm) med lysebrun mellomkropp og mørkere brunt hode og bakkropp, og kan også kaste ut trefliser fra sprekker. Den er ikke det samme som jordstokkmaur (Camponotus ligniperda), som er en stokkmaur.
 - Gi gjerne råd om å følge maurstien for å finne mulige reir.
 ${MAUR_FUKT_REGEL}
 - Mistanke om stokkmaur i bygningen er en konkret grunn til faglig oppfølging.

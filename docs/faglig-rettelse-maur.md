@@ -85,11 +85,39 @@ love forsikringsdekning.
 kan ha blitt oppdatert siden denne analysen ble utført.» når de åpnes fra historikken. Funnet og
 artsnavnet endres ikke.
 
+## Runde 3: kontroll mot FHIs felthåndbok 2023
+
+**Kilde:** FHI, *Felthåndbok for skadedyr*, 7. utgave, september 2023, maurkapittelet s. 79–87
+(lastet opp av fagansvarlig, ikke publisert i appen). FHIs nettbaserte skadedyrhåndbok kunne
+fortsatt ikke åpnes fra utviklingsmiljøet. Der nettopplysninger er brukt, er det merket «FHI på nett»
+og bygger på fagansvarliges egen kontroll.
+
+| Art | Rettelse | Kilde |
+|---|---|---|
+| Svart jordmaur | Godkjent formulering om reir i råteskadet treverk og isopor (fjernet «gjør ikke bygningsskade»). Utstående hår på første antenneledd. Alias «sukkermaur». Utbredelse: svært vanlig i lavlandet i Sør-Norge, utendørs nord til og med Trøndelag. | s. 82 |
+| Stokkmaur | Utbredelse «hele landet, men vanligst i Sør-Norge». Sverming sent i mai–tidlig juli. Tegn på reir: utkast av treflis og isolasjon, krafselyder. Forveksling med svart jordmaur rettet. | s. 80, 82 |
+| Brun tremaur | Lysebrun mellomkropp, mørkere brunt hode og bakkropp. Glatt første antenneledd (med forbehold). Sverming juni–tidlig juli. | s. 83 |
+| Svart tremaur | Utbredelse Sørøst-Norge, Aust-Agder–Hedmark. Appelsinlukt i stedet for sitrus. Reir i konstruksjoner, gnager normalt ikke i treverket; fukt rundt reiret kan gi råte. | s. 84 |
+| Faraomaur | Arbeidere 2–2,4 mm, brungul med mørkere bakre del av bakkroppen, stilk med to ledd. | s. 81 |
+| Rødmaur | Arts-ID beholdt. Faglig: eitermaur (*Myrmica* spp.), vanligst hageeitermaur. Arbeidere 3,5–5 mm. Søkeord eitermaur, hageeitermaur, *Myrmica rubra*. Fuktpåstand erstattet med FHIs råd. | s. 87 |
+| Rød skogsmaur | *Formica rufa*-gruppen, arbeidere 4,5–9 mm. Fuktpåstand erstattet med FHIs råd om tuer innendørs. | s. 86 |
+| Maur-nøkkelen og bildeprompten | Fjernet «over 6 mm → stokkmaur». Størrelse vurderes sammen med form, farge, kjennetegn og funnsted. | s. 80–87 |
+
+Bildeprompten: bare linjen om stokkmaur er endret. Grunnlinjetestene er oppdatert for den
+linjen og for lengden på hele artslisten (25 185 → 25 802 tegn).
+
 ## Gjenstår – til senere godkjenning (ikke endret)
 
-1. Rødmaur og rød skogsmaur har fortsatt «Maur inne skyldes som oftest fukt eller vannskade …».
+1. ~~Rødmaur og rød skogsmaur – fuktpåstand~~ rettet i runde 3.
 2. Skjeggkre: «skjeggkre dekkes ofte av boligforsikring».
 3. Sotstokkmaur – vurderes i en egen gjennomgang av artsbiblioteket.
-4. Størrelsene for svart tremaur (4–6 mm) og svart jordmaur (3–5 mm) er ikke kontrollert mot FHI,
-   og skiller ikke mellom arbeidere og dronninger.
-5. Utbredelse for svart tremaur («Hele landet») er ikke kontrollert mot FHI.
+4. ~~Størrelser for svart tremaur og svart jordmaur~~ kontrollert mot s. 82 og 84 (arbeidere).
+5. ~~Utbredelse for svart tremaur~~ rettet etter s. 84.
+6. Ikke i felthåndboka og ikke kontrollert: dronningstørrelser (stokkmaur 18 mm, brun tremaur
+   8–9 mm – fra FHI på nett), «aktiv mars–oktober» (stokkmaur), «aktiv vår til høst» (brun og svart
+   tremaur), «aktiv mai–september» (rødmaur), «rolig og sky» (stokkmaur), «fine, melaktige hauger»
+   (svart jordmaur), «vask bort duftsporene» (svart jordmaur), «vann og luft opp tuer» (rødmaur),
+   «hold tuer på avstand fra bygg» (rød skogsmaur), «sjelden» om faraomaur, og reirganger på
+   5 mm (brun tremaur, FHI på nett).
+7. Bildeprompten sier fortsatt «lukter sitrus eller appelsin» om svart tremaur (`analyze/route.ts`).
+   Ikke endret, fordi bare stokkmaurlinjen var godkjent.

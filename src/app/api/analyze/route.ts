@@ -91,7 +91,7 @@ Bruk disse koblingene, og bare for arter som står i listen under:
 - 3–8 mm, spisse ender, mange og spredt + skuffer, skap, isolasjon eller stikkende lukt → mus
 - skraping, tasling eller løping i vegg eller tak om natten → gnager (størrelsen avgjør mus eller rotte)
 - små ekskrementer som smuldrer til glitrende pulver + under takutstikk, loftsluke eller sprekk i vegg → flaggermus
-- sagflis av trefibre ved lister, vinduer eller terskler + store maur (over 6 mm) → stokkmaur
+- sagflis av trefibre ved lister, vinduer eller terskler + store maur med helsvart hode og jevnt buet rygg → stokkmaur (arbeidere ca. 5–14 mm; størrelse alene avgjør ikke)
 - fine, melaktige hauger + små brunsvarte maur → svart jordmaur
 - maur som lukter sitrus eller appelsin når de knuses → svart tremaur
 - hissige maur som sprayer maursyre + tue av barnåler → rød skogsmaur

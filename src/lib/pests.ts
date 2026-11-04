@@ -470,8 +470,9 @@ export const PESTS: Pest[] = [
     // (C. herculeanus) og jordstokkmaur (C. ligniperda). Jordstokkmaur er IKKE brun tremaur.
     norsk: "Stokkmaur", latin: "Camponotus spp.", slug: "stokkmaur", gruppe: "Maur",
     kjennetegn: "Arbeidere ca. 5–14 mm, dronninger opptil 18 mm. Norges største maur. Tofarget rødbrun og svart: helt svart hode, rødbrun mellomkropp og svart bakkropp (hos jordstokkmaur er fremste del av bakkroppen rødbrun), jevnt buet rygg sett fra siden. Rolig og sky – trekker seg unna når den forstyrres. Legger igjen sagflis av trefibre ved lister, vinduer og terskler",
-    utbredelse: "Hele landet, vanlig i skogsnære boliger. Angrep i bygninger er vanligst i Sør-Norge",
-    sesong: "Aktiv mars–oktober, sverming i mai–juni",
+    // Utbredelse og sverming: FHI felthåndbok 2023, s. 80
+    utbredelse: "Hele landet, men vanligst i Sør-Norge",
+    sesong: "Aktiv mars–oktober. Sverming fra sent i mai til tidlig i juli, avhengig av landsdel",
     alvorlighet: "høy",
     aliaser: [
       "stokkemaur",
@@ -483,16 +484,16 @@ export const PESTS: Pest[] = [
     ],
     forveksles: [
       "Rød skogsmaur – tofarget hode og humpete rygg, aggressiv og sprayer maursyre, bygger tue av barnåler",
-      "Brun tremaur – mye mindre (arbeidere 3,2–4,5 mm), brun med gulbrun mellomkropp og gulbrune bein",
-      "Svart tremaur – mye mindre (4–6 mm), skinnende blank svart og lukter sitrus/appelsin når den knuses",
-      "Svart jordmaur – liten (3–5 mm) og gjør ikke bygningsskade. Haugene den legger igjen er fine og melaktige, ikke sagflis av trefibre",
+      "Brun tremaur – mye mindre (arbeidere 3,2–4,5 mm), med lysebrun mellomkropp og mørkere brunt hode og bakkropp",
+      "Svart tremaur – mye mindre (arbeidere 4–6 mm), skinnende blank svart og har appelsinlukt når den knuses",
+      "Svart jordmaur – mye mindre (arbeidere 3–5 mm) og ensfarget brunsvart. Gnager normalt ikke i friskt treverk, men kan lage reir og ganger i råteskadet treverk og isopor. Haugene den legger igjen er fine og melaktige, ikke sagflis av trefibre",
     ],
     notat: "Ikke bruk gift eller andre kjemikalier før du har snakket med en godkjent skadedyrbekjemper i Ocab.",
     tiltak: [
       "Gnager ganger i trevirke og kan gi bygningsskade",
       "Mauraktivitet i bygningskonstruksjoner kan være knyttet til fukt, råte eller tidligere vannskader. Det anbefales derfor å undersøke om det finnes underliggende fuktproblemer. Maur kan imidlertid også etablere seg i tørre konstruksjoner. Ved mistanke om maurreir i bygningen bør en profesjonell skadedyrbekjemper vurdere forholdene og behovet for videre undersøkelser.",
       "Stokkmaur kan også etablere reir i isolasjonsmaterialer og polystyren, blant annet under støpte dekker og i nærheten av varmekilder. Slike reir trenger ikke være knyttet til fukt eller råte.",
-      "Se etter finmalt sagflis ved lister, terskler og vinduer",
+      "Tegn på reir: utkast av treflis og isolasjonsmateriale, for eksempel ved lister, terskler og vinduer. Noen ganger kan man høre krafselyder fra konstruksjonen",
       "Følg maurstien for å finne reiret – ofte i vegg eller i en stubbe utenfor",
       "Bør utbedres av skadedyrbekjemper. Om skaden dekkes av forsikringen, avhenger av vilkårene i den enkelte forsikringsavtalen.",
     ],
@@ -502,14 +503,15 @@ export const PESTS: Pest[] = [
     // Brun tremaur er Lasius brunneus (tidligere «brun jordmaur») – en liten maur,
     // ikke en stokkmaur. Ikke bland den med jordstokkmaur (Camponotus ligniperda).
     norsk: "Brun tremaur", latin: "Lasius brunneus", slug: "brun-tremaur", gruppe: "Maur",
-    kjennetegn: "Arbeidere 3,2–4,5 mm, dronninger 8–9 mm. Brun, med gulbrun mellomkropp og gulbrune bein. Første antenneledd er glatt, uten børster. Het tidligere brun jordmaur",
+    // Utseende og sverming: FHI felthåndbok 2023, s. 83. Dronningstørrelse: FHI på nett.
+    kjennetegn: "Arbeidere 3,2–4,5 mm, dronninger 8–9 mm. Tofarget brun: lysebrun mellomkropp og mørkere brunt hode og bakkropp. Første antenneledd (det lange) er glatt, uten utstående hår – kan bare brukes når detaljene ses tydelig. Het tidligere brun jordmaur",
     utbredelse: "Sørlig art: fra Agder til Østlandet, med hovedutbredelse i lavlandet rundt Oslo",
-    sesong: "Aktiv vår til høst",
+    sesong: "Aktiv vår til høst. Sverming i juni til tidlig i juli",
     alvorlighet: "middels",
     aliaser: ["brun jordmaur", "Lasius brunneus"],
     forveksles: [
-      "Svart jordmaur – omtrent like stor, men mørk brunsvart og matt, uten den gulbrune mellomkroppen og de gulbrune beina",
-      "Svart tremaur – skinnende blank svart med bredt hjerteformet hode, og lukter sitrus/appelsin når den knuses",
+      "Svart jordmaur – omtrent like stor, men ensfarget brunsvart og har utstående hår på første antenneledd (når detaljene kan ses)",
+      "Svart tremaur – skinnende blank svart med bredt hode, og har appelsinlukt når den knuses",
       "Stokkmaur – mye større (arbeidere ca. 5–14 mm, dronninger opptil 18 mm), med helt svart hode",
     ],
     notat: "Ikke bruk gift eller andre kjemikalier før du har snakket med en godkjent skadedyrbekjemper i Ocab.",
@@ -523,39 +525,43 @@ export const PESTS: Pest[] = [
   },
   {
     norsk: "Svart tremaur", latin: "Lasius fuliginosus", slug: "svart-tremaur", gruppe: "Maur",
-    kjennetegn: "4–6 mm, skinnende blank svart med bredt hode som har buet bakkant (hjerteformet). Lukter tydelig sitrus/appelsin når den knuses mellom fingrene – et sikkert kjennetegn",
-    utbredelse: "Hele landet, i gamle hule trær og i hulrom i vegger",
+    // Utseende, utbredelse og skade: FHI felthåndbok 2023, s. 84
+    kjennetegn: "Arbeidere 4–6 mm, skinnende blank svart med bredt hode som har svakt buet bakkant (hjerteformet). Tydelig appelsinlukt når den knuses mellom fingrene – et sikkert kjennetegn",
+    utbredelse: "Sørøst-Norge, fra Aust-Agder nordover til Hedmark. Reir i gamle trær og mellom veggkonstruksjoner i hus",
     sesong: "Aktiv vår til høst",
     alvorlighet: "middels",
     aliaser: ["sort tremaur"],
     forveksles: [
-      "Svart jordmaur – matt, ikke blank, med mindre hode og uten sitrus-/appelsinlukt",
-      "Brun tremaur – brun med gulbrun mellomkropp og gulbrune bein, ikke skinnende blank svart",
+      "Svart jordmaur – matt, ikke blank, med mindre hode og uten appelsinlukt",
+      "Brun tremaur – tofarget brun med lysebrun mellomkropp, ikke skinnende blank svart",
       "Stokkmaur – mye større (arbeidere ca. 5–14 mm, dronninger opptil 18 mm), med rødbrun mellomkropp",
     ],
     notat: "Ikke bruk gift eller andre kjemikalier før du har snakket med en godkjent skadedyrbekjemper i Ocab.",
     tiltak: [
       "Bygger reir av en papplignende masse i hulrom – let i vegger, under gulv og i gamle trær nær huset",
+      "Kan etablere reir i bygningskonstruksjoner, men gnager normalt ikke i selve treverket. Fuktproblemer rundt reiret kan bidra til råteskader",
       "Mauraktivitet i bygningskonstruksjoner kan være knyttet til fukt, råte eller tidligere vannskader. Det anbefales derfor å undersøke om det finnes underliggende fuktproblemer. Maur kan imidlertid også etablere seg i tørre konstruksjoner. Ved mistanke om maurreir i bygningen bør en profesjonell skadedyrbekjemper vurdere forholdene og behovet for videre undersøkelser.",
       "Følg maurstien for å finne reiret",
     ],
   },
   {
     norsk: "Svart jordmaur", latin: "Lasius niger", slug: "maur", gruppe: "Maur",
-    kjennetegn: "3–5 mm, mørk brunsvart og matt. Kan også legge igjen små hauger ved lister og sprekker, men det er finere og mer melaktig enn stokkmaurens sagflis av trefibre",
-    utbredelse: "Hele landet, svært vanlig i hager",
+    // Utseende, utbredelse og skade: FHI felthåndbok 2023, s. 82
+    kjennetegn: "Arbeidere 3–5 mm, ensfarget brunsvart og matt. Første antenneledd (det lange) har utstående hår – nyttig ved artsbestemmelse når detaljene kan ses. Kan også legge igjen små hauger ved lister og sprekker, men det er finere og mer melaktig enn stokkmaurens sagflis av trefibre",
+    utbredelse: "Svært vanlig i lavlandet i Sør-Norge. Utendørs finnes den nord til og med Trøndelag",
     sesong: "Aktiv april–september, sverming i juli–august",
     alvorlighet: "lav",
-    aliaser: ["jordmaur", "sort jordmaur"],
+    aliaser: ["jordmaur", "sort jordmaur", "sukkermaur"],
     forveksles: [
-      "Svart tremaur – skinnende blank (ikke matt) med bredt hjerteformet hode, og lukter sitrus/appelsin når den knuses",
-      "Brun tremaur – omtrent like stor (arbeidere 3,2–4,5 mm), men med gulbrun mellomkropp og gulbrune bein",
+      "Svart tremaur – skinnende blank (ikke matt) med bredt hjerteformet hode, og har appelsinlukt når den knuses",
+      "Brun tremaur – omtrent like stor (arbeidere 3,2–4,5 mm), men tofarget med lysebrun mellomkropp, og uten hår på første antenneledd",
       "Stokkmaur – mye større (arbeidere ca. 5–14 mm, dronninger opptil 18 mm), med rødbrun mellomkropp",
       "Faraomaur – bare 2 mm og blek gulbrun",
     ],
     notat: "Ikke bruk gift eller andre kjemikalier før du har snakket med en godkjent skadedyrbekjemper i Ocab.",
     tiltak: [
       "Vask bort duftsporene med såpevann der de går inn",
+      "Svart jordmaur gnager normalt ikke i friskt treverk, men kan etablere reir og lage ganger i råteskadet treverk og isolasjonsmaterialer som isopor. Dette kan føre til lokale skader i konstruksjonen. Ved mistanke om reir i bygningen bør forholdene undersøkes nærmere, også med tanke på fukt eller tidligere vannskader.",
       "Maur som bare kommer inn etter mat, trenger ikke ha reir i bygningen. Ved mistanke om reir i vegger, gulv eller isolasjon gjelder dette:",
       "Mauraktivitet i bygningskonstruksjoner kan være knyttet til fukt, råte eller tidligere vannskader. Det anbefales derfor å undersøke om det finnes underliggende fuktproblemer. Maur kan imidlertid også etablere seg i tørre konstruksjoner. Ved mistanke om maurreir i bygningen bør en profesjonell skadedyrbekjemper vurdere forholdene og behovet for videre undersøkelser.",
       "Tett sprekker i grunnmur og rundt vinduer",
@@ -564,7 +570,8 @@ export const PESTS: Pest[] = [
   },
   {
     norsk: "Faraomaur", latin: "Monomorium pharaonis", slug: "faraomaur", gruppe: "Maur",
-    kjennetegn: "1,5–2 mm, gulbrun og nesten gjennomskinnelig",
+    // Utseende: FHI felthåndbok 2023, s. 81
+    kjennetegn: "Arbeidere 2–2,4 mm, brungul med mørkere bakre del av bakkroppen. Stilken mellom mellomkropp og bakkropp har to ledd",
     utbredelse: "Sjelden, i oppvarmede bygg som sykehus og blokker",
     sesong: "Hele året innendørs",
     alvorlighet: "høy",
@@ -580,9 +587,13 @@ export const PESTS: Pest[] = [
     ],
   },
   {
-    norsk: "Rødmaur", latin: "Myrmica rubra", slug: "maur", gruppe: "Maur",
-    kjennetegn: "4–6 mm, rustrød, har brodd og kan stikke",
-    utbredelse: "Hele landet, i plen og bed",
+    // Arts-ID «Rødmaur» beholdes av hensyn til historikken. Faglig er dette
+    // eitermaur (Myrmica spp.), en gruppe med flere arter – vanligst hageeitermaur
+    // (M. rubra). Kilde: FHI felthåndbok 2023, s. 87.
+    norsk: "Rødmaur", latin: "Myrmica spp.", slug: "maur", gruppe: "Maur",
+    kjennetegn: "Eitermaur – en gruppe med flere arter, vanligst hageeitermaur. Arbeidere 3,5–5 mm, brungul til rødbrun og blank, med torner på ryggen. Har brodd og kan stikke",
+    utbredelse: "Vanlig over hele landet. Hageeitermaur er den vanligste mauren rundt hus i lavlandet",
+    aliaser: ["eitermaur", "hageeitermaur", "Myrmica rubra"],
     sesong: "Aktiv mai–september",
     alvorlighet: "lav",
     forveksles: [
@@ -592,17 +603,19 @@ export const PESTS: Pest[] = [
     notat: "Ikke bruk gift eller andre kjemikalier før du har snakket med en godkjent skadedyrbekjemper i Ocab.",
     tiltak: [
       "Stikker hvis den forstyrres – vær forsiktig ved luking",
-      "Maur inne skyldes som oftest fukt eller vannskade – kontroller nøye rundt bad, vinduer, terskler, bunnsvill og tak der de kommer inn",
+      "Gjør ingen materielle skader og kommer sjelden inn i hus. Bekjempelse er vanligvis unødvendig",
+      "Bruk sko og sokker der det er mye eitermaur",
       "Vann og luft opp tuer i plenen, eller flytt bedet",
     ],
   },
   {
-    norsk: "Rød skogsmaur", latin: "Formica rufa", slug: "maur", gruppe: "Maur",
-    kjennetegn: "5–9 mm, rød mellomkropp, svart bakkropp og tofarget hode (rødt og svart), humpete rygg sett fra siden. Aggressiv – angriper og sprayer maursyre når den forstyrres. Bygger store tuer av barnåler og kvister",
+    // Formica rufa-gruppen (flere arter). Kilde: FHI felthåndbok 2023, s. 86.
+    norsk: "Rød skogsmaur", latin: "Formica rufa-gruppen", slug: "maur", gruppe: "Maur",
+    kjennetegn: "Arbeidere 4,5–9 mm, rød mellomkropp, svart bakkropp og tofarget hode (rødt og svart), humpete rygg sett fra siden. Aggressiv – angriper og sprayer maursyre når den forstyrres. Bygger store tuer av barnåler og kvister",
     utbredelse: "Hele landet i skog",
     sesong: "Aktiv april–oktober",
     alvorlighet: "lav",
-    aliaser: ["skogmaur", "rød skogmaur", "skogsmaur"],
+    aliaser: ["skogmaur", "rød skogmaur", "skogsmaur", "Formica rufa"],
     forveksles: [
       "Stokkmaur – helt svart hode og jevnt buet rygg, rolig og sky, og bygger ikke tue",
       "Rødmaur – mindre og ensfarget rustrød",
@@ -610,7 +623,7 @@ export const PESTS: Pest[] = [
     notat: "Ikke bruk gift eller andre kjemikalier før du har snakket med en godkjent skadedyrbekjemper i Ocab.",
     tiltak: [
       "Arten er nyttig i skogen og bør ikke bekjempes uten grunn",
-      "Maur inne skyldes som oftest fukt eller vannskade – kontroller nøye rundt bad, vinduer, terskler, bunnsvill og tak der de kommer inn",
+      "Tuer innendørs er svært uvanlige, men kan gi fuktskader der tuen bygges – slike tuer fjernes mekanisk",
       "Hold tuer på avstand fra bygg og fjern klatreveier",
     ],
   },
@@ -1516,10 +1529,10 @@ Døde dyr kan ligge sammenkrøllet – vurder halens tykkelse og føttenes stør
   Kakerlakker: "Vurder størrelse, farge, vingedekker, antennelengde og mønster på ryggskjoldet.",
   Kre: "Vurder størrelse, skallfarge, klør, antenner og kroppsform (langstrakt vs. sammenrullet).",
   Maur: `Gå gjennom denne nøkkelen i rekkefølge:
-1. Størrelse: over 6 mm → stokkmaur eller rød skogsmaur. 3–6 mm → svart tremaur, svart jordmaur, brun tremaur eller rødmaur. Rundt 2 mm og blek gul → faraomaur.
+1. Størrelse er bare ett av kjennetegnene, og artene overlapper. Arbeidere: stokkmaur ca. 5–14 mm, rød skogsmaur 4,5–9 mm, svart tremaur 4–6 mm, eitermaur (rødmaur) 3,5–5 mm, brun tremaur 3,2–4,5 mm, svart jordmaur 3–5 mm, faraomaur 2–2,4 mm. Vurder alltid størrelse sammen med kroppsform, farge, øvrige kjennetegn og funnsted – konkluder aldri med stokkmaur bare ut fra størrelse.
 2. Store maur: helt svart hode og jevnt buet rygg → stokkmaur (bakkroppen kan være svart, eller ha rødbrun forreste del hos jordstokkmaur). Tofarget hode (rødt og svart) og humpete rygg → rød skogsmaur.
-3. Små maur: skinnende blank svart med bredt hjerteformet hode → svart tremaur. Matt brunsvart → svart jordmaur. Brun med gulbrun mellomkropp og gulbrune bein → brun tremaur. Ensfarget rustrød → rødmaur.
-4. Spor og atferd fra brukerens tekst: sky og rolig → stokkmaur. Hissig, angriper og sprayer maursyre, tue av barnåler → rød skogsmaur. Sagflis av trefibre ved lister og vinduer → stokkmaur. Fine, melaktige hauger → svart jordmaur. Lukter sitrus eller appelsin når den knuses → svart tremaur.
+3. Små maur: skinnende blank svart med bredt hjerteformet hode → svart tremaur. Matt brunsvart → svart jordmaur. Tofarget brun med lysebrun mellomkropp og mørkere hode og bakkropp → brun tremaur. Brungul til rødbrun og blank, med torner på ryggen → rødmaur (eitermaur). Rundt 2 mm og brungul → faraomaur.
+4. Spor og atferd fra brukerens tekst: sky og rolig → stokkmaur. Hissig, angriper og sprayer maursyre, tue av barnåler → rød skogsmaur. Sagflis av trefibre ved lister og vinduer → stokkmaur. Fine, melaktige hauger → svart jordmaur. Appelsinlukt når den knuses → svart tremaur.
 Vurder også om den har vinger (sverming).`,
   "Veps og bier": "Vurder størrelse, farge og mønster (striper), behåring, midje (innsnøring) og vinger.",
   Biller: "Vurder størrelse, farge og mønster på dekkvingene, antenneform, bein og kroppsform.",

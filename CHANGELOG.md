@@ -20,6 +20,9 @@ artsbiblioteket er uendret.
   (jordstokkmaur). Rettet størrelse, utseende, utbredelse, tiltak og FHI-lenke for brun tremaur,
   størrelse og latinsk navn for stokkmaur, maur-nøkkelen og assistentens eksempel. Se
   [docs/faglig-rettelse-maur.md](docs/faglig-rettelse-maur.md).
+- Maurartene kontrollert mot FHIs felthåndbok 2023 (s. 79–87): svart jordmaur kan skade
+  råteskadet treverk og isopor, rettede utbredelser, størrelser, sverming og kjennetegn, eitermaur
+  og *Formica rufa*-gruppen, og ingen ren størrelsesregel for stokkmaur i bildeanalysen.
 - Faglig kvalitetssikring av maur: godkjent formulering om fukt, råte og vannskader i
   bygningskonstruksjoner (stokkmaur, brun tremaur, svart tremaur, svart jordmaur og begge chattene),
   rettede størrelser og forvekslinger, ingen løfter om forsikringsdekning, og et diskret varsel ved

@@ -75,7 +75,7 @@ describe("størrelsessammenligninger mellom de fire maurartene", () => {
   it("brun tremaur sammenlignes med de andre der det hjelper artsbestemmelsen", () => {
     for (const navn of ["Stokkmaur", "Svart tremaur", "Svart jordmaur"]) {
       const f = findPestInGroup(navn, "Maur")!.forveksles!.find((x) => x.startsWith("Brun tremaur"));
-      expect(f, navn).toMatch(/gulbrun mellomkropp og gulbrune bein/);
+      expect(f, navn).toMatch(/lysebrun mellomkropp/);
     }
     const brun = findPestInGroup("Brun tremaur", "Maur")!.forveksles!.map((x) => x.split(" –")[0]);
     expect(brun).toEqual(["Svart jordmaur", "Svart tremaur", "Stokkmaur"]);
