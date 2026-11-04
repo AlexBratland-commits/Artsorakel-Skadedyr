@@ -24,7 +24,12 @@ export default defineConfig({
   reporter: [["list"]],
   use: { ...devices["Pixel 7"], trace: "retain-on-failure" },
   projects: [
-    { name: "åpen", testMatch: /(app|ekskrementer|heic|endringer-etter-test)\.spec\.ts/, use: { baseURL: "http://localhost:3201" } },
+    { name: "åpen", testMatch: /(app|ekskrementer|heic|endringer-etter-test|assistent|historikk|tema)\.spec\.ts/, use: { baseURL: "http://localhost:3201" } },
+    {
+      name: "pc",
+      testMatch: /(assistent-pc|tema)\.spec\.ts/,
+      use: { ...devices["Desktop Chrome"], baseURL: "http://localhost:3201" },
+    },
     { name: "tilgangskode", testMatch: /tilgang\.spec\.ts/, use: { baseURL: "http://localhost:3202" } },
     { name: "upstash-nede", testMatch: /upstash-nede\.spec\.ts/, use: { baseURL: "http://localhost:3203" } },
   ],

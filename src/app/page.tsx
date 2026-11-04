@@ -12,6 +12,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 import OcabLogo from "@/components/OcabLogo";
 import AskAboutFinding from "@/components/AskAboutFinding";
 import AccessGate from "@/components/AccessGate";
+import AssistantChat from "@/components/AssistantChat";
 import { useToast } from "@/components/Toast";
 
 import { compressImage, formatBytes, makeThumbnail } from "@/lib/image-tools";
@@ -179,7 +180,7 @@ export default function Home() {
   };
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-3xl flex-col px-4 pb-10 sm:px-6">
+    <div className="mx-auto flex min-h-dvh max-w-3xl flex-col px-4 pb-28 sm:px-6">
       <header className="no-print flex items-center justify-between gap-4 py-6">
         <a href="https://www.ocab.no/" target="_blank" rel="noopener noreferrer">
           <OcabLogo height={26} />
@@ -436,7 +437,7 @@ export default function Home() {
       <footer className="mt-14 border-t hairline pt-6 text-sm text-muted">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <OcabLogo height={20} />
+            <OcabLogo variant="slagord" height={44} />
             <p className="mt-2">Over 40 års erfaring med skadedyr</p>
           </div>
           <div className="flex flex-col gap-1 sm:items-end">
@@ -451,7 +452,7 @@ export default function Home() {
             <p>© {new Date().getFullYear()} Ocab AS</p>
           </div>
         </div>
-        <p className="mt-5 max-w-prose text-xs">
+        <p className="mt-5 max-w-prose text-sm leading-relaxed">
           Bildet og det du skriver sendes til en AI-tjeneste for analyse.
           Posisjon og andre metadata fjernes fra bildet først, og bildet lagres
           ikke hos Ocab. Svaret er veiledende og erstatter ikke en befaring.{" "}
@@ -460,6 +461,9 @@ export default function Home() {
           </Link>
         </p>
       </footer>
+
+      {/* Spør Artsorakel: åpnes bare når brukeren trykker på boblen. */}
+      <AssistantChat />
     </div>
   );
 }

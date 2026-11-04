@@ -1,5 +1,17 @@
 # Endringslogg
 
+## Uutgitt – Artsorakel 2.0
+
+Detaljer: [docs/artsorakel-2.md](docs/artsorakel-2.md). Bildeanalysen, modellene, promptene og
+artsbiblioteket er uendret.
+
+- Offisiell Ocab-logo i toppfelt og bunntekst (fra original-PNG), lys plate i mørk modus.
+- «Spør Artsorakel»: flytende chatboble og skadedyrassistent uten bilde, med fagstoff fra
+  artsbiblioteket, oppfølgingsspørsmål og kontaktkort til Ocab ved behov.
+- Samme chatmodell, delte grenser og samme kostnadsramme som funn-chatten. Ingen nye miljøvariabler.
+- Historikk: tre siste på forsiden, og «Se alle tidligere funn».
+- Personvern: nytt avsnitt om chatten (til godkjenning).
+
 ## Uutgitt – justeringer etter test i Preview
 
 - Artsavhengige tetteråd: mus fra omtrent 4–6 mm, rotte fra omtrent 10–14 mm, og

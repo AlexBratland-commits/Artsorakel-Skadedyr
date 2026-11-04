@@ -1,0 +1,325 @@
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ExternalLink, MessageCircle, RotateCcw, Send, X } from "lucide-react";
+import { nettverksfeil } from "@/lib/client-errors";
+
+/**
+ * «Spør Artsorakel» – flytende chatboble for spørsmål om skadedyr uten bilde.
+ * Helt adskilt fra funn-chatten (egen samtale, eget API, egen lagring).
+ * Samtalen lagres bare i denne nettleseren og slettes med «Ny samtale».
+ */
+
+const OCAB_KONTAKT = "https://www.ocab.no/skade/skadedyr/";
+const LAGRING = "artsorakel-assistent";
+const TIDSGRENSE_MS = 35_000;
+
+const FORSLAG = [
+  "Jeg hører krafsing på loftet",
+  "Hva kan lage hull i ullklær?",
+  "Hvordan vet jeg om jeg har veggedyr?",
+  "Hva er forskjellen på mus og rotte?",
+  "Jeg finner maur på badet",
+  "Hvordan sikrer jeg huset mot gnagere?",
+];
+
+interface Melding {
+  role: "user" | "assistant";
+  content: string;
+  sig?: string;
+  visKontakt?: boolean;
+}
+
+interface Lagret {
+  samtaleToken?: string;
+  meldinger: Melding[];
+}
+
+function lesLagret(): Lagret {
+  try {
+    const raw = window.localStorage.getItem(LAGRING);
+    if (!raw) return { meldinger: [] };
+    const d = JSON.parse(raw);
+    return Array.isArray(d?.meldinger) ? { samtaleToken: d.samtaleToken, meldinger: d.meldinger } : { meldinger: [] };
+  } catch {
+    return { meldinger: [] };
+  }
+}
+
+export default function AssistantChat() {
+  const [apen, setApen] = useState(false);
+  const [meldinger, setMeldinger] = useState<Melding[]>([]);
+  const [samtaleToken, setSamtaleToken] = useState<string | undefined>();
+  const [utkast, setUtkast] = useState("");
+  const [venter, setVenter] = useState(false);
+  const [feil, setFeil] = useState<string | null>(null);
+  const knappRef = useRef<HTMLButtonElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const listeRef = useRef<HTMLDivElement>(null);
+  const lastet = useRef(false);
+
+  // Hent tidligere samtale fra denne nettleseren (bare på klienten).
+  useEffect(() => {
+    const l = lesLagret();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMeldinger(l.meldinger);
+    setSamtaleToken(l.samtaleToken);
+    lastet.current = true;
+  }, []);
+
+  useEffect(() => {
+    if (!lastet.current) return;
+    try {
+      if (meldinger.length) window.localStorage.setItem(LAGRING, JSON.stringify({ samtaleToken, meldinger }));
+      else window.localStorage.removeItem(LAGRING);
+    } catch {
+      /* privat modus – samtalen lagres ikke */
+    }
+  }, [meldinger, samtaleToken]);
+
+  useEffect(() => {
+    listeRef.current?.scrollTo({ top: listeRef.current.scrollHeight, behavior: "smooth" });
+  }, [meldinger, venter, apen]);
+
+  const lukk = useCallback(() => {
+    setApen(false);
+    // Knappen vises igjen etter neste tegning – flytt fokuset dit da.
+    requestAnimationFrame(() => knappRef.current?.focus());
+  }, []);
+
+  // Esc lukker, fokus til skrivefeltet når chatten åpnes, og siden bak låses på mobil.
+  useEffect(() => {
+    if (!apen) return;
+    inputRef.current?.focus();
+    const tast = (e: KeyboardEvent) => e.key === "Escape" && lukk();
+    window.addEventListener("keydown", tast);
+    const mobil = window.matchMedia("(max-width: 639px)").matches;
+    if (mobil) document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", tast);
+      document.body.style.overflow = "";
+    };
+  }, [apen, lukk]);
+
+  const nySamtale = () => {
+    setMeldinger([]);
+    setSamtaleToken(undefined);
+    setFeil(null);
+    setUtkast("");
+    inputRef.current?.focus();
+  };
+
+  const send = async (tekst: string) => {
+    const sporsmal = tekst.trim();
+    if (!sporsmal || venter) return;
+    const neste: Melding[] = [...meldinger, { role: "user", content: sporsmal }];
+    setMeldinger(neste);
+    setUtkast("");
+    setFeil(null);
+    setVenter(true);
+    const controller = new AbortController();
+    const tid = window.setTimeout(() => controller.abort(), TIDSGRENSE_MS);
+    try {
+      const res = await fetch("/api/assistent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
+        body: JSON.stringify({
+          samtaleToken,
+          messages: neste.map(({ role, content, sig }) => ({ role, content, sig })),
+        }),
+      });
+      const data = await res.json().catch(() => null);
+      if (res.status === 401 && data?.kode === "tilgang_kreves") {
+        throw new Error("Logg inn med tilgangskoden på forsiden først.");
+      }
+      if (data?.kode === "samtale_ugyldig") {
+        setMeldinger([{ role: "user", content: sporsmal }]);
+        setSamtaleToken(undefined);
+        throw new Error("Samtalen måtte startes på nytt. Send spørsmålet igjen.");
+      }
+      if (!res.ok) throw new Error(data?.error ?? "Fikk ikke svar. Prøv igjen.");
+      if (typeof data?.svar !== "string" || !data.svar) throw new Error("Tomt svar. Prøv igjen.");
+      setSamtaleToken(data.samtaleToken);
+      setMeldinger([...neste, { role: "assistant", content: data.svar, sig: data.signatur, visKontakt: !!data.visKontakt }]);
+    } catch (error) {
+      setMeldinger((m) => (m.at(-1)?.role === "user" && m.at(-1)?.content === sporsmal ? m.slice(0, -1) : m));
+      setUtkast(sporsmal);
+      setFeil(nettverksfeil(error, "Fikk ikke svar. Prøv igjen."));
+    } finally {
+      window.clearTimeout(tid);
+      setVenter(false);
+    }
+  };
+
+  return (
+    <>
+      {!apen && (
+        <button
+          ref={knappRef}
+          type="button"
+          onClick={() => setApen(true)}
+          aria-expanded={false}
+          aria-controls="assistent-panel"
+          className="no-print fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 z-40 inline-flex items-center gap-2 rounded-full bg-ocab-900 px-5 py-3.5 text-sm font-semibold text-white shadow-lifted ring-1 ring-white/10 transition hover:bg-ocab-950 active:scale-[0.98] dark:bg-ocab-200 dark:text-ocab-950 dark:hover:bg-white"
+        >
+          <MessageCircle className="size-5" aria-hidden />
+          Spør Artsorakel
+        </button>
+      )}
+
+      {apen && (
+        <section
+          id="assistent-panel"
+          role="dialog"
+          aria-labelledby="assistent-tittel"
+          className="no-print fixed inset-0 z-50 flex flex-col bg-[color:var(--surface)] sm:inset-auto sm:bottom-4 sm:right-4 sm:h-[min(640px,calc(100dvh-2rem))] sm:w-[400px] sm:overflow-hidden sm:rounded-card sm:border sm:hairline sm:shadow-lifted"
+        >
+          <header className="flex items-center gap-3 bg-ocab-900 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] text-white dark:bg-ocab-950">
+            <MessageCircle className="size-5 shrink-0 text-ocab-200" aria-hidden />
+            <div className="min-w-0 flex-1">
+              <h2 id="assistent-tittel" className="text-base font-semibold leading-tight">
+                Spør Artsorakel
+              </h2>
+              <p className="text-xs text-ocab-200">Fagassistent for skadedyr</p>
+            </div>
+            <button
+              type="button"
+              onClick={nySamtale}
+              disabled={venter}
+              className="inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold text-white/90 transition hover:bg-white/10 disabled:opacity-50"
+            >
+              <RotateCcw className="size-3.5" aria-hidden />
+              Ny samtale
+            </button>
+            <button
+              type="button"
+              onClick={lukk}
+              aria-label="Lukk chatten"
+              className="grid size-10 place-items-center rounded-full transition hover:bg-white/10"
+            >
+              <X className="size-5" aria-hidden />
+            </button>
+          </header>
+
+          <div ref={listeRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-4" aria-live="polite">
+            <p className="w-fit max-w-[90%] rounded-2xl rounded-bl-sm bg-[color:var(--surface-sunken)] px-4 py-2.5 text-sm leading-relaxed">
+              Hei! Jeg er Artsorakels fagassistent. Beskriv hva du har sett eller hørt – for eksempel
+              størrelse, farge, lyd og hvor du fant det – så hjelper jeg deg videre. Har du et bilde,
+              gir bildeanalysen på forsiden et sikrere svar.
+            </p>
+
+            {meldinger.length === 0 && (
+              <div className="flex flex-wrap gap-2 pt-1">
+                {FORSLAG.map((f) => (
+                  <button
+                    key={f}
+                    type="button"
+                    onClick={() => send(f)}
+                    className="rounded-full border border-ocab-900/20 px-3.5 py-2 text-left text-sm transition hover:bg-ocab-50 dark:border-white/15 dark:hover:bg-white/5"
+                  >
+                    {f}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {meldinger.map((m, i) => (
+              <div key={i} className={m.role === "user" ? "flex justify-end" : ""}>
+                <p
+                  className={`w-fit max-w-[88%] whitespace-pre-wrap break-words rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+                    m.role === "user"
+                      ? "rounded-br-sm bg-ocab-900 text-white dark:bg-ocab-700"
+                      : "rounded-bl-sm bg-[color:var(--surface-sunken)]"
+                  }`}
+                >
+                  {m.content}
+                </p>
+                {m.visKontakt && (
+                  <div className="mt-2 max-w-[88%] rounded-xl border border-ocab-500/30 bg-ocab-50 p-4 text-sm dark:border-ocab-200/20 dark:bg-ocab-900/30">
+                    <p className="leading-relaxed">
+                      Dette kan være lurt å få undersøkt nærmere. Ocab kan hjelpe deg med å kartlegge
+                      problemet og vurdere riktige tiltak.
+                    </p>
+                    <a
+                      href={OCAB_KONTAKT}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[#b34a00] px-4 py-2 font-semibold text-white transition hover:bg-[#963e00]"
+                    >
+                      Kontakt Ocab
+                      <ExternalLink className="size-3.5" aria-hidden />
+                    </a>
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {venter && (
+              <p className="w-fit rounded-2xl rounded-bl-sm bg-[color:var(--surface-sunken)] px-4 py-2.5 text-sm text-muted">
+                Skriver …
+              </p>
+            )}
+            {feil && (
+              <p role="alert" className="rounded-lg border-l-2 border-grad-hoy bg-[color:var(--surface-sunken)] px-3 py-2 text-sm">
+                {feil}
+              </p>
+            )}
+          </div>
+
+          <form
+            className="flex items-end gap-2 border-t hairline p-3"
+            onSubmit={(e) => {
+              e.preventDefault();
+              send(utkast);
+            }}
+          >
+            <label htmlFor="assistent-input" className="sr-only">
+              Skriv spørsmålet ditt til Artsorakel
+            </label>
+            <textarea
+              id="assistent-input"
+              ref={inputRef}
+              rows={1}
+              value={utkast}
+              maxLength={500}
+              onChange={(e) => setUtkast(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  send(utkast);
+                }
+              }}
+              disabled={venter}
+              placeholder="Beskriv hva du har funnet …"
+              className="max-h-32 min-h-11 min-w-0 flex-1 resize-none rounded-2xl bg-[color:var(--surface-sunken)] px-4 py-2.5 text-base outline-none disabled:opacity-50 sm:text-sm"
+            />
+            <button
+              type="submit"
+              disabled={venter || !utkast.trim()}
+              aria-label="Send spørsmål til Artsorakel"
+              className="grid size-11 shrink-0 place-items-center rounded-full bg-ocab-900 text-white transition hover:bg-ocab-950 disabled:opacity-40 dark:bg-ocab-200 dark:text-ocab-950"
+            >
+              <Send className="size-4" aria-hidden />
+            </button>
+          </form>
+
+          <footer className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-t hairline px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2.5 text-xs leading-relaxed text-muted">
+            <p className="max-w-[17rem]">
+              Meldinger sendes til en AI-tjeneste. Ikke skriv navn, adresse eller andre
+              personopplysninger. Samtalen lagres bare i denne nettleseren.
+            </p>
+            <a
+              href={OCAB_KONTAKT}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-ocab-700 underline underline-offset-4 dark:text-ocab-200"
+            >
+              Kontakt Ocab
+            </a>
+          </footer>
+        </section>
+      )}
+    </>
+  );
+}

@@ -51,6 +51,7 @@ CI (GitHub Actions) kjører alt unntatt `eval` ved hver push og pull request.
 | `src/lib/pests.ts` | Artsbiblioteket (krever faglig godkjenning) |
 | `src/lib/server/` | Sikkerhet, valgfri tilgangskode, grenser (Upstash), AI-klient og logging |
 | `src/app/api/ask-about-findings/route.ts` | Chat om et analysert funn |
+| `src/app/api/assistent/route.ts`, `src/lib/server/assistent.ts` | «Spør Artsorakel» – chat uten bilde (2.0) |
 | `docs/` | Leveranserapporter, veiledning for Vercel og faglige forslag |
 
 ## Drift
