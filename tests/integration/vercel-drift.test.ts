@@ -15,7 +15,6 @@ beforeEach(() => {
   vi.stubEnv("KV_REST_API_TOKEN", "");
   vi.stubEnv("ARTSORAKEL_HEMMELIGHET", "");
   vi.stubEnv("ARTSORAKEL_TILGANGSKODE", "");
-  vi.stubEnv("ARTSORAKEL_APEN_TILGANG", "");
   vi.spyOn(console, "log").mockImplementation(() => {});
   vi.spyOn(console, "warn").mockImplementation(() => {});
   vi.spyOn(console, "error").mockImplementation(() => {});
@@ -41,7 +40,6 @@ describe.each(["production", "preview"])("Vercel %s", (miljo) => {
     expect(oppsett.manglendeSikkerhetsoppsett()).toEqual([
       "ARTSORAKEL_HEMMELIGHET",
       "Upstash (KV_REST_API_URL og KV_REST_API_TOKEN)",
-      "ARTSORAKEL_TILGANGSKODE",
     ]);
     const a = await analyze(analyzeRequest({ image: await jpeg(1) }));
     expect(a.status).toBe(503);
@@ -63,14 +61,41 @@ describe.each(["production", "preview"])("Vercel %s", (miljo) => {
     await expect(store.tellerLager().okn("k", 60)).rejects.toBeInstanceOf(store.LagerUtilgjengelig);
   });
 
-  it("åpen tilgang uten kode krever et bevisst valg (ARTSORAKEL_APEN_TILGANG=1)", async () => {
+  it("tilgangskoden er valgfri: hemmelighet og Upstash er nok", async () => {
     vi.stubEnv("ARTSORAKEL_HEMMELIGHET", "lang-hemmelighet-for-test");
     vi.stubEnv("KV_REST_API_URL", "https://eksempel.upstash.io");
     vi.stubEnv("KV_REST_API_TOKEN", "t");
     const { oppsett } = await last();
-    expect(oppsett.manglendeSikkerhetsoppsett()).toEqual(["ARTSORAKEL_TILGANGSKODE"]);
-    vi.stubEnv("ARTSORAKEL_APEN_TILGANG", "1");
     expect(oppsett.manglendeSikkerhetsoppsett()).toEqual([]);
+  });
+
+  it("uten tilgangskode er appen åpen, men bruksgrensene gjelder (mot ekte tellere)", async () => {
+    vi.stubEnv("ARTSORAKEL_HEMMELIGHET", "lang-hemmelighet-for-test");
+    const store = await import("@/lib/server/store");
+    const lager = new store.MinneLager();
+    vi.resetModules();
+    const s2 = await import("@/lib/server/store");
+    s2._settLagerForTester(lager);
+    vi.stubEnv("KV_REST_API_URL", "https://eksempel.upstash.io");
+    vi.stubEnv("KV_REST_API_TOKEN", "t");
+    installFakeAi();
+    const { tilgangKreves } = await import("@/lib/server/access");
+    expect(tilgangKreves()).toBe(false);
+    const { POST } = await import("@/app/api/analyze/route");
+    const statuser: number[] = [];
+    for (let i = 0; i < 11; i++) {
+      statuser.push((await POST(analyzeRequest({ image: await jpeg(20 + i), headers: { "x-real-ip": "198.51.100.5" } }))).status);
+    }
+    expect(statuser.slice(0, 10).every((s) => s === 200)).toBe(true);
+    expect(statuser[10]).toBe(429);
+  });
+
+  it("med tilgangskode satt kreves den fortsatt", async () => {
+    vi.stubEnv("ARTSORAKEL_HEMMELIGHET", "lang-hemmelighet-for-test");
+    vi.stubEnv("ARTSORAKEL_TILGANGSKODE", "ansatt-kode-123");
+    vi.resetModules();
+    const { tilgangKreves } = await import("@/lib/server/access");
+    expect(tilgangKreves()).toBe(true);
   });
 
   it("signering uten egen hemmelighet feiler i stedet for å bruke en avledet nøkkel", async () => {

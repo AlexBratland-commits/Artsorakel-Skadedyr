@@ -48,7 +48,7 @@ export function siteUrl(): string {
 
 /**
  * Kjører appen i Vercel Production eller Preview? Da gjelder strenge krav:
- * Upstash, signeringshemmelighet og tilgangskode må være satt (oppsett.ts),
+ * Upstash og signeringshemmelighet må være satt (oppsett.ts),
  * og tellere i minnet brukes aldri. Lokal utvikling (og `vercel dev`) er unntatt.
  */
 export function erVercelDrift(): boolean {

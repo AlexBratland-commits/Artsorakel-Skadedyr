@@ -29,15 +29,17 @@ med meldingen *«Artsorakel er ikke ferdig satt opp på serveren …»*.
    (gjerne også *Development*).
 5. Vercel legger selv inn `KV_REST_API_URL` og `KV_REST_API_TOKEN`. Du trenger ikke kopiere noe.
 
-## Del 2 – Legg inn de to sikkerhetsinnstillingene (5 minutter)
+## Del 2 – Legg inn sikkerhetsinnstillingen (5 minutter)
 
 *Settings* → *Environment Variables* → *Add*. Kryss av for *Sensitive* hvis valget finnes.
-**Begge er påkrevd i Production og Preview.**
+`ARTSORAKEL_HEMMELIGHET` er **påkrevd** i Production og Preview. `ARTSORAKEL_TILGANGSKODE` er
+**valgfri**: uten den er appen åpen for alle med lenken, slik de ansatte bruker den i dag.
 
 | Navn | Verdi | Miljø |
 |---|---|---|
 | `ARTSORAKEL_HEMMELIGHET` | En lang, tilfeldig tekst, minst 40 tegn. Lag den med passordgeneratoren i passordbehandleren. Den skal ikke huskes. | Production **og** Preview |
-| `ARTSORAKEL_TILGANGSKODE` | Koden de ansatte skal bruke, minst 12 tegn. For eksempel tre ord og et tall: `rotte-fjord-lampe-42` | Production **og** Preview |
+| `ARTSORAKEL_MAKS_KOSTNAD_PER_DOGN_USD` | Anbefalt: `2` (se «Når appen er åpen» under) | Production **og** Preview |
+| `ARTSORAKEL_TILGANGSKODE` | **Valgfritt – sett den ikke nå.** Settes den senere, må alle skrive inn koden én gang per enhet. | – |
 
 Ikke endre `OPENROUTER_API_KEY` eller modellinnstillingene.
 
@@ -50,7 +52,7 @@ Ikke endre `OPENROUTER_API_KEY` eller modellinnstillingene.
 2. Tre prikker → *Redeploy*, så innstillingene kommer med. Vent til den er *Ready*.
 3. Åpne forhåndsvisningen på mobilen (*Visit*). Kanskje må du logge inn hos Vercel først.
 4. Sjekkliste, gjerne på både iPhone (Safari) og Android (Chrome):
-   - [ ] Du blir bedt om tilgangskoden. Feil kode gir «Feil tilgangskode.», riktig kode slipper deg inn.
+   - [ ] Appen åpner rett på opplastingen, uten tilgangskode (som i dag).
    - [ ] *Ta bilde* åpner kameraet.
    - [ ] En analyse gir et resultat. **Da vet du at Upstash og innstillingene er riktige.**
    - [ ] Chatten svarer, også på et oppfølgingsspørsmål.
@@ -60,9 +62,8 @@ Ikke endre `OPENROUTER_API_KEY` eller modellinnstillingene.
 
 ## Del 4 – Ta i bruk i produksjon (når du har godkjent)
 
-1. Gi tilgangskoden til de ansatte. De skriver den inn én gang per mobil eller PC.
-2. Godkjenn personvernteksten i Ocab.
-3. Åpne PR #6 på GitHub og klikk *Merge pull request*. Vercel lager en ny produksjonsversjon.
+1. Godkjenn personvernteksten i Ocab.
+2. Åpne PR #6 på GitHub og klikk *Merge pull request*. Vercel lager en ny produksjonsversjon.
 
 ---
 
@@ -75,11 +76,30 @@ Sikkerhetsfunksjonene skal **ikke** slås av for å få appen i gang igjen. Bruk
 | «… ikke ferdig satt opp på serveren …» | En påkrevd innstilling mangler. Sjekk Del 1 og 2 for riktig miljø (Production/Preview), og velg *Redeploy*. |
 | «… midlertidig utilgjengelig fordi kontrollen av bruksgrenser ikke svarer …» | Upstash svarer ikke. Vent noen minutter. Varer det, sjekk at databasen fortsatt er koblet til i *Storage*, og se status hos Upstash. |
 | «AI-tjenesten er midlertidig stoppet fordi saldoen er brukt opp …» | Fyll på saldoen i OpenRouter. |
-| Ansatte kommer ikke inn | Sjekk at koden stemmer med `ARTSORAKEL_TILGANGSKODE`. Ny kode: legg den inn ved siden av den gamle, skilt med komma, og fjern den gamle senere. |
+| Mistanke om misbruk (mange analyser, saldoen synker raskt) | Sett `ARTSORAKEL_TILGANGSKODE` og velg *Redeploy*. Da kreves kode med en gang, uten kodeendring. |
 | Noe annet er feil etter en ny produksjonsversjon | *Deployments* → velg forrige produksjonsversjon → *Instant Rollback*. Det ruller tilbake koden, uten å svekke sikkerheten i den nye versjonen. |
+
+## Når appen er åpen (uten tilgangskode)
+
+Alle som har lenken kan bruke appen. Dette beskytter OpenRouter-nøkkelen:
+
+| Vern | Hva det gjør |
+|---|---|
+| Nøkkelen ligger bare på serveren | Den sendes aldri til nettleseren og kan ikke leses av brukerne |
+| Grense per nettverk | 10 analyser og 10 chatspørsmål per time per IP-adresse (IPv6 per /64), felles for alle servere via Upstash |
+| Chat bare om analyserte funn | Chatten kan ikke brukes som en gratis, generell AI-tjeneste |
+| Felles døgnbudsjett | Maks 200 analyser og 500 chatspørsmål per døgn for hele appen |
+| Kostnadsramme | Stopper AI-kall når dagens beløp er brukt (standard 10 USD – **sett den lavere, se under**) |
+| Saldo uten automatisk påfyll | Siste barriere: AI stopper når saldoen er tom |
+| Stor eller falsk opplasting, uvaliderte felter | Avvises før de når AI-en |
+
+**Det som gjenstår:** en som har mange IP-adresser, kan bruke opp døgnbudsjettet. Da stopper
+analysene for alle resten av døgnet, men kostnaden blir aldri høyere enn kostnadsrammen. Med
+omtrent 10 USD i saldo og under 50 analyser per døgn anbefales derfor
+`ARTSORAKEL_MAKS_KOSTNAD_PER_DOGN_USD=2`. Da kan én dag med misbruk koste høyst omtrent 2 USD.
+Merker du misbruk, slår du på tilgangskoden (se tabellen over).
 
 ## Når appen skal brukes mer
 
 Skal Artsorakel lanseres offisielt eller brukes i større skala, skal løsningen overleveres til Ocabs
-IT-avdeling for vurdering av sikkerhet, personvern, tilgangsstyring og drift. Den enkle
-tilgangskoden er laget for dagens interne testfase.
+IT-avdeling for vurdering av sikkerhet, personvern, tilgangsstyring og drift.
