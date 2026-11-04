@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
 import crypto from "crypto";
 import sharp from "sharp";
 
@@ -25,28 +23,29 @@ import {
   type Candidate,
   type Severity,
 } from "@/lib/types";
-import { checkRateLimit, getCached, setCached, RATE_LIMIT } from "@/lib/server-store";
+import { getCached, setCached } from "@/lib/server-store";
+import { erEvalModus, openRouterApiKey, visionModel } from "@/lib/server/config";
+import { kallOpenRouter, summerForbruk, type AiFeil, type Forbruk } from "@/lib/server/openrouter";
+import { forStorForesporsel, ipNokkel, klientIp, sjekkOpprinnelse } from "@/lib/server/request-guards";
+import { lesTilgang, tilgangNektet } from "@/lib/server/access";
+import { analyseDognRegel, analyseRegler, sjekkGrenser, type GrenseResultat } from "@/lib/server/limits";
+import { lesAnalyseFelter } from "@/lib/server/validation";
+import { gjenkjennBildeformat, TILLATTE_SHARP_FORMATER } from "@/lib/server/image-format";
+import { lagChatBillett } from "@/lib/server/chat-ticket";
+import { loggHendelse } from "@/lib/server/log";
+import { sikkerhetsnivaa } from "@/lib/types";
 
 export const runtime = "nodejs"; // sharp krever Node-runtime, ikke Edge
 export const maxDuration = 30;
 
-// ── API-nøkkel (uendret logikk: env først, så config.json) ───────────────
-let apiKey = process.env.OPENROUTER_API_KEY;
-
-if (!apiKey) {
-  try {
-    const configPath = path.join(process.cwd(), "config.json");
-    const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
-    apiKey = config.OPENROUTER_API_KEY;
-    console.log("✅ API-nøkkel lastet fra config.json");
-  } catch {
-    console.warn("⚠️  Fant ingen config.json – bruker OPENROUTER_API_KEY fra miljøet");
-  }
-}
-
-/** Synsmodell for bildeanalyse – kan overstyres med OPENROUTER_VISION_MODEL. */
-const MODEL = process.env.OPENROUTER_VISION_MODEL ?? "google/gemini-3.7-flash";
 const MAX_BYTES = 15 * 1024 * 1024;
+/** Tak på hele forespørselen (bilde + felter), sjekkes før den leses inn. */
+const MAX_BODY_BYTES = MAX_BYTES + 512 * 1024;
+/**
+ * Tak på antall piksler før bildet dekodes. Dekker kameraer på 48–50 MP,
+ * men stopper «dekompresjonsbomber» som ville fylt minnet (S3).
+ */
+const MAX_PIXELS = 70_000_000;
 /**
  * Tak på svarlengden i steg 2. Romslig, fordi noen modeller bruker tokens på
  * å tenke før de svarer – blir taket nådd, kuttes JSON-en og svaret kan ikke
@@ -63,12 +62,6 @@ const ALLOWED_TYPES = /^image\/(jpeg|png|webp|heic|heif|gif|avif|tiff)$/i;
  * skalerer til, så bildet ikke krympes en gang til her.
  */
 const MAX_EDGE = 1600;
-/**
- * Testmodus for scripts/eval.mjs: slår av rate limit og cache, slik at et
- * helt testsett kan kjøres og nye prompter faktisk blir testet. Virker bare
- * under `next dev` – aldri i produksjon.
- */
-const EVAL_MODE = process.env.EVAL_MODE === "1" && process.env.NODE_ENV !== "production";
 
 const UNKNOWN: AnalysisResult = {
   found: false,
@@ -213,20 +206,13 @@ ${SVARFORMAT}`;
 }
 
 export async function POST(request: NextRequest) {
-  // ── CSRF: skjemaposter med FormData utløser ikke preflight, så vi
-  //    sjekker Origin mot Host selv.
-  const origin = request.headers.get("origin");
-  const host = request.headers.get("host");
-  if (origin && host) {
-    try {
-      if (new URL(origin).host !== host) {
-        return NextResponse.json({ error: "Ugyldig opprinnelse." }, { status: 403 });
-      }
-    } catch {
-      return NextResponse.json({ error: "Ugyldig opprinnelse." }, { status: 403 });
-    }
-  }
+  const start = Date.now();
 
+  // ── CSRF: skjemaposter fra andre nettsteder avvises ──────────────────
+  const fremmed = sjekkOpprinnelse(request);
+  if (fremmed) return fremmed;
+
+  const apiKey = openRouterApiKey();
   if (!apiKey) {
     return NextResponse.json(
       { error: "Tjenesten er ikke konfigurert. Kontakt Ocab." },
@@ -234,34 +220,38 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // ── Rate limit per IP ──────────────────────────────────────────────────
-  const ip =
-    request.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
-    request.headers.get("x-real-ip") ||
-    "ukjent";
-  const limit = EVAL_MODE
-    ? { allowed: true, remaining: RATE_LIMIT.MAX_REQUESTS, retryAfterSeconds: 0 }
-    : checkRateLimit(ip);
-  if (!limit.allowed) {
-    const minutter = Math.ceil(limit.retryAfterSeconds / 60);
-    return NextResponse.json(
-      {
-        error: `Du har brukt alle ${RATE_LIMIT.MAX_REQUESTS} analysene denne timen. Prøv igjen om ${minutter} minutter.`,
-      },
-      { status: 429, headers: { "Retry-After": String(limit.retryAfterSeconds) } }
-    );
+  // ── Tilgangskode (når den er slått på) ──────────────────────────────
+  const tilgang = lesTilgang(request);
+  if (tilgang.kreves && !tilgang.ok) return tilgangNektet();
+
+  // ── Bruksgrense per enhet og IP ─────────────────────────────────────
+  const evalModus = erEvalModus();
+  const klient = { ipNokkel: ipNokkel(klientIp(request)), sid: tilgang.sid };
+  let gjenstaende = 0;
+  if (!evalModus) {
+    const grense = await sjekkGrenser(analyseRegler(klient));
+    if (!grense.ok) return grenseSvar(grense, Boolean(klient.sid));
+    gjenstaende = grense.gjenstaende;
+  }
+
+  // ── For stor forespørsel avvises før den leses inn i minnet (S6) ────
+  if (forStorForesporsel(request, MAX_BODY_BYTES)) {
+    return NextResponse.json({ error: "Bildet er for stort. Maks 15 MB." }, { status: 413 });
   }
 
   try {
-    const formData = await request.formData();
+    let formData: FormData;
+    try {
+      formData = await request.formData();
+    } catch {
+      return NextResponse.json({ error: "Ugyldig forespørsel." }, { status: 400 });
+    }
     const image = formData.get("image");
-    const location = String(formData.get("location") ?? "");
-    const storrelse = String(formData.get("storrelse") ?? "");
-    const analyseType = String(formData.get("type") ?? "dyr");
+    // Alle felter valideres: valgfelter godtas bare med kjente verdier,
+    // fritekst renses og kuttes (S1).
+    const { location, storrelse, analyseType, droppingSize, beskrivelse, notesAnimal } =
+      lesAnalyseFelter(formData);
     const erEkskrementer = analyseType === "ekskrementer";
-    const droppingSize = String(formData.get("droppingSize") ?? "");
-    const beskrivelse = String(formData.get("beskrivelse") ?? "").trim().slice(0, 300);
-    const notesAnimal = String(formData.get("notesAnimal") ?? "").trim().slice(0, 300);
 
     if (!(image instanceof File) || image.size === 0) {
       return NextResponse.json({ error: "Ingen bildefil ble sendt med." }, { status: 400 });
@@ -281,6 +271,15 @@ export async function POST(request: NextRequest) {
 
     const inputBuffer = Buffer.from(await image.arrayBuffer());
 
+    // Filtypen avsenderen oppgir kan være feil eller forfalsket. Sjekk hva
+    // filen faktisk er før den når bildemotoren – SVG, PDF o.l. stoppes (S3).
+    if (!gjenkjennBildeformat(inputBuffer)) {
+      return NextResponse.json(
+        { error: "Filtypen støttes ikke. Bruk JPG, PNG, WebP eller HEIC." },
+        { status: 415 }
+      );
+    }
+
     // ── Cache: samme bilde + samme sted gir samme svar ───────────────────
     // Feltene serialiseres som JSON, så "ab"+"c" og "a"+"bc" ikke gir samme nøkkel.
     const hash = crypto
@@ -289,34 +288,50 @@ export async function POST(request: NextRequest) {
       .update(JSON.stringify([location, storrelse, analyseType, droppingSize, beskrivelse, notesAnimal]))
       .digest("hex");
 
-    const cached = EVAL_MODE ? undefined : getCached(hash);
+    const cached = evalModus ? undefined : getCached(hash);
     if (cached) {
-      return NextResponse.json({ ...cached, cached: true });
+      loggHendelse("analyse", { type: analyseType, utfall: utfallFor(cached), cached: true, ms: Date.now() - start });
+      return NextResponse.json({ ...cached, cached: true, chatToken: lagChatBillett(cached) });
+    }
+
+    // ── Felles døgnbudsjett – telles først når et AI-kall faktisk skal gjøres
+    if (!evalModus) {
+      const dogn = await sjekkGrenser([analyseDognRegel()]);
+      if (!dogn.ok) return grenseSvar(dogn, Boolean(klient.sid));
     }
 
     // ── Normaliser til JPEG ─────────────────────────────────────────────
+    // Ny JPEG uten metadata: EXIF – også GPS-posisjon – blir ikke med til
+    // AI-tjenesten. Klarer ikke sharp å lese bildet, avvises det; vi sender
+    // aldri originalfilen videre (S7).
     let jpegBuffer: Buffer;
     try {
-      jpegBuffer = await sharp(inputBuffer)
+      const bilde = sharp(inputBuffer, { limitInputPixels: MAX_PIXELS, failOn: "none" });
+      const meta = await bilde.metadata();
+      if (!meta.format || !TILLATTE_SHARP_FORMATER.has(meta.format)) {
+        return NextResponse.json(
+          { error: "Filtypen støttes ikke. Bruk JPG, PNG, WebP eller HEIC." },
+          { status: 415 }
+        );
+      }
+      if ((meta.width ?? 0) * (meta.height ?? 0) > MAX_PIXELS) return forHoyOpplosning();
+      jpegBuffer = await bilde
         .rotate() // følg EXIF-orientering
         .resize({ width: MAX_EDGE, height: MAX_EDGE, fit: "inside", withoutEnlargement: true })
         .jpeg({ quality: 85, progressive: true, mozjpeg: true })
         .toBuffer();
     } catch (convError) {
-      console.error("❌ sharp klarte ikke å lese bildet:", convError);
-      // HEIC støttes ikke av alle sharp-bygg. Er filen allerede JPEG,
-      // sender vi den som den er i stedet for å gi opp.
-      if (/^image\/jpe?g$/i.test(image.type)) {
-        jpegBuffer = inputBuffer;
-      } else {
-        return NextResponse.json(
-          {
-            error:
-              "Bildeformatet kunne ikke leses. Ta bildet på nytt, eller lagre det som JPG først.",
-          },
-          { status: 415 }
-        );
-      }
+      const melding = convError instanceof Error ? convError.message : "";
+      console.error("❌ sharp klarte ikke å lese bildet:", melding.slice(0, 200));
+      if (/pixel limit/i.test(melding)) return forHoyOpplosning();
+      // HEIC støttes ikke av alle sharp-bygg.
+      return NextResponse.json(
+        {
+          error:
+            "Bildeformatet kunne ikke leses. Ta bildet på nytt, eller lagre det som JPG først.",
+        },
+        { status: 415 }
+      );
     }
 
     const base64Image = `data:image/jpeg;base64,${jpegBuffer.toString("base64")}`;
@@ -324,6 +339,11 @@ export async function POST(request: NextRequest) {
     const sizeText = buildSizeText(storrelse);
     const notesText = notesAnimal ? ` Brukerens notater: "${notesAnimal}".` : "";
     const imageContent = { type: "image_url", image_url: { url: base64Image, detail: "high" } };
+    const forbruk: Forbruk[] = [];
+    const feil = (reason: AiFeil) => {
+      loggHendelse("analyse", { type: analyseType, utfall: "ai_feil", grunn: reason, ms: Date.now() - start });
+      return modelError(reason);
+    };
 
     let gruppe: PestGroup | null;
     let speciesOutcome: CallOutcome;
@@ -351,7 +371,7 @@ export async function POST(request: NextRequest) {
           },
           imageContent,
         ],
-        { maxTokens: SPECIES_MAX_TOKENS, timeoutMs: 15_000 }
+        { maxTokens: SPECIES_MAX_TOKENS, timeoutMs: 15_000, steg: "ekskrementer", apiKey, forbruk }
       );
     } else {
       // ── Steg 1: finn hovedgruppe ─────────────────────────────────────
@@ -366,10 +386,10 @@ export async function POST(request: NextRequest) {
           },
           imageContent,
         ],
-        { maxTokens: 300, timeoutMs: 10_000 }
+        { maxTokens: 300, timeoutMs: 10_000, steg: "gruppe", apiKey, forbruk }
       );
 
-      if (!groupOutcome.ok) return modelError(groupOutcome.reason);
+      if (!groupOutcome.ok) return feil(groupOutcome.reason);
 
       gruppe = findGroup(groupOutcome.json?.gruppe);
       const speciesList = gruppe ? groupPromptList(gruppe) : PEST_PROMPT_LIST;
@@ -385,34 +405,83 @@ export async function POST(request: NextRequest) {
           },
           imageContent,
         ],
-        { maxTokens: SPECIES_MAX_TOKENS, timeoutMs: 15_000 }
+        { maxTokens: SPECIES_MAX_TOKENS, timeoutMs: 15_000, steg: "art", apiKey, forbruk }
       );
     }
 
-    if (!speciesOutcome.ok) return modelError(speciesOutcome.reason);
+    if (!speciesOutcome.ok) return feil(speciesOutcome.reason);
 
     // Et svar vi ikke klarte å lese er en teknisk feil, ikke en vurdering.
     // Vis det som feil med "prøv igjen" – ikke som "Ukjent", som får
     // brukeren til å tro at dyret ikke kunne bestemmes.
     if (!speciesOutcome.json) {
+      loggHendelse("analyse", { type: analyseType, utfall: "uleselig_svar", ms: Date.now() - start });
       return NextResponse.json(
         { error: "Fikk ikke et lesbart svar fra analysen. Prøv igjen." },
         { status: 502 }
       );
     }
     const result = enrich(speciesOutcome.json, gruppe);
-    if (!EVAL_MODE) setCached(hash, result);
+    if (!evalModus) setCached(hash, result);
 
-    return NextResponse.json(result, {
-      headers: { "X-RateLimit-Remaining": String(limit.remaining) },
+    const sum = summerForbruk(forbruk);
+    loggHendelse("analyse", {
+      type: analyseType,
+      utfall: utfallFor(result),
+      art: result.found ? result.name : undefined,
+      gruppe: result.gruppe,
+      nivaa: result.found ? sikkerhetsnivaa(result.confidence) : undefined,
+      cached: false,
+      ai_kall: forbruk.length,
+      tokens_inn: sum.tokensInn,
+      tokens_ut: sum.tokensUt,
+      kostnad_usd: sum.kostnadUsd,
+      ms: Date.now() - start,
     });
+
+    return NextResponse.json(
+      { ...result, chatToken: lagChatBillett(result) },
+      { headers: { "X-RateLimit-Remaining": String(gjenstaende) } }
+    );
   } catch (error) {
-    console.error("❌ Uventet feil i /api/analyze:", error);
+    console.error("❌ Uventet feil i /api/analyze:", error instanceof Error ? error.message : "ukjent feil");
     return NextResponse.json(
       { error: "Noe gikk galt under analysen. Prøv igjen." },
       { status: 500 }
     );
   }
+}
+
+function utfallFor(r: AnalysisResult): string {
+  return r.found ? "art" : r.annenArt ? "annen_art" : "ukjent";
+}
+
+function forHoyOpplosning(): NextResponse {
+  return NextResponse.json(
+    { error: "Bildet har for høy oppløsning. Ta bildet på nytt med vanlig kamerainnstilling." },
+    { status: 413 }
+  );
+}
+
+/** Svar når en bruksgrense eller døgnbudsjettet er nådd. */
+function grenseSvar(grense: Extract<GrenseResultat, { ok: false }>, harTilgangskode: boolean): NextResponse {
+  loggHendelse("grense", { rute: "analyze", regel: grense.regel });
+  const headers = { "Retry-After": String(grense.retryAfterSeconds) };
+  const minutter = Math.ceil(grense.retryAfterSeconds / 60);
+  if (grense.regel === "dogn") {
+    return NextResponse.json(
+      {
+        error: "Artsorakel har nådd dagens grense for analyser. Prøv igjen i morgen, eller ring Ocab.",
+        kode: "dognbudsjett",
+      },
+      { status: 503, headers }
+    );
+  }
+  const error =
+    grense.regel === "ip_time" && harTilgangskode
+      ? `Det er gjort mange analyser fra dette nettverket den siste timen. Prøv igjen om ${minutter} minutter.`
+      : `Du har brukt alle ${grense.maks} analysene denne timen. Prøv igjen om ${minutter} minutter.`;
+  return NextResponse.json({ error }, { status: 429, headers });
 }
 
 // ── Hjelpere ─────────────────────────────────────────────────────────────
@@ -458,67 +527,41 @@ function parseJson(content: string): Record<string, unknown> | null {
 
 type CallOutcome =
   | { ok: true; json: Record<string, unknown> | null }
-  | { ok: false; reason: "timeout" | "rate_limit" | "http" | "network" };
+  | { ok: false; reason: AiFeil };
 
 async function callModel(
   system: string,
   userContent: unknown[],
-  opts: { maxTokens: number; timeoutMs: number }
+  opts: { maxTokens: number; timeoutMs: number; steg: string; apiKey: string; forbruk: Forbruk[] }
 ): Promise<CallOutcome> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), opts.timeoutMs);
+  const svar = await kallOpenRouter({
+    apiKey: opts.apiKey,
+    rute: "analyze",
+    steg: opts.steg,
+    model: visionModel(),
+    messages: [
+      { role: "system", content: system },
+      { role: "user", content: userContent },
+    ],
+    temperature: 0.1,
+    maxTokens: opts.maxTokens,
+    timeoutMs: opts.timeoutMs,
+    json: true,
+  });
+  if (!svar.ok) return { ok: false, reason: svar.reason };
+  opts.forbruk.push(svar.forbruk);
 
-  try {
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      signal: controller.signal,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-        "HTTP-Referer": process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
-        "X-Title": "Ocab Artsbestemmer",
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        messages: [
-          { role: "system", content: system },
-          { role: "user", content: userContent },
-        ],
-        temperature: 0.1,
-        max_tokens: opts.maxTokens,
-        response_format: { type: "json_object" },
-      }),
-    });
-
-    if (!response.ok) {
-      const detail = await response.text().catch(() => "");
-      console.error("❌ OpenRouter svarte", response.status, detail.slice(0, 500));
-      return { ok: false, reason: response.status === 429 ? "rate_limit" : "http" };
-    }
-
-    const data = await response.json();
-    const raw: string = data?.choices?.[0]?.message?.content ?? "";
-    const finishReason: string = data?.choices?.[0]?.finish_reason ?? "ukjent";
-    const json = parseJson(raw);
-    // "length" betyr at max_tokens var for lavt og svaret ble kuttet.
-    if (!json || finishReason === "length") {
-      console.warn(
-        `⚠️ Modellsvar ${json ? "kuttet" : "ikke lesbart"}: finish_reason=${finishReason}, ` +
-          `max_tokens=${opts.maxTokens}, svar=${JSON.stringify(raw.slice(0, 300))}`
-      );
-    }
-    return { ok: true, json };
-  } catch (err) {
-    const aborted = err instanceof Error && err.name === "AbortError";
-    if (aborted) {
-      console.error("⏱️ OpenRouter-kall tok for lang tid");
-      return { ok: false, reason: "timeout" };
-    }
-    console.error("❌ OpenRouter-kall feilet:", err);
-    return { ok: false, reason: "network" };
-  } finally {
-    clearTimeout(timeout);
+  const json = parseJson(svar.content);
+  // "length" betyr at max_tokens var for lavt og svaret ble kuttet.
+  // Vi logger bare lengde og årsak – aldri selve svaret, som kan gjengi
+  // det brukeren skrev.
+  if (!json || svar.finishReason === "length") {
+    console.warn(
+      `⚠️ Modellsvar ${json ? "kuttet" : "ikke lesbart"}: finish_reason=${svar.finishReason}, ` +
+        `max_tokens=${opts.maxTokens}, svar_tegn=${svar.content.length}`
+    );
   }
+  return { ok: true, json };
 }
 
 function modelError(reason: string): NextResponse {

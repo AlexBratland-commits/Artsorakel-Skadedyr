@@ -1,107 +1,131 @@
 import { NextRequest, NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
 
 import { findPest, findPestInGroup } from "@/lib/pests";
-import { checkRateLimit } from "@/lib/server-store";
+import { chatModel, openRouterApiKey } from "@/lib/server/config";
+import { kallOpenRouter } from "@/lib/server/openrouter";
+import { forStorForesporsel, ipNokkel, klientIp, sjekkOpprinnelse } from "@/lib/server/request-guards";
+import { lesTilgang, tilgangNektet } from "@/lib/server/access";
+import {
+  chatBillettRegel,
+  chatDognRegel,
+  chatRegler,
+  sjekkGrenser,
+  type GrenseResultat,
+} from "@/lib/server/limits";
+import { lesChatBillett, signerChatSvar, verifiserChatSvar } from "@/lib/server/chat-ticket";
+import { rensTekst } from "@/lib/server/validation";
+import { loggHendelse } from "@/lib/server/log";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
 
-let apiKey = process.env.OPENROUTER_API_KEY;
-if (!apiKey) {
-  try {
-    const config = JSON.parse(
-      fs.readFileSync(path.join(process.cwd(), "config.json"), "utf8")
-    );
-    apiKey = config.OPENROUTER_API_KEY;
-  } catch {
-    /* env-variabelen er hovedveien */
-  }
-}
-
-/** Ren tekstmodell – dette kallet trenger ikke syn, og blir billigere uten. */
-const MODEL = process.env.OPENROUTER_CHAT_MODEL ?? "openai/gpt-5.6-luna";
-
 const MAX_MESSAGE_CHARS = 500;
 const MAX_TURNS = 12;
+/** Tak på hele forespørselen. 12 meldinger à maks ~4000 tegn er god margin. */
+const MAX_BODY_BYTES = 64 * 1024;
+/** Lengste chatsvar vi tar imot tilbake i historikken (for å sjekke signaturen). */
+const MAX_ASSISTANT_CHARS = 6000;
 
 interface ChatMessage {
   role: "user" | "assistant";
   content: string;
 }
 
-export async function POST(request: NextRequest) {
-  const origin = request.headers.get("origin");
-  const host = request.headers.get("host");
-  if (origin && host) {
-    try {
-      if (new URL(origin).host !== host) {
-        return NextResponse.json({ error: "Ugyldig opprinnelse." }, { status: 403 });
-      }
-    } catch {
-      return NextResponse.json({ error: "Ugyldig opprinnelse." }, { status: 403 });
-    }
-  }
+function ugyldig(error = "Ugyldig forespørsel.", kode?: string): NextResponse {
+  return NextResponse.json(kode ? { error, kode } : { error }, { status: 400 });
+}
 
+function grenseSvar(grense: Extract<GrenseResultat, { ok: false }>): NextResponse {
+  loggHendelse("grense", { rute: "chat", regel: grense.regel });
+  const headers = { "Retry-After": String(grense.retryAfterSeconds) };
+  const error =
+    grense.regel === "dogn"
+      ? "Chatten har nådd dagens grense. Prøv igjen i morgen, eller ring Ocab."
+      : grense.regel === "billett"
+        ? "Du har stilt mange spørsmål om dette funnet. Ring Ocab hvis du trenger mer hjelp."
+        : "Du har stilt mange spørsmål den siste timen. Prøv igjen senere.";
+  return NextResponse.json({ error }, { status: grense.regel === "dogn" ? 503 : 429, headers });
+}
+
+export async function POST(request: NextRequest) {
+  const fremmed = sjekkOpprinnelse(request);
+  if (fremmed) return fremmed;
+
+  const apiKey = openRouterApiKey();
   if (!apiKey) {
     return NextResponse.json({ error: "Tjenesten er ikke konfigurert." }, { status: 500 });
   }
 
-  const ip =
-    request.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
-    request.headers.get("x-real-ip") ||
-    "ukjent";
-  // Egen kvote for chat, uavhengig av bildeanalysene.
-  const limit = checkRateLimit(`chat:${ip}`);
-  if (!limit.allowed) {
-    return NextResponse.json(
-      { error: "Du har stilt mange spørsmål den siste timen. Prøv igjen senere." },
-      { status: 429 }
-    );
-  }
+  const tilgang = lesTilgang(request);
+  if (tilgang.kreves && !tilgang.ok) return tilgangNektet();
 
-  let body: { art?: string; gruppe?: string; annenArt?: string; messages?: ChatMessage[] };
+  // Egen kvote for chat, uavhengig av bildeanalysene.
+  const klient = { ipNokkel: ipNokkel(klientIp(request)), sid: tilgang.sid };
+  const grense = await sjekkGrenser(chatRegler(klient));
+  if (!grense.ok) return grenseSvar(grense);
+
+  if (forStorForesporsel(request, MAX_BODY_BYTES)) return ugyldig();
+
+  let body: { chatToken?: unknown; messages?: unknown };
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: "Ugyldig forespørsel." }, { status: 400 });
+    return ugyldig();
   }
-  // Klienten styrer innholdet – sjekk formen før vi kaller metoder på det.
-  const erTekst = (v: unknown) => v === undefined || typeof v === "string";
-  if (
-    typeof body !== "object" ||
-    body === null ||
-    !erTekst(body.art) ||
-    !erTekst(body.gruppe) ||
-    !erTekst(body.annenArt)
-  ) {
-    return NextResponse.json({ error: "Ugyldig forespørsel." }, { status: 400 });
+  if (typeof body !== "object" || body === null) return ugyldig();
+
+  // ── Chatten gjelder ett bestemt, analysert funn (S5) ──────────────────
+  // Arten hentes fra den signerte billetten – ikke fra det klienten
+  // skriver i forespørselen (feltene art/gruppe/annenArt ignoreres).
+  const billett = lesChatBillett(body.chatToken);
+  if (!billett) {
+    return NextResponse.json(
+      {
+        error: "Spørsmål må gjelde et funn du har analysert. Analyser bildet på nytt for å stille spørsmål.",
+        kode: "chat_billett_mangler",
+      },
+      { status: 401 }
+    );
   }
+
+  if (!Array.isArray(body.messages)) return ugyldig("Mangler spørsmål.");
+  const raa = body.messages.slice(-MAX_TURNS);
+  const messages: ChatMessage[] = [];
+  for (const m of raa) {
+    if (typeof m !== "object" || m === null) return ugyldig();
+    const { role, content, sig } = m as { role?: unknown; content?: unknown; sig?: unknown };
+    if (typeof content !== "string") return ugyldig();
+    if (role === "user") {
+      messages.push({ role: "user", content: rensTekst(content, MAX_MESSAGE_CHARS) });
+    } else if (role === "assistant") {
+      // Tidligere svar må være signert av serveren – ellers kan klienten
+      // dikte opp at «assistenten» har lovet å svare på alt.
+      if (content.length > MAX_ASSISTANT_CHARS || !verifiserChatSvar(billett.id, content, sig)) {
+        loggHendelse("chat_avvist", { grunn: "usignert_svar" });
+        return ugyldig("Samtalen kunne ikke bekreftes. Start en ny samtale.", "chat_historikk_ugyldig");
+      }
+      messages.push({ role: "assistant", content: content.slice(0, MAX_MESSAGE_CHARS) });
+    } else {
+      return ugyldig();
+    }
+  }
+
+  if (messages.length === 0 || messages[messages.length - 1].role !== "user" || !messages.at(-1)?.content) {
+    return NextResponse.json({ error: "Mangler spørsmål." }, { status: 400 });
+  }
+
+  const perBillett = await sjekkGrenser([chatBillettRegel(billett.id)]);
+  if (!perBillett.ok) return grenseSvar(perBillett);
+  const dogn = await sjekkGrenser([chatDognRegel()]);
+  if (!dogn.ok) return grenseSvar(dogn);
 
   // Samme navn kan finnes i flere grupper (Brunrotte som dyr og som
   // ekskrementer), så gruppen avgjør hvilken oppføring vi bruker.
   const pest =
-    (body.gruppe ? findPestInGroup(body.art, body.gruppe) : undefined) ?? findPest(body.art);
+    (billett.gruppe ? findPestInGroup(billett.art, billett.gruppe) : undefined) ?? findPest(billett.art);
   // Art AI-en kjente igjen, men som ikke er i databasen. Kort og uten
   // linjeskift, siden den havner i systemprompten.
-  const annenArt = body.annenArt?.replace(/\s+/g, " ").trim().slice(0, 80) || "";
-
-  if (body.messages !== undefined && !Array.isArray(body.messages)) {
-    return NextResponse.json({ error: "Ugyldig forespørsel." }, { status: 400 });
-  }
-
-  const messages = (body.messages ?? [])
-    .filter(
-      (m): m is ChatMessage =>
-        (m?.role === "user" || m?.role === "assistant") && typeof m.content === "string"
-    )
-    .slice(-MAX_TURNS)
-    .map((m) => ({ role: m.role, content: m.content.slice(0, MAX_MESSAGE_CHARS) }));
-
-  if (messages.length === 0 || messages[messages.length - 1].role !== "user") {
-    return NextResponse.json({ error: "Mangler spørsmål." }, { status: 400 });
-  }
+  const annenArt = billett.annenArt?.replace(/\s+/g, " ").replace(/["\\]/g, "").trim().slice(0, 80) || "";
 
   const funn = pest
     ? `Funnet er ${pest.norsk} (${pest.latin})${pest.gruppe === "Ekskrementer" ? ", bestemt ut fra ekskrementer" : ""}.
@@ -136,60 +160,44 @@ RAMMER FOR SVARENE
 - Prisoverslag på oppdrag skal du aldri gi – be dem kontakte Ocab for befaring.
 - Svar på norsk bokmål, i vanlig samtaletone. Maks 150 ord. Ingen emoji, ingen overskrifter.`;
 
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 20_000);
+  const ai = await kallOpenRouter({
+    apiKey,
+    rute: "chat",
+    steg: "svar",
+    model: chatModel(),
+    messages: [{ role: "system", content: system }, ...messages],
+    temperature: 0.3,
+    maxTokens: 1000,
+    timeoutMs: 20_000,
+  });
 
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      signal: controller.signal,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-        "HTTP-Referer": process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
-        "X-Title": "Ocab Artsbestemmer",
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        messages: [{ role: "system", content: system }, ...messages],
-        temperature: 0.3,
-        max_tokens: 1000,
-      }),
-    }).finally(() => clearTimeout(timeout));
-
-    if (!response.ok) {
-      console.error("❌ Chat-kall feilet:", response.status);
-      return NextResponse.json(
-        { error: "Fikk ikke svar akkurat nå. Prøv igjen om litt." },
-        { status: 502 }
-      );
-    }
-
-    const data = await response.json();
-    const valg = data?.choices?.[0];
-    const svar: string = valg?.message?.content?.trim() ?? "";
-    const finishReason: string = valg?.finish_reason ?? "ukjent";
-
-    // Denne linjen avgjør hvor et avkuttet svar blir kuttet.
-    // finish_reason "length" = modellen gikk tom for tokens.
-    // "stop" med kort tekst = modellen svarte kort med vilje.
-    // Full tekst her, men kort i nettleseren = feil i utlistingen.
-    console.log(
-      `💬 Chat om ${pest?.norsk ?? (annenArt || "ukjent funn")}: ${svar.length} tegn, finish_reason=${finishReason}`
-    );
-
-    if (!svar) {
-      return NextResponse.json(
-        { error: "Fikk ikke svar akkurat nå. Prøv igjen om litt." },
-        { status: 502 }
-      );
-    }
-
-    return NextResponse.json({ svar, avkuttet: finishReason === "length" });
-  } catch {
+  if (!ai.ok) {
     return NextResponse.json(
       { error: "Fikk ikke svar akkurat nå. Prøv igjen om litt." },
-      { status: 504 }
+      { status: ai.reason === "timeout" || ai.reason === "network" ? 504 : 502 }
     );
   }
+
+  const svar = ai.content.trim();
+  // finish_reason "length" = modellen gikk tom for tokens og svaret ble kuttet.
+  loggHendelse("chat", {
+    art: pest?.norsk ?? (annenArt ? "annen_art" : "ukjent_funn"),
+    svar_tegn: svar.length,
+    finish: ai.finishReason,
+    tur: messages.length,
+  });
+
+  if (!svar) {
+    return NextResponse.json(
+      { error: "Fikk ikke svar akkurat nå. Prøv igjen om litt." },
+      { status: 502 }
+    );
+  }
+
+  return NextResponse.json({
+    svar,
+    avkuttet: ai.finishReason === "length",
+    // Signaturen sendes med tilbake i historikken neste gang (se over).
+    signatur: signerChatSvar(billett.id, svar),
+  });
 }

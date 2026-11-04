@@ -52,6 +52,12 @@ export interface AnalysisResult extends AiIdentification {
   annenArt?: AnnenArt;
   /** Satt hvis svaret kom fra serverens cache (samme bilde analysert før). */
   cached?: boolean;
+  /**
+   * Signert «billett» som gir tilgang til chatten om akkurat dette funnet.
+   * Lages av serveren ved hver analyse; klienten sender den med til
+   * /api/ask-about-findings.
+   */
+  chatToken?: string;
 }
 
 export interface HistoryEntry {
@@ -80,6 +86,18 @@ export const LOCATIONS = [
 ] as const;
 
 export type LocationValue = (typeof LOCATIONS)[number]["value"];
+
+/**
+ * Størrelsesvalg for dyr. Teksten sendes uendret til API-et som feltet
+ * "storrelse", og serveren godtar bare disse verdiene (S1).
+ */
+export const ANIMAL_SIZES = [
+  "under 5 mm (mindre enn et riskorn)",
+  "5–10 mm (som et riskorn til en ert)",
+  "1–3 cm (som en femkroning)",
+  "3–10 cm (som en fyrstikkeske til en hånd)",
+  "større enn 10 cm",
+] as const;
 
 // ── Ekskrement-spesifikke feltvalg ───────────────────────────────────────
 // Disse sendes til API-et og brukes kun til å berike prompten når brukeren

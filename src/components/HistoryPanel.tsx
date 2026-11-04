@@ -77,7 +77,7 @@ export default function HistoryPanel({
       </ul>
 
       <p className="mt-2 text-xs text-muted">
-        Listen ligger bare i denne nettleseren. Bildene sendes ikke til Ocab.
+        Listen og miniatyrbildene ligger bare i denne nettleseren.
       </p>
     </section>
   );
