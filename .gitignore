@@ -44,3 +44,7 @@ config.json
 # testsett og resultater fra scripts/eval.mjs (kan inneholde kundebilder)
 /testbilder/
 /eval-resultater/
+
+# Playwright
+/test-results/
+/playwright-report/
