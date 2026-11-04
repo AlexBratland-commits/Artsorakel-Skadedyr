@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { Search } from "lucide-react";
 
 import ImageUploader from "@/components/ImageUploader";
@@ -10,26 +11,26 @@ import InstallBanner from "@/components/InstallBanner";
 import ThemeToggle from "@/components/ThemeToggle";
 import OcabLogo from "@/components/OcabLogo";
 import AskAboutFinding from "@/components/AskAboutFinding";
+import AccessGate from "@/components/AccessGate";
 import { useToast } from "@/components/Toast";
 
-import { compressImage, makeThumbnail } from "@/lib/image-tools";
+import { compressImage, formatBytes, makeThumbnail } from "@/lib/image-tools";
+import { nettverksfeil } from "@/lib/client-errors";
 import { addToHistory, clearHistory, readHistory, removeFromHistory } from "@/lib/history";
 import {
   LOCATIONS,
   DROPPING_SIZES,
+  ANIMAL_SIZES as SIZES,
   type AnalysisResult,
   type HistoryEntry,
 } from "@/lib/types";
 
-const SIZES = [
-  "under 5 mm (mindre enn et riskorn)",
-  "5–10 mm (som et riskorn til en ert)",
-  "1–3 cm (som en femkroning)",
-  "3–10 cm (som en fyrstikkeske til en hånd)",
-  "større enn 10 cm",
-];
-
 type AnalyseType = "dyr" | "ekskrementer";
+
+/** Serveren bruker opptil 30 s; litt margin for opplasting på svak dekning. */
+const ANALYSE_TIMEOUT_MS = 45_000;
+/** Vercel avviser forespørsler over 4,5 MB, så vi stopper litt under. */
+const MAKS_OPPLASTING = 4 * 1024 * 1024;
 
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
@@ -44,6 +45,8 @@ export default function Home() {
   const [beskrivelse, setBeskrivelse] = useState("");
   const [notesAnimal, setNotesAnimal] = useState("");
   const [historikk, setHistorikk] = useState<HistoryEntry[]>([]);
+  /** "kreves" når serveren krever tilgangskode og enheten ikke er logget inn. */
+  const [tilgang, setTilgang] = useState<"ok" | "kreves">("ok");
 
   const previewUrl = useRef<string | null>(null);
   const { vis } = useToast();
@@ -51,6 +54,17 @@ export default function Home() {
   // Historikk leses fra localStorage én gang etter mount (kun tilgjengelig på klienten).
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setHistorikk(readHistory()), []);
+
+  // Spør serveren om tilgangskode kreves. Feiler det (f.eks. uten dekning),
+  // vises appen som vanlig – serveren avviser uansett uten gyldig kode.
+  useEffect(() => {
+    fetch("/api/tilgang", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d?.kreves && !d?.innlogget) setTilgang("kreves");
+      })
+      .catch(() => {});
+  }, []);
 
   // Rydd opp objekt-URL-en når komponenten forsvinner
   useEffect(() => {
@@ -94,11 +108,25 @@ export default function Home() {
     const timer = window.setInterval(() => {
       setFremdrift((f) => (f >= 90 ? f : f + Math.max(1, (90 - f) * 0.08)));
     }, 220);
+    const controller = new AbortController();
+    const tidsavbrudd = window.setTimeout(() => controller.abort(), ANALYSE_TIMEOUT_MS);
 
     try {
       const { file: klar, originalBytes, compressed } = await compressImage(file);
       if (compressed && originalBytes > klar.size * 1.5) {
         vis("Bildet ble komprimert før opplasting.", "info");
+      }
+      // F9: HEIC kan bare leses i nettlesere som selv konverterer det (Safari).
+      // Serveren kan ikke lese HEIC, så vi sier fra med en gang.
+      if (!compressed && /hei[cf]$/i.test(file.type || file.name)) {
+        throw new Error(
+          "Dette HEIC-bildet kan ikke leses i denne nettleseren. Ta bildet med «Ta bilde», eller lagre det som JPG først."
+        );
+      }
+      if (klar.size > MAKS_OPPLASTING) {
+        throw new Error(
+          `Bildet er for stort til å sendes (${formatBytes(klar.size)}). Ta bildet på nytt, eller lagre det som JPG først.`
+        );
       }
 
       const formData = new FormData();
@@ -113,9 +141,14 @@ export default function Home() {
         formData.append("notesAnimal", notesAnimal);
       }
 
-      const response = await fetch("/api/analyze", { method: "POST", body: formData });
+      const response = await fetch("/api/analyze", {
+        method: "POST",
+        body: formData,
+        signal: controller.signal,
+      });
       const data = await response.json().catch(() => null);
 
+      if (response.status === 401 && data?.kode === "tilgang_kreves") setTilgang("kreves");
       if (!response.ok) {
         throw new Error(data?.error ?? "Analysen feilet. Prøv igjen.");
       }
@@ -127,14 +160,13 @@ export default function Home() {
       const thumb = await makeThumbnail(klar);
       setHistorikk(addToHistory(analysis, thumb, sted));
 
-      if (!analysis.found && !analysis.annenArt) {
+      if (!analysis.found && !analysis.annenArt && !analysis.ikkeSkadedyr) {
         vis("Ingen sikker match. Prøv et skarpere bilde nærmere dyret.", "info");
       }
     } catch (error) {
-      const melding =
-        error instanceof Error ? error.message : "Noe gikk galt. Prøv igjen.";
-      vis(melding, "feil");
+      vis(nettverksfeil(error, "Noe gikk galt. Prøv igjen."), "feil");
     } finally {
+      window.clearTimeout(tidsavbrudd);
       window.clearInterval(timer);
       setAnalyserer(false);
       window.setTimeout(() => setFremdrift(0), 500);
@@ -166,15 +198,24 @@ export default function Home() {
           </p>
         </div>
 
-        <ImageUploader
-          onImageSelect={velgBilde}
-          imagePreview={preview}
-          fileName={file?.name}
-          fileSize={file?.size}
-          disabled={analyserer}
-        />
+        {tilgang === "kreves" ? (
+          <AccessGate
+            onOk={() => {
+              setTilgang("ok");
+              vis("Du er logget inn.", "ok");
+            }}
+          />
+        ) : (
+          <ImageUploader
+            onImageSelect={velgBilde}
+            imagePreview={preview}
+            fileName={file?.name}
+            fileSize={file?.size}
+            disabled={analyserer}
+          />
+        )}
 
-        {file && !result && (
+        {tilgang === "ok" && file && !result && (
           <div className="no-print mt-6 animate-stagger-in">
             <span className="block text-sm font-semibold">Hva vil du artsbestemme?</span>
             <p className="mt-1 text-sm text-muted">
@@ -325,6 +366,15 @@ export default function Home() {
               </>
             )}
 
+            {/* Oppgave 3: mus og flaggermus er like store på bilder – størrelse,
+                funnsted og om de smuldrer avgjør. Tipset stopper ikke analysen. */}
+            {analyseType === "ekskrementer" && !beskrivelse.trim() && !droppingSize && (
+              <p className="mt-6 rounded-lg border-l-2 border-ocab-500 bg-[color:var(--surface-sunken)] px-4 py-3 text-sm">
+                Tips: Oppgi omtrentlig størrelse, hvor du fant dem og om de smuldrer når du
+                trykker på dem. Det gir et sikrere svar, særlig for å skille mus fra flaggermus.
+              </p>
+            )}
+
             <button
               type="button"
               onClick={analyser}
@@ -360,9 +410,16 @@ export default function Home() {
 
         <ResultDisplay result={result} onReset={nyttBilde} />
 
-        {result && <AskAboutFinding key={result.name} result={result} />}
+        {/* Ny samtale for hver analyse: billetten er unik per analyse (F10). */}
+        {result && (
+          <AskAboutFinding
+            key={result.chatToken ?? result.name}
+            result={result}
+            onTilgangKreves={() => setTilgang("kreves")}
+          />
+        )}
 
-        {!file && <InstallBanner />}
+        {!file && tilgang === "ok" && <InstallBanner />}
 
         <HistoryPanel
           entries={historikk}
@@ -395,9 +452,12 @@ export default function Home() {
           </div>
         </div>
         <p className="mt-5 max-w-prose text-xs">
-          Tjenesten er gratis og bruker bildeanalyse. Bildene lagres ikke hos oss
-          etter at svaret er gitt. Svaret er veiledende og erstatter ikke en
-          befaring.
+          Bildet og det du skriver sendes til en AI-tjeneste for analyse.
+          Posisjon og andre metadata fjernes fra bildet først, og bildet lagres
+          ikke hos Ocab. Svaret er veiledende og erstatter ikke en befaring.{" "}
+          <Link href="/personvern" className="underline underline-offset-4">
+            Personvern
+          </Link>
         </p>
       </footer>
     </div>

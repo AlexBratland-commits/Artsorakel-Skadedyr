@@ -1,0 +1,52 @@
+# Automatisk testing ved hver push og pull request.
+# Deployer ALDRI – Vercel håndterer deploy, og produksjon endres bare ved merge.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Installer avhengigheter
+        run: npm ci
+
+      - name: Installer Redis (for testene mot ekte Redis)
+        run: sudo apt-get update && sudo apt-get install -y redis-server
+
+      - name: TypeScript
+        run: npm run typecheck
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: Enhets- og integrasjonstester (falsk AI, ekte Redis)
+        run: npm test
+
+      - name: Sårbarheter i produksjonsavhengigheter
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Installer nettleser for UI-tester
+        run: npx playwright install --with-deps chromium
+
+      - name: Produksjonsbygg og UI-tester (falsk AI)
+        run: npm run test:ui

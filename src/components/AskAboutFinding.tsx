@@ -3,11 +3,16 @@
 import { useEffect, useRef, useState } from "react";
 import { MessageCircleQuestion, Send } from "lucide-react";
 import type { AnalysisResult } from "@/lib/types";
+import { nettverksfeil } from "@/lib/client-errors";
 import { useToast } from "./Toast";
+
+const CHAT_TIMEOUT_MS = 35_000;
 
 interface Melding {
   role: "user" | "assistant";
   content: string;
+  /** Serverens signatur på chatsvaret – sendes med tilbake i historikken. */
+  sig?: string;
 }
 
 const FORSLAG = [
@@ -23,7 +28,13 @@ const FORSLAG_UKJENT = [
   "Bør jeg ringe fagfolk?",
 ];
 
-export default function AskAboutFinding({ result }: { result: AnalysisResult }) {
+export default function AskAboutFinding({
+  result,
+  onTilgangKreves,
+}: {
+  result: AnalysisResult;
+  onTilgangKreves?: () => void;
+}) {
   const [meldinger, setMeldinger] = useState<Melding[]>([]);
   const [utkast, setUtkast] = useState("");
   const [venter, setVenter] = useState(false);
@@ -53,37 +64,38 @@ export default function AskAboutFinding({ result }: { result: AnalysisResult }) 
     setUtkast("");
     setVenter(true);
 
+    const controller = new AbortController();
+    const tidsavbrudd = window.setTimeout(() => controller.abort(), CHAT_TIMEOUT_MS);
     try {
+      if (!result.chatToken) {
+        throw new Error("Analyser bildet på nytt for å stille spørsmål om dette funnet.");
+      }
       const response = await fetch("/api/ask-about-findings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          art: result.found ? result.name : undefined,
-          gruppe: result.gruppe,
-          annenArt: result.annenArt?.name,
-          messages: neste,
-        }),
+        signal: controller.signal,
+        body: JSON.stringify({ chatToken: result.chatToken, messages: neste }),
       });
       const data = await response.json().catch(() => null);
 
+      if (response.status === 401 && data?.kode === "tilgang_kreves") onTilgangKreves?.();
       if (!response.ok) throw new Error(data?.error ?? "Fikk ikke svar. Prøv igjen.");
 
       const svar = typeof data?.svar === "string" ? data.svar : "";
       if (!svar) throw new Error("Tomt svar fra tjenesten. Prøv igjen.");
 
-      if (process.env.NODE_ENV !== "production") {
-        console.log(`💬 Mottok ${svar.length} tegn fra /api/ask-about-findings`);
-      }
       if (data?.avkuttet) {
         vis("Svaret ble avkortet. Still gjerne et mer avgrenset spørsmål.", "info");
       }
 
-      setMeldinger([...neste, { role: "assistant", content: svar }]);
+      const sig = typeof data?.signatur === "string" ? data.signatur : undefined;
+      setMeldinger([...neste, { role: "assistant", content: svar, sig }]);
     } catch (error) {
       setMeldinger(meldinger); // rull tilbake, så brukeren kan prøve på nytt
       setUtkast(sporsmal);
-      vis(error instanceof Error ? error.message : "Fikk ikke svar.", "feil");
+      vis(nettverksfeil(error, "Fikk ikke svar."), "feil");
     } finally {
+      window.clearTimeout(tidsavbrudd);
       setVenter(false);
     }
   };
