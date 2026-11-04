@@ -31,6 +31,17 @@ export const EKSKREMENT_UKJENT_TEKST =
 export const ROTTE_FORBEHOLD =
   "Ekskrementer alene gir ikke alltid sikkert grunnlag for å skille brunrotte fra svartrotte. I Norge er brunrotte langt vanligst.";
 
+/**
+ * Mus- og flaggermusekskrementer er like store. Forbeholdet bygger på
+ * bibliotekets egne kjennetegn (konsistens og innhold).
+ */
+export const MUS_FLAGGERMUS_FORBEHOLD =
+  "Mus- og flaggermusekskrementer er omtrent like store og kan ligne på bilder. Smuldrer de til glinsende pulver når du knuser dem (bruk hansker), tyder det på flaggermus. Er de faste og harde, tyder det på mus.";
+
+/** Tekst når bildet tydelig viser noe annet enn et skadedyr (oppgave 4). */
+export const IKKE_SKADEDYR_TEKST =
+  "Bildet ser ut til å vise en gjenstand eller noe annet enn et skadedyr eller spor etter skadedyr.";
+
 /** Høyeste sikkerhet når arten bare er utledet av et generelt ord som «rotte» (under «Høy»). */
 const MAKS_VED_GENERELT_NAVN = 79;
 
@@ -232,7 +243,13 @@ export function enrich(raw: Record<string, unknown>, gruppe: PestGroup | null): 
   if (erEkskrementer && pest.latin === "Rattus norvegicus" && erGenereltNavn(name, latinName, pest)) {
     confidence = Math.min(confidence, MAKS_VED_GENERELT_NAVN);
   }
-  const forbehold = erEkskrementer && pest.latin === "Rattus norvegicus" ? ROTTE_FORBEHOLD : undefined;
+  const forbehold = !erEkskrementer
+    ? undefined
+    : pest.latin === "Rattus norvegicus"
+      ? ROTTE_FORBEHOLD
+      : pest.norsk === "Mus" || pest.norsk === "Flaggermus"
+        ? MUS_FLAGGERMUS_FORBEHOLD
+        : undefined;
 
   const severity: Severity = pest.alvorlighet;
   const alternativer = parseAlternatives(raw.alternativer, gruppe).filter(
@@ -259,6 +276,24 @@ export function enrich(raw: Record<string, unknown>, gruppe: PestGroup | null): 
     notat: pest.notat,
     forbehold,
     fhiUrl: fhiUrl(pest.slug),
+  };
+}
+
+/**
+ * Oppgave 4: grovsorteringen (steg 1) svarer «Ukjent» når den ikke ser noe
+ * dyr. Fant heller ikke steg 2 noen art, viser bildet trolig en gjenstand.
+ * Da droppes standardrådene om å fotografere dyret på nytt. Bruker bare
+ * signalet den eksisterende prompten allerede gir – ingen promptendring.
+ */
+export function markerIkkeSkadedyr(result: AnalysisResult, stegEnGruppe: unknown): AnalysisResult {
+  const ingenDyr = typeof stegEnGruppe === "string" && stegEnGruppe.trim().toLowerCase() === "ukjent";
+  if (!ingenDyr || result.found || result.annenArt) return result;
+  const beskrivelse = result.description && result.description !== UNKNOWN.description ? result.description : IKKE_SKADEDYR_TEKST;
+  return {
+    ...result,
+    ikkeSkadedyr: true,
+    description: beskrivelse,
+    tiltak: ["Gjelder det et skadedyr eller spor som ikke synes på dette bildet, ta et nytt bilde av selve funnet."],
   };
 }
 

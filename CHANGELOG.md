@@ -1,5 +1,13 @@
 # Endringslogg
 
+## Uutgitt – justeringer etter test i Preview
+
+- Artsavhengige tetteråd: mus fra omtrent 4–6 mm, rotte fra omtrent 10–14 mm, og
+  kartlegging før en aktiv inngang tettes (bare tiltak-tekster – identifiseringen er uendret).
+- Chat: helt irrelevante spørsmål får et fast svar uten AI-kall. Skjerpet chat-instruks.
+- Ekskrementer: forbehold om mus og flaggermus, og tips om størrelse og beskrivelse når de mangler.
+- Bilder uten skadedyr vises som «Ingen skadedyr på bildet».
+
 ## Uutgitt – leveranse A: sikkerhet, kostnadskontroll og stabilitet
 
 Detaljer, tester og driftssteg: [docs/leveranse-a.md](docs/leveranse-a.md).

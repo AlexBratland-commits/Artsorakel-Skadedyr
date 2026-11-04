@@ -15,6 +15,7 @@ import {
 import { lesChatBillett, signerChatSvar, verifiserChatSvar } from "@/lib/server/chat-ticket";
 import { rensTekst } from "@/lib/server/validation";
 import { loggHendelse } from "@/lib/server/log";
+import { erHeltUtenforFaget, UTENFOR_FAGET_SVAR } from "@/lib/server/chat-tema";
 import { grensekontrollUtilgjengelig, kostnadsrammeNaadd, medGrensekontroll, saldoBruktOpp } from "@/lib/server/svar";
 import { sjekkSikkerhetsoppsett } from "@/lib/server/oppsett";
 
@@ -122,6 +123,17 @@ async function svarPaaSporsmal(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Mangler spørsmål." }, { status: 400 });
   }
 
+  // Helt irrelevante spørsmål (f.eks. «Hvem er kong Harald?») får et fast
+  // svar uten AI-kall. Svaret signeres, så samtalen kan fortsette normalt.
+  if (erHeltUtenforFaget(messages[messages.length - 1].content)) {
+    loggHendelse("chat", { art: "utenfor_faget", svar_tegn: UTENFOR_FAGET_SVAR.length, finish: "regel", tur: messages.length });
+    return NextResponse.json({
+      svar: UTENFOR_FAGET_SVAR,
+      avkuttet: false,
+      signatur: signerChatSvar(billett.id, UTENFOR_FAGET_SVAR),
+    });
+  }
+
   const perBillett = await sjekkGrenser([chatBillettRegel(billett.id)]);
   if (!perBillett.ok) return grenseSvar(perBillett);
   const dogn = await sjekkGrenser([chatDognRegel()]);
@@ -158,12 +170,13 @@ ${funn}
 DETTE KAN DU SVARE PÅ
 - Funnet: arten, hvor farlig den er, hva brukeren gjør nå, og når det er verdt å tilkalle fagfolk.
 - Generelle spørsmål om skadedyr i og rundt hus og hytte: forebygging, tetting, fukt, hygiene, hvordan man ser om det er flere, arter som ligner, og hva tegn som ekskrementer, gnagespor og sagflis betyr.
-- Spørsmål om noe helt annet enn skadedyr avviser du vennlig, og foreslår at de kontakter Ocab.
+- Spørsmål om noe helt annet enn skadedyr (personer, nyheter, politikk, sport, oppskrifter, skole- eller skriveoppgaver, generell kunnskap) svarer du IKKE på innholdsmessig – heller ikke kort. Si i én setning at du er Artsorakels fagassistent for skadedyr, og inviter til et spørsmål om funnet, forebygging eller bekjempelse.
 
 RAMMER FOR SVARENE
 - Anbefal aldri gift, kjemiske midler, doser eller egenbehandling med pesticider. Si at man ikke skal bruke gift eller andre kjemikalier før man har snakket med en godkjent skadedyrbekjemper i Ocab. Yrkesmessig bruk av slike midler krever godkjenning i Norge.
 - Helsespørsmål (bitt, allergi, smitte) besvares kort og generelt, med henvisning til lege eller legevakt.
 - Spørsmål om ansvar, husleie, forsikring og fredede arter: forklar hovedregelen kort, og vis til huseier, forsikringsselskapet eller kommunen. Du gir ikke juridiske råd.
+- Råd om tetting: følg tiltakene over. For mus gjelder åpninger fra omtrent 4–6 mm, for rotte fra omtrent 10–14 mm. Si aldri at mindre åpninger er trygge, og anbefal kartlegging før en aktiv inngang tettes, så dyr ikke stenges inne.
 - Er du usikker, si det. Ikke gjett på tall, priser eller frister.
 - Prisoverslag på oppdrag skal du aldri gi – be dem kontakte Ocab for befaring.
 - Svar på norsk bokmål, i vanlig samtaletone. Maks 150 ord. Ingen emoji, ingen overskrifter.`;

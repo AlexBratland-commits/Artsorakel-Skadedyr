@@ -69,7 +69,8 @@ export const PESTS: Pest[] = [
     aliaser: ["brun rotte", "rotte"],
     forveksles: ["Husmus – langt mindre, og ørene er store i forhold til hodet", "Vånd – har svært kort hale og nesten skjulte ører"],
     tiltak: [
-      "Tett alle åpninger på 12 mm eller mer rundt rør, dører og luftventiler",
+      "Kontroller og sikre åpninger fra omtrent 10–14 mm rundt rør, dører, luftventiler og avløp – unge rotter kan komme gjennom mindre åpninger",
+      "Kartlegg før du tetter: en aktiv inngang bør ikke tettes før du vet om dyr fortsatt er inne – kontakt Ocab ved usikkerhet",
       "Fjern matkilder: fuglemat, kompost, åpne avfallsbeholdere",
       "Sjekk avløp og kummer – brunrotte kommer ofte opp via kloakk",
       "Rotteangrep i bolig bør håndteres av godkjent skadedyrbekjemper",
@@ -86,7 +87,8 @@ export const PESTS: Pest[] = [
     tiltak: [
       "Sikre loft og hulrom – arten klatrer godt og holder til høyt i bygget",
       "Tett innganger og fjern klatreveier langs fasade og kabler",
-      "Tett alle åpninger på 12 mm eller mer rundt rør, dører og luftventiler",
+      "Kontroller og sikre åpninger fra omtrent 10–14 mm rundt rør, dører, luftventiler og avløp – unge rotter kan komme gjennom mindre åpninger",
+      "Kartlegg før du tetter: en aktiv inngang bør ikke tettes før du vet om dyr fortsatt er inne – kontakt Ocab ved usikkerhet",
       "Kontakt skadedyrbekjemper for artsbestemmelse og tiltak",
     ],
   },
@@ -100,7 +102,8 @@ export const PESTS: Pest[] = [
     aliaser: ["mus"],
     forveksles: ["Skogmus – større øyne, hvitere buk, holder mest til ute", "Ung brunrotte – kraftigere poter og tykkere hale"],
     tiltak: [
-      "Tett sprekker fra 6 mm og opp med stålull og fugemasse",
+      "Kontroller og sikre åpninger fra omtrent 4–6 mm rundt rør, kabler og ventiler, for eksempel med stålull og fugemasse – mus kan også utnytte mindre sprekker og gnage dem større",
+      "Kartlegg før du tetter: en aktiv inngang bør ikke tettes før du vet om dyr fortsatt er inne – kontakt Ocab ved usikkerhet",
       "Oppbevar tørrvarer i tette bokser",
       "Sett ut slagfeller langs vegger der du ser ekskrementer",
       "Gnag på kabler gir brannrisiko – sjekk el-skap og hulrom",
@@ -118,7 +121,8 @@ export const PESTS: Pest[] = [
       "Stor skogmus – større, med gult bånd som går helt over brystet (liten skogmus har høyst en liten gul flekk)",
     ],
     tiltak: [
-      "Tett innganger i grunnmur, kledning og ventiler",
+      "Kontroller og sikre åpninger fra omtrent 4–6 mm i grunnmur, kledning og ventiler – mus kan også utnytte mindre sprekker og gnage dem større",
+      "Kartlegg før du tetter: en aktiv inngang bør ikke tettes før du vet om dyr fortsatt er inne – kontakt Ocab ved usikkerhet",
       "Rydd ved, løv og busker inntil veggen",
       "Sett feller på loft og i kjeller før vinteren",
     ],
@@ -1251,6 +1255,8 @@ export const PESTS: Pest[] = [
       "Bruk hansker og støvmaske ved opprydding – rotteekskrementer kan smitte",
       "Fukt området før rengjøring – ikke tørrfei eller støvsug direkte",
       "Rotter lager faste toaletter – let etter flere klynger, ikke bare den du så først",
+      "Kontroller og sikre åpninger fra omtrent 10–14 mm rundt rør, dører, luftventiler og avløp – unge rotter kan komme gjennom mindre åpninger",
+      "Kartlegg før du tetter: en aktiv inngang bør ikke tettes før du vet om dyr fortsatt er inne – kontakt Ocab ved usikkerhet",
       "Kontakt Ocab for kartlegging og sanering ved funn innendørs",
     ],
   },
@@ -1274,7 +1280,8 @@ export const PESTS: Pest[] = [
     ],
     notat: "Vi skiller ikke mellom husmus og skogmus på ekskrementer – tiltakene er de samme. Det viktigste er å skille mus fra rotte.",
     tiltak: [
-      "Mus kommer gjennom svært små åpninger – tett rundt rør, kabler, ventiler og i grunnmur",
+      "Kontroller og sikre åpninger fra omtrent 4–6 mm rundt rør, kabler, ventiler og i grunnmur – mus kan også utnytte mindre sprekker og gnage dem større",
+      "Kartlegg før du tetter: en aktiv inngang bør ikke tettes før du vet om dyr fortsatt er inne – kontakt Ocab ved usikkerhet",
       "Bruk hansker og munnbind, og fukt ekskrementene før opprydding – ikke tørrfei eller støvsug direkte",
       "Sett feller langs vegger der ekskrementene ligger tettest",
       "Ved mange funn eller mus i flere rom: kontakt Ocab",

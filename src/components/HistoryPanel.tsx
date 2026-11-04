@@ -57,7 +57,9 @@ export default function HistoryPanel({
                     ? `Mulig ${e.resultat.annenArt.name}`
                     : e.resultat.found
                       ? e.resultat.name
-                      : "Ikke identifisert sikkert"}
+                      : e.resultat.ikkeSkadedyr
+                        ? "Ingen skadedyr på bildet"
+                        : "Ikke identifisert sikkert"}
                 </span>
                 <span className="block truncate text-xs text-muted">
                   {formatTime(e.tid)}

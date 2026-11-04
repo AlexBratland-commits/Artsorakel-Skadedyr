@@ -25,7 +25,7 @@ import { LagerUtilgjengelig } from "@/lib/server/store";
 import { grensekontrollUtilgjengelig, kostnadsrammeNaadd, medGrensekontroll, saldoBruktOpp } from "@/lib/server/svar";
 import { sjekkSikkerhetsoppsett } from "@/lib/server/oppsett";
 import { sikkerhetsnivaa } from "@/lib/types";
-import { enrich, parseJson } from "@/lib/identification";
+import { enrich, markerIkkeSkadedyr, parseJson } from "@/lib/identification";
 
 export const runtime = "nodejs"; // sharp krever Node-runtime, ikke Edge
 export const maxDuration = 30;
@@ -327,6 +327,7 @@ async function analyser(request: NextRequest): Promise<NextResponse> {
 
     let gruppe: PestGroup | null;
     let speciesOutcome: CallOutcome;
+    let stegEnGruppe: unknown;
 
     if (erEkskrementer) {
       // Ekskrement-analyser vet allerede hvilken gruppe det gjelder – vi
@@ -371,7 +372,8 @@ async function analyser(request: NextRequest): Promise<NextResponse> {
 
       if (!groupOutcome.ok) return feil(groupOutcome.reason);
 
-      gruppe = findGroup(groupOutcome.json?.gruppe);
+      stegEnGruppe = groupOutcome.json?.gruppe;
+      gruppe = findGroup(stegEnGruppe);
       const speciesList = gruppe ? groupPromptList(gruppe) : PEST_PROMPT_LIST;
       const focus = focusForGroup(gruppe);
 
@@ -401,13 +403,13 @@ async function analyser(request: NextRequest): Promise<NextResponse> {
         { status: 502 }
       );
     }
-    const result = enrich(speciesOutcome.json, gruppe);
+    const result = markerIkkeSkadedyr(enrich(speciesOutcome.json, gruppe), stegEnGruppe);
     if (!evalModus) setCached(hash, result);
 
     const sum = summerForbruk(forbruk);
     loggHendelse("analyse", {
       type: analyseType,
-      utfall: utfallFor(result),
+      utfall: result.ikkeSkadedyr ? "ikke_skadedyr" : utfallFor(result),
       art: result.found ? result.name : undefined,
       gruppe: result.gruppe,
       // F2: arten lå i en annen gruppe enn steg 1 valgte – måler hvor ofte det skjer.

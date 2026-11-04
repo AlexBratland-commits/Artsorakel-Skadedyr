@@ -160,7 +160,7 @@ export default function Home() {
       const thumb = await makeThumbnail(klar);
       setHistorikk(addToHistory(analysis, thumb, sted));
 
-      if (!analysis.found && !analysis.annenArt) {
+      if (!analysis.found && !analysis.annenArt && !analysis.ikkeSkadedyr) {
         vis("Ingen sikker match. Prøv et skarpere bilde nærmere dyret.", "info");
       }
     } catch (error) {
@@ -364,6 +364,15 @@ export default function Home() {
                   ))}
                 </select>
               </>
+            )}
+
+            {/* Oppgave 3: mus og flaggermus er like store på bilder – størrelse,
+                funnsted og om de smuldrer avgjør. Tipset stopper ikke analysen. */}
+            {analyseType === "ekskrementer" && !beskrivelse.trim() && !droppingSize && (
+              <p className="mt-6 rounded-lg border-l-2 border-ocab-500 bg-[color:var(--surface-sunken)] px-4 py-3 text-sm">
+                Tips: Oppgi omtrentlig størrelse, hvor du fant dem og om de smuldrer når du
+                trykker på dem. Det gir et sikrere svar, særlig for å skille mus fra flaggermus.
+              </p>
             )}
 
             <button

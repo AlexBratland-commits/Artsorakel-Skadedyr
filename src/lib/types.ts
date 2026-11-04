@@ -46,6 +46,8 @@ export interface AnalysisResult extends AiIdentification {
   bekreftelse?: string[];
   /** Kort, viktig varsel som fremheves i resultatvisningen. */
   notat?: string;
+  /** Bildet viser tydelig noe annet enn et skadedyr (f.eks. en gjenstand). */
+  ikkeSkadedyr?: boolean;
   /** Faglig forbehold ved bestemmelsen, f.eks. brunrotte/svartrotte på ekskrementer. */
   forbehold?: string;
   /** Satt når treffet er en usikker enkeltkandidat (confidence 30–49) – vises som "Mulig [navn]". */

@@ -41,3 +41,16 @@ De nye testene for F1–F4 ble skrevet først. 13 av dem feilet på den gamle ko
 Ingen av testene måler hvor treffsikker AI-en er. Rettingene gjør at riktige AI-svar ikke lenger
 kastes (F2, F4) og at usikre svar ikke ser sikrere ut enn de er (F3). Om dette gir flere riktige
 artsbestemmelser i praksis, kan bare fasitbilder vise (leveranse C, C7).
+
+## Etter test i Preview med ekte AI (eierens test)
+
+Riktige svar i testen: faraomaur, brunrotte, mus, sølvkre og skjeggkre, og metallskruer avvist.
+Endringene under påvirker **ikke** artsbestemmelsen: promptene er uendret (snapshotene består),
+og i artsbiblioteket er bare `tiltak`-tekster endret. De inngår ikke i identifiseringspromptene.
+
+| Oppgave | Endring |
+|---|---|
+| 1. Tetting | Husmus, liten skogmus og ekskrement-Mus: «åpninger fra omtrent 4–6 mm». Brunrotte, svartrotte og ekskrement-Brunrotte: «fra omtrent 10–14 mm». Alle: ikke tett en aktiv inngang før situasjonen er kartlagt. Chatten følger samme regel. |
+| 2. Chat utenfor faget | Helt irrelevante spørsmål («Hvem er kong Harald?») får et fast, høflig svar uten AI-kall (`src/lib/server/chat-tema.ts`). Spørsmål med fagord går alltid videre. Chat-instruksen er også skjerpet. |
+| 3. Mus/flaggermus | Ingen prompt- eller modellendring. Ekskrement-Mus og -Flaggermus får et forbehold om hvordan de skilles (konsistens, fra bibliotekets egne kjennetegn). Uten størrelse og beskrivelse vises et tips før analysen. |
+| 4. Ikke-skadedyr | Når grovsorteringen ikke ser noe dyr og ingen art blir funnet, vises «Ingen skadedyr på bildet» uten standardrådet om å fotografere dyret på nytt. |

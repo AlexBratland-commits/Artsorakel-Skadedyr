@@ -122,6 +122,48 @@ describe("falsk samtalehistorikk", () => {
   });
 });
 
+describe("spørsmål utenfor skadedyrfaget", () => {
+  it("«Hvem er kong Harald?» får fast, signert svar uten AI-kall", async () => {
+    const ai = installFakeAi();
+    const { analyze, chat } = await load();
+    const token = await billett(analyze);
+    const kallFor = ai.calls.length;
+    const res = await chat(
+      jsonRequest("/api/ask-about-findings", { chatToken: token, messages: [{ role: "user", content: "Hvem er kong Harald?" }] })
+    );
+    const body = await res.json();
+    expect(res.status).toBe(200);
+    expect(body.svar).toMatch(/fagassistent/);
+    expect(body.svar).not.toMatch(/Harald/);
+    expect(ai.calls.length).toBe(kallFor);
+    // Svaret er signert, så neste spørsmål i samme samtale godtas
+    const neste = await chat(
+      jsonRequest("/api/ask-about-findings", {
+        chatToken: token,
+        messages: [
+          { role: "user", content: "Hvem er kong Harald?" },
+          { role: "assistant", content: body.svar, sig: body.signatur },
+          { role: "user", content: "Er musa farlig?" },
+        ],
+      })
+    );
+    expect(neste.status).toBe(200);
+    expect(ai.calls.length).toBe(kallFor + 1);
+  });
+
+  it("chat-instruksen har regler for tetting og for spørsmål utenfor faget", async () => {
+    const ai = installFakeAi();
+    const { analyze, chat } = await load();
+    const token = await billett(analyze);
+    await chat(jsonRequest("/api/ask-about-findings", { chatToken: token, messages: [{ role: "user", content: "Hvordan tetter jeg?" }] }));
+    const system = ai.calls.find((c) => c.kind === "chat")!.system;
+    expect(system).toMatch(/fra omtrent 4–6 mm/);
+    expect(system).toMatch(/10–14 mm/);
+    expect(system).toMatch(/aktiv inngang/);
+    expect(system).toMatch(/svarer du IKKE på innholdsmessig/);
+  });
+});
+
 describe("grenser i chatten", () => {
   it("tak på spørsmål per analyse", async () => {
     installFakeAi();

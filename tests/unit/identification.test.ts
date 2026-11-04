@@ -54,7 +54,7 @@ describe("B2 / F4: «rotte» på ekskrementer", () => {
 
   it("forbeholdet gjelder ikke brunrotte som dyr eller andre ekskrementer", () => {
     expect(enrich(svar({ name: "Brunrotte", latinName: "Rattus norvegicus", confidence: 90 }), "Gnagere").forbehold).toBeUndefined();
-    expect(enrich(svar({ name: "Mus", latinName: "Mus musculus", confidence: 90 }), "Ekskrementer").forbehold).toBeUndefined();
+    expect(enrich(svar({ name: "Mink", latinName: "Neogale vison", confidence: 90 }), "Ekskrementer").forbehold).toBeUndefined();
   });
 
   it("svartrotte tvinges ikke inn som sikker ekskrementbestemmelse", () => {
@@ -141,5 +141,52 @@ describe("B4 / F2: feil gruppe i steg 1 ødelegger ikke et riktig svar", () => {
       "Biller"
     );
     expect(r.found).toBe(false);
+  });
+});
+
+describe("oppgave 4: bilder uten skadedyr", () => {
+  it("når steg 1 ikke så noe dyr og steg 2 ikke fant art, merkes funnet som «ikke skadedyr»", async () => {
+    const { markerIkkeSkadedyr, IKKE_SKADEDYR_TEKST } = await import("@/lib/identification");
+    const ukjent = enrich({ found: false, name: "Ukjent", description: "Bildet viser fire metallskruer.", confidence: 0 }, null);
+    const r = markerIkkeSkadedyr(ukjent, "Ukjent");
+    expect(r).toMatchObject({ found: false, name: "Ukjent", ikkeSkadedyr: true });
+    expect(r.description).toBe("Bildet viser fire metallskruer.");
+    expect(r.tiltak.join(" ")).not.toMatch(/nærmere dyret|god belysning/);
+    expect(IKKE_SKADEDYR_TEKST).toMatch(/annet enn et skadedyr/);
+  });
+
+  it("uten beskrivelse fra AI-en brukes en standardtekst", async () => {
+    const { markerIkkeSkadedyr, IKKE_SKADEDYR_TEKST } = await import("@/lib/identification");
+    const r = markerIkkeSkadedyr(enrich({ found: false, name: "Ukjent", confidence: 0 }, null), "Ukjent");
+    expect(r.description).toBe(IKKE_SKADEDYR_TEKST);
+  });
+
+  it("ikke merket når steg 1 valgte en dyregruppe (uklart dyr ≠ gjenstand)", async () => {
+    const { markerIkkeSkadedyr } = await import("@/lib/identification");
+    const r = markerIkkeSkadedyr(enrich({ found: false, name: "Ukjent", confidence: 0 }, "Biller"), "Biller");
+    expect(r.ikkeSkadedyr).toBeUndefined();
+    expect(r.tiltak.join(" ")).toMatch(/nærmere dyret/);
+  });
+
+  it("ikke merket når steg 2 likevel fant en art eller en annen art", async () => {
+    const { markerIkkeSkadedyr } = await import("@/lib/identification");
+    const funnet = enrich({ found: true, name: "Husmus", latinName: "Mus musculus", confidence: 80 }, null);
+    expect(markerIkkeSkadedyr(funnet, "Ukjent").ikkeSkadedyr).toBeUndefined();
+    const annen = enrich({ found: false, name: "Ukjent", confidence: 0, annenArt: { name: "Gresshoppe", latinName: "Caelifera", confidence: 70 } }, null);
+    expect(markerIkkeSkadedyr(annen, "Ukjent").ikkeSkadedyr).toBeUndefined();
+  });
+});
+
+describe("oppgave 3: mus og flaggermus på ekskrementer", () => {
+  it.each(["Mus", "Flaggermus"])("%s får forbehold om hvordan de skilles", async (navn) => {
+    const { MUS_FLAGGERMUS_FORBEHOLD } = await import("@/lib/identification");
+    const r = enrich({ found: true, name: navn, latinName: "", confidence: 60 }, "Ekskrementer");
+    expect(r.name).toBe(navn);
+    expect(r.forbehold).toBe(MUS_FLAGGERMUS_FORBEHOLD);
+  });
+
+  it("forbeholdet gjelder ikke dyrebilder", async () => {
+    const r = enrich({ found: true, name: "Husmus", latinName: "Mus musculus", confidence: 80 }, "Gnagere");
+    expect(r.forbehold).toBeUndefined();
   });
 });

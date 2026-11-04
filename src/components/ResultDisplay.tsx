@@ -40,6 +40,9 @@ const SEVERITY: Record<Severity, { etikett: string, farge: string, tekst: string
 /** Overskrift når funnet ikke kunne bestemmes (godkjent tekst, F1). */
 const IKKE_IDENTIFISERT = "Kunne ikke identifisere funnet sikkert";
 
+/** Overskrift når bildet tydelig ikke viser et skadedyr (oppgave 4). */
+const IKKE_SKADEDYR_OVERSKRIFT = "Ingen skadedyr på bildet";
+
 const OCAB_TELEFON = "+4740003527"; // ← bytt til riktig nummer
 const OCAB_SKADEDYR = "https://www.ocab.no/skade/skadedyr/";
 
@@ -72,9 +75,11 @@ export default function ResultDisplay({
     ? `Mulig ${annen.name}`
     : result.found && result.usikkerKandidat
       ? `Mulig ${result.name}`
-      : !result.found
-        ? IKKE_IDENTIFISERT
-        : result.name;
+      : result.ikkeSkadedyr
+        ? IKKE_SKADEDYR_OVERSKRIFT
+        : !result.found
+          ? IKKE_IDENTIFISERT
+          : result.name;
   const latinNavn = annen ? annen.latinName : result.latinName;
 
   const delingstekst = result.found
