@@ -161,10 +161,10 @@ describe("generell chat uten bilde", () => {
     expect(res.status).toBe(400);
   });
 
-  it("regresjon: sagflis og store maur ved vinduskarmen – trelevende maur, bilde og kontaktkort", async () => {
+  it("regresjon: sagflis og store maur ved vinduskarmen – stokkmaur, bilde og kontaktkort", async () => {
     const ai = installFakeAi({
       assistent:
-        "Sagflis og store maur ved vinduskarmen gir mistanke om stokkmaur eller andre trelevende maur. Hvor store er de, og hvilken farge har bakkroppen? Ta gjerne et bilde.\n[[ANALYSER_BILDE]]\n[[KONTAKT_OCAB]]",
+        "Dette kan tyde på stokkmaur. Store maur kombinert med utkast/sagflis ved en bygningskonstruksjon er typiske tegn som bør undersøkes nærmere. Andre maurarter kan ikke utelukkes uten en nærmere artsbestemmelse. Ta gjerne bilde med bildeanalysen. Hvor store er maurene, hvilken farge har de, og hvor fant du dem?\n[[ANALYSER_BILDE]]\n[[KONTAKT_OCAB]]",
     });
     const { assistent } = await load();
     const body = await (
@@ -173,7 +173,8 @@ describe("generell chat uten bilde", () => {
     expect(body).toMatchObject({ visBilde: true, visKontakt: true });
     expect(body.svar).not.toMatch(/\[\[/);
     const kall = ai.calls.find((c) => c.kind === "assistent")!;
-    expect(kall.system).toMatch(/MAUR OG SAGFLIS/);
+    expect(kall.system).toMatch(/MAUR OG UTKAST\/SAGFLIS/);
+    expect(body.svar).toMatch(/^Dette kan tyde på stokkmaur\./);
     expect(kall.system).toMatch(/Stokkmaur \(Camponotus herculeanus/);
     // Bare chatmodellen kalles – ingen bildeidentifisering
     expect(ai.calls.every((c) => c.kind === "assistent")).toBe(true);

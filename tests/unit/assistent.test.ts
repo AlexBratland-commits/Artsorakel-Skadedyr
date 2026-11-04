@@ -89,39 +89,46 @@ describe("regler i assistentens prompt", () => {
 
 describe("regresjon: store maur og sagflis ved vinduskarmen", () => {
   const SPORSMAL = "Jeg har funnet sagflis og flere store maur rundt vinduskarmen. Hva gjør jeg?";
+  const ORDLYD =
+    "«Dette kan tyde på stokkmaur. Store maur kombinert med utkast/sagflis ved en bygningskonstruksjon er typiske tegn som bør undersøkes nærmere. Andre maurarter kan ikke utelukkes uten en nærmere artsbestemmelse.»";
 
-  it("stokkmaur kommer først i fagstoffet, og prompten fremhever trelevende maur uten sikker art", () => {
-    const arter = relevanteArter(SPORSMAL).map((p) => p.norsk);
-    expect(arter[0]).toBe("Stokkmaur");
+  it("stokkmaur fremheves først, med den godkjente ordlyden", () => {
+    expect(relevanteArter(SPORSMAL).map((p) => p.norsk)[0]).toBe("Stokkmaur");
     const p = byggAssistentPrompt(SPORSMAL);
-    expect(p).toMatch(/Fremhev da mistanke om stokkmaur eller andre trelevende maur, uten å påstå sikker art/);
-    expect(p).toMatch(/Ikke sidestill brun tremaur med stokkmaur bare fordi maurene er store/);
-    expect(p).toMatch(/Be om størrelse og farge på hode, mellomkropp og bakkropp/);
+    expect(p).toContain(ORDLYD);
+    expect(p).toMatch(/først og fremst fremheve mistanke om stokkmaur, uten å påstå sikker art/);
+  });
+
+  it("anbefaler bildeanalyse og spør etter størrelse, farge og funnsted", () => {
+    const p = byggAssistentPrompt(SPORSMAL);
+    expect(p).toMatch(/Anbefal deretter bildeanalyse i Artsorakel, og spør etter størrelse, farge og funnsted/);
     expect(p).toContain(BILDE_MARKOR);
   });
 
-  it("ingen feil regel om at brun tremaur alltid er liten", () => {
+  it("«trelevende maur» og «trefiberrik sagflis» brukes ikke som anbefalt formulering", () => {
     const p = byggAssistentPrompt(SPORSMAL);
-    expect(p).toMatch(/Begge kan bli store, så størrelse alene skiller dem ikke/);
-    expect(p).not.toMatch(/brun tremaur (er|blir) (alltid|bare) (liten|små)/i);
-    // Bibliotekets størrelse for brun tremaur står uendret i fagstoffet
-    expect(p).toMatch(/Brun tremaur \(Camponotus ligniperda, Maur\): 6–18 mm/);
+    expect(p).toMatch(/Ikke bruk uttrykkene «trelevende maur» eller «trefiberrik sagflis»/);
+    // Den forrige formuleringen er fjernet
+    expect(p).not.toMatch(/stokkmaur eller andre trelevende maur/);
+    // Uttrykkene står bare i forbudet, ikke noe annet sted i instruksen
+    expect(p.match(/trelevende maur/g)).toHaveLength(1);
+    expect(p.match(/trefiberrik sagflis/g)).toHaveLength(1);
   });
 
-  it("råd om sagflis, reir, fukt og bygningsskade beholdes – fukt er ikke et krav", () => {
+  it("ingen generell regel om at store maur er stokkmaur – andre arter kan fortsatt nevnes", () => {
+    const p = byggAssistentPrompt(SPORSMAL);
+    expect(p).toMatch(/Dette er ingen regel om at store maur er stokkmaur/);
+    expect(p).not.toMatch(/brun tremaur (er|blir) (alltid|bare) (liten|små)/i);
+    const sp = "Store maur ved vinduet, blanke, og fremste del av bakkroppen er rødbrun";
+    expect(relevanteArter(sp).map((a) => a.norsk)).toContain("Brun tremaur");
+    expect(byggAssistentPrompt(sp)).toMatch(/rødbrun fremre del av bakkroppen og blankere kropp hos brun tremaur, nevn den/);
+    expect(relevanteArter("Er det brun tremaur jeg har?").map((a) => a.norsk)).toContain("Brun tremaur");
+  });
+
+  it("råd om reir, fukt og bygningsskade beholdes – fukt er ikke et krav", () => {
     const p = byggAssistentPrompt(SPORSMAL);
     expect(p).toMatch(/følge maurstien for å finne mulige reir/);
-    expect(p).toMatch(/undersøke treverket for fukt og skader/);
     expect(p).toMatch(/Fukt og råte øker risikoen, men er ikke et krav/);
-    expect(p).toMatch(/også kan etablere seg i tørt trevirke/); // stokkmaurrådet fra biblioteket
-    expect(p).toMatch(/konkret grunn til faglig oppfølging/);
-  });
-
-  it("brun tremaur kan fortsatt nevnes når kjennetegnene peker dit", () => {
-    const sp = "Store maur ved vinduet, blanke, og fremste del av bakkroppen er rødbrun";
-    expect(relevanteArter(sp).map((p) => p.norsk)).toContain("Brun tremaur");
-    const p = byggAssistentPrompt(sp);
-    expect(p).toMatch(/Nevn brun tremaur som et reelt alternativ når kjennetegnene peker dit, for eksempel at fremste del av bakkroppen er rødbrun/);
-    expect(relevanteArter("Er det brun tremaur jeg har?").map((p) => p.norsk)).toContain("Brun tremaur");
+    expect(p).toMatch(/Mistanke om stokkmaur i bygningen er en konkret grunn til faglig oppfølging/);
   });
 });
