@@ -86,7 +86,7 @@ Alle som har lenken kan bruke appen. Dette beskytter OpenRouter-nøkkelen:
 | Vern | Hva det gjør |
 |---|---|
 | Nøkkelen ligger bare på serveren | Den sendes aldri til nettleseren og kan ikke leses av brukerne |
-| Grense per nettverk | 10 analyser og 10 chatspørsmål per time per IP-adresse (IPv6 per /64), felles for alle servere via Upstash |
+| Grense per nettverk | 10 analyser per time, og 120 chatspørsmål per time (maks 10 i minuttet) per IP-adresse (IPv6 per /64), felles for alle servere via Upstash |
 | Chat bare om analyserte funn | Chatten kan ikke brukes som en gratis, generell AI-tjeneste |
 | Felles døgnbudsjett | Maks 200 analyser og 500 chatspørsmål per døgn for hele appen |
 | Kostnadsramme | Stopper AI-kall når dagens beløp er brukt (standard 10 USD – **sett den lavere, se under**) |
@@ -98,6 +98,20 @@ analysene for alle resten av døgnet, men kostnaden blir aldri høyere enn kostn
 omtrent 10 USD i saldo og under 50 analyser per døgn anbefales derfor
 `ARTSORAKEL_MAKS_KOSTNAD_PER_DOGN_USD=2`. Da kan én dag med misbruk koste høyst omtrent 2 USD.
 Merker du misbruk, slår du på tilgangskoden (se tabellen over).
+
+## Kostnadsgrensen i Artsorakel og saldoen i OpenRouter – to forskjellige ting
+
+| | Kostnadsramme i Artsorakel | Saldo i OpenRouter |
+|---|---|---|
+| Hva det er | En grense **per døgn** (norsk tid) som appen selv teller | Pengene som faktisk står på kontoen |
+| Hvor den settes | `ARTSORAKEL_MAKS_KOSTNAD_PER_DOGN_USD` i Vercel (standard 10, anbefalt 2) | Du fyller på manuelt hos OpenRouter (automatisk påfyll er av) |
+| Når den slår inn | Når dagens AI-forbruk når grensen. Nullstilles ved midnatt. | Når saldoen er tom. Fylles ikke på av seg selv. |
+| Hva brukeren ser | «… nådd dagens kostnadsramme …» | «AI-tjenesten er midlertidig stoppet fordi saldoen er brukt opp …» |
+| Hvor nøyaktig | Bruker OpenRouters oppgitte kostnad når den finnes, ellers et forsiktig anslag (0,02 USD per kall) | Eksakt – det er dette som faktisk trekkes |
+
+Kostnadsrammen hindrer at **én dag** bruker opp saldoen. Saldoen er den **endelige** grensen. Er
+saldoen 10 USD og dagsrammen 2 USD, kan appen bruke høyst 2 USD per døgn, og aldri mer enn saldoen
+totalt. Antallsgrensene (per time og per minutt) teller forespørsler, ikke kroner.
 
 ## Når appen skal brukes mer
 

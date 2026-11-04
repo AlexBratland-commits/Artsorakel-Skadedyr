@@ -44,7 +44,9 @@ function grenseSvar(grense: Extract<GrenseResultat, { ok: false }>): NextRespons
   const error =
     grense.regel === "dogn"
       ? "Chatten har nådd dagens grense. Prøv igjen i morgen, eller ring Ocab."
-      : grense.regel === "billett"
+      : grense.regel === "ip_minutt"
+        ? "Du sender spørsmål veldig raskt. Vent et øyeblikk og prøv igjen."
+        : grense.regel === "billett"
         ? "Du har stilt mange spørsmål om dette funnet. Ring Ocab hvis du trenger mer hjelp."
         : "Du har stilt mange spørsmål den siste timen. Prøv igjen senere.";
   return NextResponse.json({ error }, { status: grense.regel === "dogn" ? 503 : 429, headers });

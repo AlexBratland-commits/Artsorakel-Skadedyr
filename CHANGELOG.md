@@ -7,6 +7,10 @@
 - Chat: helt irrelevante spørsmål får et fast svar uten AI-kall. Skjerpet chat-instruks.
 - Ekskrementer: forbehold om mus og flaggermus, og tips om størrelse og beskrivelse når de mangler.
 - Bilder uten skadedyr vises som «Ingen skadedyr på bildet».
+- Chat: timegrensen per IP er hevet fra 10 til 120 (konfigurerbar), med ny spamgrense på 10 per
+  minutt. Taket per analyse er hevet fra 20 til 60. Døgnbudsjett og kostnadsramme er uendret.
+- Stokkmaur: nye råd om fukt og råte (ikke en nødvendig betingelse) og om reir i isolasjon og
+  polystyren. Bare tiltakene for stokkmaur – andre maurarter og identifiseringen er uendret.
 
 ## Uutgitt – leveranse A: sikkerhet, kostnadskontroll og stabilitet
 

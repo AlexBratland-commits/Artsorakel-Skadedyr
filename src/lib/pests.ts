@@ -480,8 +480,9 @@ export const PESTS: Pest[] = [
     ],
     notat: "Ikke bruk gift eller andre kjemikalier før du har snakket med en godkjent skadedyrbekjemper i Ocab.",
     tiltak: [
-      "Gnager ganger i fuktig konstruksjonsvirke og kan gi bygningsskade",
-      "Maur inne skyldes som oftest fukt eller vannskade – kontroller nøye rundt bad, vinduer, terskler, bunnsvill og tak der de kommer inn",
+      "Gnager ganger i trevirke og kan gi bygningsskade",
+      "Stokkmaurangrep i bygninger er ofte knyttet til fukt, råte eller tidligere fuktskader. Undersøk særlig utsatte konstruksjoner, men vær oppmerksom på at stokkmaur også kan etablere seg i tørt trevirke.",
+      "Stokkmaur kan også etablere reir i isolasjonsmaterialer og polystyren, blant annet under støpte dekker og i nærheten av varmekilder. Slike reir trenger ikke være knyttet til fukt eller råte.",
       "Se etter finmalt sagflis ved lister, terskler og vinduer",
       "Følg maurstien for å finne reiret – ofte i vegg eller i en stubbe utenfor",
       "Bør utbedres av skadedyrbekjemper, ofte dekket av boligforsikring",
