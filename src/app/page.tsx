@@ -199,8 +199,8 @@ export default function Home() {
             Hva er det du har funnet?
           </h1>
           <p className="mt-3 max-w-md text-base leading-relaxed text-muted">
-            Ta et bilde, så foreslår vi hvilken art det er, hvor alvorlig det er
-            og hva du bør gjøre videre.
+            Ta bilde av et skadedyr eller ekskrementer. Artsorakelet hjelper deg å
+            finne ut hva det kan være, hvor alvorlig det er og hva du bør gjøre videre.
           </p>
         </div>
 
