@@ -90,6 +90,7 @@ export function grenseverdier() {
     analyserPerTime: heltall("ARTSORAKEL_ANALYSER_PER_TIME", 0, 0, 10_000),
     analyserPerDogn: heltall("ARTSORAKEL_MAKS_ANALYSER_PER_DOGN", 200, 1, 1_000_000),
     chatPerTime: heltall("ARTSORAKEL_CHAT_PER_TIME", 0, 0, 10_000),
+    chatPerMinutt: heltall("ARTSORAKEL_CHAT_PER_MINUTT", 10, 1, 10_000),
     chatPerDogn: heltall("ARTSORAKEL_MAKS_CHAT_PER_DOGN", 500, 1, 1_000_000),
   };
 }
@@ -115,17 +116,25 @@ export function analyseDognRegel(): Regel {
   return { navn: "dogn", nokkel: `analyse:dogn:${osloDato()}`, maks: grenseverdier().analyserPerDogn, vinduSek: DOGN_TTL };
 }
 
-/** Grenser for chatten. Samme oppbygging som for analysene. */
+/**
+ * Grenser for chatten. Romslige nok til at manuell testing og vanlig bruk
+ * aldri stoppes (120 spørsmål per time), men med en kort spamgrense per
+ * minutt (standard 10) mot automatiserte forespørsler. Kostnaden styres
+ * uansett av døgnbudsjettet, kostnadsrammen og OpenRouter-saldoen.
+ */
 export function chatRegler(k: Klient): Regel[] {
-  const satt = grenseverdier().chatPerTime;
+  const { chatPerTime: satt, chatPerMinutt } = grenseverdier();
+  const ip = anonymIp(k.ipNokkel);
+  const perMinutt: Regel = { navn: "ip_minutt", nokkel: `chat:ip-min:${ip}`, maks: chatPerMinutt, vinduSek: 60 };
   if (k.sid) {
-    const perEnhet = satt || 30;
+    const perEnhet = satt || 120;
     return [
       { navn: "enhet_time", nokkel: `chat:enhet:${k.sid}`, maks: perEnhet, vinduSek: TIME },
-      { navn: "ip_time", nokkel: `chat:ip:${anonymIp(k.ipNokkel)}`, maks: perEnhet * 3, vinduSek: TIME },
+      { navn: "ip_time", nokkel: `chat:ip:${ip}`, maks: perEnhet * 3, vinduSek: TIME },
+      perMinutt,
     ];
   }
-  return [{ navn: "ip_time", nokkel: `chat:ip:${anonymIp(k.ipNokkel)}`, maks: satt || 10, vinduSek: TIME }];
+  return [{ navn: "ip_time", nokkel: `chat:ip:${ip}`, maks: satt || 120, vinduSek: TIME }, perMinutt];
 }
 
 export function chatDognRegel(): Regel {
@@ -133,7 +142,7 @@ export function chatDognRegel(): Regel {
 }
 
 /** Tak på antall spørsmål per analyse (per chat-billett). */
-export const CHAT_PER_BILLETT = 20;
+export const CHAT_PER_BILLETT = 60;
 export const CHAT_BILLETT_LEVETID_SEK = 30 * 24 * 3600;
 
 export function chatBillettRegel(billettId: string): Regel {

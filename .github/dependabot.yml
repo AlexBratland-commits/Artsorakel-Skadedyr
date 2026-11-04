@@ -1,0 +1,16 @@
+# Foreslår sikkerhetsoppdateringer som pull requests. Ingenting oppdateres
+# automatisk – hver oppdatering må godkjennes og testes (CI) før merge.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      utviklingsverktoy:
+        dependency-type: development
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

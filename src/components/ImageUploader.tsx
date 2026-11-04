@@ -164,7 +164,7 @@ export default function ImageUploader({
       </div>
 
       <p className="mt-5 text-xs text-muted">
-        JPG, PNG, WebP eller HEIC. Du kan også dra en fil hit.
+        JPG, PNG eller WebP. Bilder tatt med «Ta bilde» fungerer alltid. Du kan også dra en fil hit.
       </p>
     </div>
   );

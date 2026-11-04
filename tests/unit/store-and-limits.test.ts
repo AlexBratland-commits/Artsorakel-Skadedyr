@@ -127,3 +127,14 @@ describe("bruksgrenser", () => {
     expect(sekunderTilMidnatt(new Date("2026-11-04T22:00:00Z"))).toBe(3600);
   });
 });
+
+describe("ny chatgrense virker straks, uten å vente på at timekvoten utløper", () => {
+  it("en teller som sto på 15 (over den gamle grensen 10) slipper gjennom med den nye grensen", async () => {
+    const lager = new MinneLager();
+    _settLagerForTester(lager);
+    const { chatRegler, anonymIp } = await import("@/lib/server/limits");
+    const nokkel = `artsorakel:chat:ip:${anonymIp("v4:9.9.9.9")}`;
+    for (let i = 0; i < 15; i++) await lager.okn(nokkel, 3600);
+    expect((await sjekkGrenser(chatRegler({ ipNokkel: "v4:9.9.9.9" }))).ok).toBe(true);
+  });
+});

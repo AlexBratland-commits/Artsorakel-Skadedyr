@@ -122,13 +122,107 @@ describe("falsk samtalehistorikk", () => {
   });
 });
 
+describe("spørsmål utenfor skadedyrfaget", () => {
+  it("«Hvem er kong Harald?» får fast, signert svar uten AI-kall", async () => {
+    const ai = installFakeAi();
+    const { analyze, chat } = await load();
+    const token = await billett(analyze);
+    const kallFor = ai.calls.length;
+    const res = await chat(
+      jsonRequest("/api/ask-about-findings", { chatToken: token, messages: [{ role: "user", content: "Hvem er kong Harald?" }] })
+    );
+    const body = await res.json();
+    expect(res.status).toBe(200);
+    expect(body.svar).toMatch(/fagassistent/);
+    expect(body.svar).not.toMatch(/Harald/);
+    expect(ai.calls.length).toBe(kallFor);
+    // Svaret er signert, så neste spørsmål i samme samtale godtas
+    const neste = await chat(
+      jsonRequest("/api/ask-about-findings", {
+        chatToken: token,
+        messages: [
+          { role: "user", content: "Hvem er kong Harald?" },
+          { role: "assistant", content: body.svar, sig: body.signatur },
+          { role: "user", content: "Er musa farlig?" },
+        ],
+      })
+    );
+    expect(neste.status).toBe(200);
+    expect(ai.calls.length).toBe(kallFor + 1);
+  });
+
+  it("chatten gir samme stokkmaurråd som analyseresultatet", async () => {
+    const ai = installFakeAi({
+      group: { gruppe: "Maur" },
+      species: { found: true, name: "Stokkmaur", latinName: "Camponotus herculeanus", description: "x", confidence: 85 },
+    });
+    const { analyze, chat } = await load();
+    const res = await analyze(analyzeRequest({ image: await jpeg(77) }));
+    const resultat = await res.json();
+    expect(resultat.tiltak.join(" ")).toMatch(/polystyren/);
+    await chat(jsonRequest("/api/ask-about-findings", { chatToken: resultat.chatToken, messages: [{ role: "user", content: "Hvorfor har jeg fått dem?" }] }));
+    const system = ai.calls.find((c) => c.kind === "chat")!.system;
+    expect(system).toMatch(/Stokkmaurangrep i bygninger er ofte knyttet til fukt, råte eller tidligere fuktskader/);
+    expect(system).toMatch(/også kan etablere seg i tørt trevirke/);
+    expect(system).toMatch(/isolasjonsmaterialer og polystyren/);
+  });
+
+  it("chat-instruksen har regler for tetting og for spørsmål utenfor faget", async () => {
+    const ai = installFakeAi();
+    const { analyze, chat } = await load();
+    const token = await billett(analyze);
+    await chat(jsonRequest("/api/ask-about-findings", { chatToken: token, messages: [{ role: "user", content: "Hvordan tetter jeg?" }] }));
+    const system = ai.calls.find((c) => c.kind === "chat")!.system;
+    expect(system).toMatch(/fra omtrent 4–6 mm/);
+    expect(system).toMatch(/10–14 mm/);
+    expect(system).toMatch(/aktiv inngang/);
+    expect(system).toMatch(/svarer du IKKE på innholdsmessig/);
+  });
+});
+
 describe("grenser i chatten", () => {
+  it("manuell testing stoppes ikke: 30 spørsmål på en time fra samme IP går fint", async () => {
+    installFakeAi();
+    const { analyze, chat } = await load();
+    const token = await billett(analyze);
+    vi.useFakeTimers({ toFake: ["Date"] });
+    const statuser: number[] = [];
+    for (let i = 0; i < 30; i++) {
+      vi.setSystemTime(Date.now() + 61_000); // ett spørsmål i minuttet
+      const res = await chat(jsonRequest("/api/ask-about-findings", { chatToken: token, messages: [{ role: "user", content: `Spørsmål ${i}` }] }));
+      statuser.push(res.status);
+    }
+    vi.useRealTimers();
+    expect(statuser.every((s) => s === 200)).toBe(true);
+  });
+
+  it("automatisert spam stoppes: mer enn 10 spørsmål i minuttet fra samme IP", async () => {
+    installFakeAi();
+    const { analyze, chat } = await load();
+    const token = await billett(analyze);
+    const statuser: number[] = [];
+    for (let i = 0; i < 11; i++) {
+      statuser.push((await chat(jsonRequest("/api/ask-about-findings", { chatToken: token, messages: [{ role: "user", content: `Spm ${i}` }] }))).status);
+    }
+    expect(statuser.slice(0, 10).every((s) => s === 200)).toBe(true);
+    expect(statuser[10]).toBe(429);
+  });
+
+  it("spamgrensen kan justeres med ARTSORAKEL_CHAT_PER_MINUTT", async () => {
+    vi.stubEnv("ARTSORAKEL_CHAT_PER_MINUTT", "3");
+    const { chatRegler } = await import("@/lib/server/limits");
+    expect(chatRegler({ ipNokkel: "v4:1.2.3.4" }).map((r) => [r.navn, r.maks])).toEqual([
+      ["ip_time", 120],
+      ["ip_minutt", 3],
+    ]);
+  });
+
   it("tak på spørsmål per analyse", async () => {
     installFakeAi();
     const { analyze, chat } = await load();
     const token = await billett(analyze);
     const statuser: number[] = [];
-    for (let i = 0; i < 21; i++) {
+    for (let i = 0; i < 61; i++) {
       const res = await chat(
         jsonRequest(
           "/api/ask-about-findings",
@@ -138,8 +232,8 @@ describe("grenser i chatten", () => {
       );
       statuser.push(res.status);
     }
-    expect(statuser.slice(0, 20).every((s) => s === 200)).toBe(true);
-    expect(statuser[20]).toBe(429);
+    expect(statuser.slice(0, 60).every((s) => s === 200)).toBe(true);
+    expect(statuser[60]).toBe(429);
   });
 
   it("lange meldinger kuttes til 500 tegn før de sendes", async () => {

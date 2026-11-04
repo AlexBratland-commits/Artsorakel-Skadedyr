@@ -53,7 +53,13 @@ export default function HistoryPanel({
               )}
               <span className="min-w-0">
                 <span className="block truncate font-medium">
-                  {e.resultat.annenArt ? `Mulig ${e.resultat.annenArt.name}` : e.resultat.name}
+                  {e.resultat.annenArt
+                    ? `Mulig ${e.resultat.annenArt.name}`
+                    : e.resultat.found
+                      ? e.resultat.name
+                      : e.resultat.ikkeSkadedyr
+                        ? "Ingen skadedyr på bildet"
+                        : "Ikke identifisert sikkert"}
                 </span>
                 <span className="block truncate text-xs text-muted">
                   {formatTime(e.tid)}

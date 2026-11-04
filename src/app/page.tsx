@@ -116,6 +116,13 @@ export default function Home() {
       if (compressed && originalBytes > klar.size * 1.5) {
         vis("Bildet ble komprimert før opplasting.", "info");
       }
+      // F9: HEIC kan bare leses i nettlesere som selv konverterer det (Safari).
+      // Serveren kan ikke lese HEIC, så vi sier fra med en gang.
+      if (!compressed && /hei[cf]$/i.test(file.type || file.name)) {
+        throw new Error(
+          "Dette HEIC-bildet kan ikke leses i denne nettleseren. Ta bildet med «Ta bilde», eller lagre det som JPG først."
+        );
+      }
       if (klar.size > MAKS_OPPLASTING) {
         throw new Error(
           `Bildet er for stort til å sendes (${formatBytes(klar.size)}). Ta bildet på nytt, eller lagre det som JPG først.`
@@ -153,7 +160,7 @@ export default function Home() {
       const thumb = await makeThumbnail(klar);
       setHistorikk(addToHistory(analysis, thumb, sted));
 
-      if (!analysis.found && !analysis.annenArt) {
+      if (!analysis.found && !analysis.annenArt && !analysis.ikkeSkadedyr) {
         vis("Ingen sikker match. Prøv et skarpere bilde nærmere dyret.", "info");
       }
     } catch (error) {
@@ -357,6 +364,15 @@ export default function Home() {
                   ))}
                 </select>
               </>
+            )}
+
+            {/* Oppgave 3: mus og flaggermus er like store på bilder – størrelse,
+                funnsted og om de smuldrer avgjør. Tipset stopper ikke analysen. */}
+            {analyseType === "ekskrementer" && !beskrivelse.trim() && !droppingSize && (
+              <p className="mt-6 rounded-lg border-l-2 border-ocab-500 bg-[color:var(--surface-sunken)] px-4 py-3 text-sm">
+                Tips: Oppgi omtrentlig størrelse, hvor du fant dem og om de smuldrer når du
+                trykker på dem. Det gir et sikrere svar, særlig for å skille mus fra flaggermus.
+              </p>
             )}
 
             <button
