@@ -9,7 +9,7 @@ export function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-async function decode(file: File): Promise<ImageBitmap | HTMLImageElement> {
+async function decode(file: Blob): Promise<ImageBitmap | HTMLImageElement> {
   // createImageBitmap håndterer EXIF-rotasjon og er raskest der den finnes.
   if (typeof createImageBitmap === "function") {
     try {
@@ -112,5 +112,21 @@ export async function makeThumbnail(file: File, edge = 160): Promise<string> {
     return canvas.toDataURL("image/jpeg", 0.6);
   } catch {
     return "";
+  }
+}
+/**
+ * Bilde til PDF-rapporten: samme bilde som ble analysert, med riktig
+ * rotasjon (EXIF), skalert til høyst 1600 px og lagret som JPEG.
+ * Gir null hvis nettleseren ikke kan lese bildet (f.eks. HEIC utenfor Safari).
+ */
+export async function lagRapportbilde(kilde: Blob): Promise<Uint8Array | null> {
+  try {
+    const source = await decode(kilde);
+    const canvas = drawScaled(source, MAX_EDGE);
+    if ("close" in source && typeof source.close === "function") source.close();
+    const blob = await toBlob(canvas, 0.88);
+    return blob ? new Uint8Array(await blob.arrayBuffer()) : null;
+  } catch {
+    return null;
   }
 }

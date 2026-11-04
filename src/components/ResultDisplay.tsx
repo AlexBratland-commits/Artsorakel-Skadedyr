@@ -18,33 +18,32 @@ import {
   type Severity,
 } from "@/lib/types";
 import { useToast } from "./Toast";
+import PdfRapportKnapp, { type RapportKontekst } from "./PdfRapportKnapp";
+import {
+  ALVORLIGHET,
+  EKSKREMENT_FORBEHOLD,
+  ELDRE_ARTSDATA_TEKST,
+  GENERELT_FORBEHOLD,
+  OCAB_SKADEDYR_URL,
+  SIKKERHET_FORKLARING,
+  SIKKERHET_USIKKER_TILLEGG,
+  USIKKER_KANDIDAT_TEKST,
+  visningsnavn as lagVisningsnavn,
+} from "@/lib/resultat-tekst";
 
-const SEVERITY: Record<Severity, { etikett: string, farge: string, tekst: string }> = {
-  lav: {
-    etikett: "Lite alvorlig",
-    farge: "bg-grad-lav",
-    tekst: "Sjelden behov for profesjonell hjelp.",
-  },
-  middels: {
-    etikett: "Bør følges opp",
-    farge: "bg-grad-middels",
-    tekst: "Gjør tiltak nå, så slipper du et større problem senere.",
-  },
-  høy: {
-    etikett: "Bør håndteres raskt",
-    farge: "bg-grad-hoy",
-    tekst: "Denne arten sprer seg eller gjør skade – ta kontakt med fagfolk.",
-  },
+const FARGE: Record<Severity, string> = {
+  lav: "bg-grad-lav",
+  middels: "bg-grad-middels",
+  høy: "bg-grad-hoy",
+};
+const SEVERITY: Record<Severity, { etikett: string; farge: string; tekst: string }> = {
+  lav: { ...ALVORLIGHET.lav, farge: FARGE.lav },
+  middels: { ...ALVORLIGHET.middels, farge: FARGE.middels },
+  høy: { ...ALVORLIGHET.høy, farge: FARGE.høy },
 };
 
-/** Overskrift når funnet ikke kunne bestemmes (godkjent tekst, F1). */
-const IKKE_IDENTIFISERT = "Kunne ikke identifisere funnet sikkert";
-
-/** Overskrift når bildet tydelig ikke viser et skadedyr (oppgave 4). */
-const IKKE_SKADEDYR_OVERSKRIFT = "Ingen skadedyr på bildet";
-
 const OCAB_TELEFON = "+4740003527"; // ← bytt til riktig nummer
-const OCAB_SKADEDYR = "https://www.ocab.no/skade/skadedyr/";
+const OCAB_SKADEDYR = OCAB_SKADEDYR_URL;
 
 function nivaaTrinnFor(confidence: number): number {
   return { lav: 1, middels: 2, høy: 3 }[sikkerhetsnivaa(confidence)];
@@ -54,11 +53,14 @@ export default function ResultDisplay({
   result,
   onReset,
   eldreArtsdata = false,
+  rapport,
 }: {
   result: AnalysisResult | null;
   onReset: () => void;
   /** Funnet er åpnet fra historikken og ble lagret med eldre artsdata. */
   eldreArtsdata?: boolean;
+  /** Bilde, tidspunkt og funnsted til PDF-rapporten. */
+  rapport?: RapportKontekst;
 }) {
   const { vis } = useToast();
   const ref = useRef<HTMLElement>(null);
@@ -74,15 +76,7 @@ export default function ResultDisplay({
   const nivaaTrinn = { lav: 1, middels: 2, høy: 3 }[nivaa];
   const usikker = nivaa !== "høy";
   const annen = !result.found ? result.annenArt : undefined;
-  const visningsnavn = annen
-    ? `Mulig ${annen.name}`
-    : result.found && result.usikkerKandidat
-      ? `Mulig ${result.name}`
-      : result.ikkeSkadedyr
-        ? IKKE_SKADEDYR_OVERSKRIFT
-        : !result.found
-          ? IKKE_IDENTIFISERT
-          : result.name;
+  const visningsnavn = lagVisningsnavn(result);
   const latinNavn = annen ? annen.latinName : result.latinName;
 
   const delingstekst = result.found
@@ -147,7 +141,7 @@ export default function ResultDisplay({
             )}
             {eldreArtsdata && (
               <p className="mt-2 text-xs text-muted">
-                Artsopplysninger kan ha blitt oppdatert siden denne analysen ble utført.
+                {ELDRE_ARTSDATA_TEKST}
               </p>
             )}
             {annen && (
@@ -159,9 +153,7 @@ export default function ResultDisplay({
             )}
             {result.usikkerKandidat && (
               <p className="mt-2 max-w-prose text-sm text-muted">
-                Dette er det mest sannsynlige forslaget, men sikkerheten er for
-                lav til en trygg bestemmelse. Bruk kjennetegnene under til å
-                sjekke selv, eller kontakt Ocab for bekreftelse.
+                {USIKKER_KANDIDAT_TEKST}
               </p>
             )}
 
@@ -217,8 +209,8 @@ export default function ResultDisplay({
                   ))}
                 </div>
                 <p className="mt-2 text-xs text-muted">
-                  Dette er modellens egen vurdering av bildet, ikke en måling.
-                  {usikker && " Ved lav eller middels sikkerhet bør bestemmelsen bekreftes av en fagperson."}
+                  {SIKKERHET_FORKLARING}
+                  {usikker && ` ${SIKKERHET_USIKKER_TILLEGG}`}
                 </p>
               </div>
             )}
@@ -339,21 +331,21 @@ export default function ResultDisplay({
 
             {result.gruppe === "Ekskrementer" && (
               <p className="rounded-lg border-l-2 border-signal-500 bg-signal-100/50 px-4 py-3 text-sm dark:bg-signal-600/10">
-                Dette er en AI-vurdering basert på bilde og oppgitte kjennetegn,
-                ikke en laboratorieprøve. Er du usikker, eller gjelder det et
-                sted der sikker bestemmelse er viktig – kontakt Ocab for
-                bekreftelse.
+                {EKSKREMENT_FORBEHOLD}
               </p>
             )}
 
             <p className="rounded-lg border-l-2 border-signal-500 bg-signal-100/50 px-4 py-3 text-sm dark:bg-signal-600/10">
-              Svaret er et forslag fra en bildeanalyse og kan være feil. Arter som
-              ligner på hverandre – for eksempel skjeggkre og sølvkre – krever
-              limfeller og en fagperson for sikker bestemmelse.
+              {GENERELT_FORBEHOLD}
             </p>
 
+            {/* PDF-rapport: tydelig, men i samme stil som de andre knappene */}
+            <div className="no-print border-t hairline pt-5">
+              <PdfRapportKnapp result={result} eldreArtsdata={eldreArtsdata} kontekst={rapport} />
+            </div>
+
             {/* Handlinger */}
-            <div className="no-print flex flex-wrap gap-2 border-t hairline pt-5">
+            <div className="no-print flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={onReset}

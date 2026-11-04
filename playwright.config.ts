@@ -30,6 +30,16 @@ export default defineConfig({
       testMatch: /(assistent-pc|tema)\.spec\.ts/,
       use: { ...devices["Desktop Chrome"], baseURL: "http://localhost:3201" },
     },
+    {
+      name: "iphone-se",
+      testMatch: /boble-og-pdf\.spec\.ts/,
+      use: { ...devices["iPhone SE"], browserName: "chromium", baseURL: "http://localhost:3201" },
+    },
+    {
+      name: "iphone-13",
+      testMatch: /boble-og-pdf\.spec\.ts/,
+      use: { ...devices["iPhone 13"], browserName: "chromium", baseURL: "http://localhost:3201" },
+    },
     { name: "tilgangskode", testMatch: /tilgang\.spec\.ts/, use: { baseURL: "http://localhost:3202" } },
     { name: "upstash-nede", testMatch: /upstash-nede\.spec\.ts/, use: { baseURL: "http://localhost:3203" } },
   ],

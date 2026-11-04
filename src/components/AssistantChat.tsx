@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Camera, ExternalLink, MessageCircle, RotateCcw, Send, X } from "lucide-react";
 import { nettverksfeil } from "@/lib/client-errors";
+import { velgPlass, type BobleModus } from "@/lib/bobleplass";
 
 /**
  * «Spør Artsorakel» – flytende chatboble for spørsmål om skadedyr uten bilde.
@@ -64,6 +65,11 @@ export default function AssistantChat() {
   const [venter, setVenter] = useState(false);
   const [feil, setFeil] = useState<string | null>(null);
   const knappRef = useRef<HTMLButtonElement>(null);
+  // Boblen skal aldri dekke knapper eller skjemafelt: full → kompakt → skjult.
+  const [modus, setModus] = useState<BobleModus>("full");
+  const [synligModus, setSynligModus] = useState<"full" | "kompakt">("full");
+  const [loft, setLoft] = useState(0);
+  const fullStorrelse = useRef({ bredde: 190, hoyde: 52 });
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const listeRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLElement>(null);
@@ -147,6 +153,65 @@ export default function AssistantChat() {
     requestAnimationFrame(() => requestAnimationFrame(gaTilBildeanalyse));
   };
 
+  // Sjekk plassen ved scrolling, endret størrelse, tastatur og endret innhold.
+  useEffect(() => {
+    if (apen) return;
+    let ramme = 0;
+    const KOMPAKT = 52;
+    const sjekk = () => {
+      ramme = 0;
+      const knapp = knappRef.current;
+      if (!knapp) return;
+      // Hjørnet boblen er festet til (uten løft), fra CSS-plasseringen – påvirkes ikke av animasjonen.
+      const cs = getComputedStyle(knapp);
+      const a = {
+        right: document.documentElement.clientWidth - (parseFloat(cs.right) || 16),
+        bottom: window.innerHeight - (parseFloat(cs.bottom) || 16),
+      };
+      if (knapp.dataset.modus === "full") {
+        const r = knapp.getBoundingClientRect();
+        if (r.width) fullStorrelse.current = { bredde: r.width, hoyde: r.height };
+      }
+      const { bredde, hoyde } = fullStorrelse.current;
+      const plass = velgPlass(
+        knapp,
+        { left: a.right - bredde, top: a.bottom - hoyde, right: a.right, bottom: a.bottom },
+        { left: a.right - KOMPAKT, top: a.bottom - KOMPAKT, right: a.right, bottom: a.bottom },
+        // Løft boblen høyst til litt over midten av skjermen.
+        Math.round(window.innerHeight * 0.45)
+      );
+      setModus(plass.modus);
+      if (plass.modus !== "skjult") {
+        setSynligModus(plass.modus);
+        setLoft(plass.loft);
+      }
+    };
+    const planlegg = () => {
+      if (!ramme) ramme = requestAnimationFrame(sjekk);
+    };
+    const etterFokus = () => setTimeout(planlegg, 0);
+    planlegg();
+    window.addEventListener("scroll", planlegg, { passive: true, capture: true });
+    window.addEventListener("resize", planlegg);
+    window.visualViewport?.addEventListener("resize", planlegg);
+    document.addEventListener("focusin", etterFokus);
+    document.addEventListener("focusout", etterFokus);
+    const ro = new ResizeObserver(planlegg);
+    ro.observe(document.body);
+    // Innhold kan endre seg uten at siden endrer størrelse (f.eks. en ny knapp).
+    const intervall = window.setInterval(planlegg, 1000);
+    return () => {
+      cancelAnimationFrame(ramme);
+      window.removeEventListener("scroll", planlegg, { capture: true });
+      window.removeEventListener("resize", planlegg);
+      window.visualViewport?.removeEventListener("resize", planlegg);
+      document.removeEventListener("focusin", etterFokus);
+      document.removeEventListener("focusout", etterFokus);
+      ro.disconnect();
+      window.clearInterval(intervall);
+    };
+  }, [apen]);
+
   const nySamtale = () => {
     setMeldinger([]);
     setSamtaleToken(undefined);
@@ -218,10 +283,21 @@ export default function AssistantChat() {
           onClick={() => setApen(true)}
           aria-expanded={false}
           aria-controls="assistent-panel"
-          className="no-print fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 z-40 inline-flex items-center gap-2 rounded-full bg-ocab-900 px-5 py-3.5 text-sm font-semibold text-white shadow-lifted ring-1 ring-white/10 transition hover:bg-ocab-950 active:scale-[0.98] dark:bg-ocab-200 dark:text-ocab-950 dark:hover:bg-white"
+          data-modus={modus}
+          data-loft={loft}
+          style={loft ? { transform: `translateY(-${loft}px)` } : undefined}
+          data-flytende=""
+          title={synligModus === "kompakt" ? "Spør Artsorakel" : undefined}
+          className={`no-print fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 z-40 inline-flex items-center justify-center rounded-full bg-ocab-900 text-sm font-semibold text-white shadow-lifted ring-1 ring-white/10 transition-[opacity,transform,background-color] duration-200 hover:bg-ocab-950 active:scale-[0.98] motion-reduce:transition-none dark:bg-ocab-200 dark:text-ocab-950 dark:hover:bg-white ${
+            synligModus === "full" ? "gap-2 px-5 py-3.5" : "size-[52px]"
+          } ${
+            modus === "skjult"
+              ? "pointer-events-none translate-y-3 opacity-0 focus-visible:pointer-events-auto focus-visible:translate-y-0 focus-visible:opacity-100"
+              : ""
+          }`}
         >
-          <MessageCircle className="size-5" aria-hidden />
-          Spør Artsorakel
+          <MessageCircle className="size-5 shrink-0" aria-hidden />
+          <span className={synligModus === "full" ? "" : "sr-only"}>Spør Artsorakel</span>
         </button>
       )}
 

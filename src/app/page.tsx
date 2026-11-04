@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Search } from "lucide-react";
 
 import ImageUploader from "@/components/ImageUploader";
+import type { RapportKontekst } from "@/components/PdfRapportKnapp";
 import ResultDisplay from "@/components/ResultDisplay";
 import HistoryPanel from "@/components/HistoryPanel";
 import InstallBanner from "@/components/InstallBanner";
@@ -39,6 +40,8 @@ export default function Home() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   // Funnet som vises er åpnet fra historikken og lagret med eldre artsdata.
   const [eldreArtsdata, setEldreArtsdata] = useState(false);
+  // Bilde, tidspunkt og funnsted til PDF-rapporten for resultatet som vises.
+  const [rapport, setRapport] = useState<RapportKontekst | undefined>();
   const [analyserer, setAnalyserer] = useState(false);
   const [fremdrift, setFremdrift] = useState(0);
   const [sted, setSted] = useState("");
@@ -162,6 +165,7 @@ export default function Home() {
       setFremdrift(100);
       setResult(analysis);
       setEldreArtsdata(false);
+      setRapport({ bilde: klar, analyseTid: new Date().toISOString(), sted });
 
       const thumb = await makeThumbnail(klar);
       setHistorikk(addToHistory(analysis, thumb, sted));
@@ -416,7 +420,7 @@ export default function Home() {
           </div>
         )}
 
-        <ResultDisplay result={result} onReset={nyttBilde} eldreArtsdata={eldreArtsdata} />
+        <ResultDisplay result={result} onReset={nyttBilde} eldreArtsdata={eldreArtsdata} rapport={rapport} />
 
         {/* Ny samtale for hver analyse: billetten er unik per analyse (F10). */}
         {result && (
@@ -434,6 +438,7 @@ export default function Home() {
           onOpen={(e) => {
             setResult(e.resultat);
             setEldreArtsdata(harEldreArtsdata(e));
+            setRapport({ bilde: e.thumb || null, analyseTid: e.tid, sted: e.sted });
             setPreview(e.thumb || null);
             setFile(null);
           }}
