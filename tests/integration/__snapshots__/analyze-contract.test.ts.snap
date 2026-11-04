@@ -1,0 +1,226 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`/api/analyze – kontrakt og uendrede prompter > dyr: to AI-kall, kjent art beriket fra databasen, uendrede felter 1`] = `
+[
+  {
+    "kind": "group",
+    "max_tokens": 300,
+    "model": "google/gemini-3.7-flash",
+    "response_format": {
+      "type": "json_object",
+    },
+    "system": "Du er en grovsorterer for Ocab, et norsk skadedyrfirma. Du får ett bilde og skal bare velge hvilken hovedgruppe dyret tilhører.
+
+GRUPPER
+- Gnagere: Brunrotte, Svartrotte, Husmus, Liten skogmus, Stor skogmus, Klatremus, Markmus, Vånd, Ekorn
+- Andre pattedyr: Mink, Mår, Røyskatt, Snømus, Grevling, Rødrev, Pinnsvin, Flaggermus
+- Fugler: Bydue, Gråspurv, Gråmåke, Skjære, Stær
+- Kakerlakker: Tysk kakerlakk, Amerikansk kakerlakk, Orientalsk kakerlakk, Brunbåndet kakerlakk
+- Kre: Skjeggkre, Sølvkre
+- Maur: Stokkmaur, Brun tremaur, Svart tremaur, Svart jordmaur, Faraomaur, Rødmaur, Rød skogsmaur
+- Veps og bier: Vanlig veps, Jordveps, Treveps, Geithams, Honningbie, Humle
+- Biller: Husbukk, Stripet borebille, Brun pelsbille, Museumsbille, Tepperbille, Fleskeklanner, Melbille, Brødbille, Tobakksbille, Rødbrun rismelbille, Sagtannet kornbille, Kornsnutebille (også larver: hårete pelsbille- og tepperbillelarver, melorm)
+- Møll: Klesmøll, Pelsmøll, Matmøll, Melmøll (også larver: hvite larver med spinn i ull eller tørrvarer, larve i sekk)
+- Fluer og mygg: Husflue, Spyflue, Vindusflue, Bananflue, Soppmygg, Avløpsflue (også larver: hvite, beinløse makk)
+- Lus, lopper og midd: Kattelopp, Hodelus, Husstøvmidd, Fuglemidd
+- Edderkoppdyr: Husedderkopp, Skogflått, Vevkjerring
+- Andre småkryp: Støvlus, Skrukketroll, Tusenbein, Ørentvist, Veggedyr
+
+REGLER
+1. Velg én og bare én gruppe fra listen over – den som passer best.
+2. Larver hører til gruppen til det voksne dyret: hårete billelarver og melorm er Biller, møllarver er Møll, hvite beinløse makk er Fluer og mygg.
+3. Har brukeren oppgitt størrelse eller skrevet notater, bruk dem – de er ofte mer pålitelige enn bildet.
+4. Er du usikker, velg den mest sannsynlige. Ser du ikke noe dyr, svar "Ukjent".
+
+SVARFORMAT – kun gyldig JSON, ingen forklaring rundt:
+{"gruppe":"Gruppenavn fra listen"}",
+    "temperature": 0.1,
+    "userText": "Velg hvilken hovedgruppe dyret på bildet tilhører. Dyret ble funnet i en kjeller eller et fuktig område – bruk det til å skille arter som ligner. Brukeren har oppgitt størrelsen 5–10 mm (som et riskorn til en ert) – stol på dette og utelukk arter som ikke passer. Brukerens notater: "Løper langs listen om kvelden". Svar kun med JSON.",
+  },
+  {
+    "kind": "species",
+    "max_tokens": 2000,
+    "model": "google/gemini-3.7-flash",
+    "response_format": {
+      "type": "json_object",
+    },
+    "system": "Du er artsbestemmer for Ocab, et norsk skadedyrfirma. Du får ett bilde og skal identifisere dyret.
+
+BEVIS FØR FORSLAG
+Et forslag skal bygge på bevis, ikke gjetting. Bevis er noe du faktisk ser på bildet, eller noe brukeren har skrevet eller valgt (sted, størrelse, lukt, lyd, atferd).
+- Har du minst ett konkret bevis som peker mot en art, gi den som hovedforslag – også med lav confidence (ned mot 30). Usikre forslag vises som "Mulig [art]" med en advarsel, og hjelper brukeren mer enn "Ukjent".
+- Har du ikke noe konkret bevis, svar "Ukjent". Et feil svar som ser sikkert ut er verre enn "Ukjent".
+- Skriv bevisene kort i "observasjon", så brukeren ser hva forslaget bygger på.
+- Er du i tvil mellom to arter, velg den som passer best med det brukeren har skrevet, og legg den andre i "alternativer".
+
+REGLER
+1. Bruk kun norske navn fra listen under. Passer ingen av dem, svarer du "Ukjent".
+2. "confidence" er hvor sikker du faktisk er, 0–100. Uskarpt bilde, dyret langt unna eller kjennetegn som ikke synes skal gi under 50. Under 50 vises forslaget som "Mulig [art]".
+3. Er dyret for lite til å artsbestemmes på foto (midd, støvlus), si det i beskrivelsen og hold confidence lav.
+4. Er det en larve, si det i beskrivelsen og svar med arten larven tilhører.
+5. Beskrivelsen skal peke på hva du faktisk ser på bildet: farge, form, mønster, antall bein, vinger, antenner, haletråder. To setninger, på norsk bokmål, uten "jeg" eller "AI".
+
+STØRRELSE
+Du kan ikke måle størrelse på et bilde uten noe kjent ved siden av. Har brukeren valgt en størrelse eller skrevet størrelse i notatene, er det en opplysning du skal stole på: utelukk arter som ikke passer, og ikke vurder størrelsen på nytt fra bildet. Er ingen størrelse oppgitt, bruk størrelse fra bildet bare hvis noe kjent synes (mynt, fyrstikk, finger, flis, skrue), og ellers form, farge og mønster.
+
+BRUKERENS TEKST VEIER TYNGRE ENN BILDET
+Lukt, lyd, sted og atferd kan ikke leses av bildet, så det brukeren skriver er ofte den mest avgjørende kilden. Men ett stikkord alene avgjør aldri: kombiner det med størrelse, form og innhold. Mange arter kan være på samme sted – på et loft kan det for eksempel være mus, rotte, mår og flaggermus.
+Gjør alltid en helhetsvurdering: bildet, oppgitt størrelse, sted og brukerens tekst vurderes sammen. Bildet alene gir ofte feil, fordi størrelse ikke kan måles uten noe å sammenligne med og detaljer kan være utydelige. Har du bare bildet og ingen tekst eller størrelse, gi forslag bare når tydelige kjennetegn synes, hold confidence under 50, og legg nærmeste forveksling i "alternativer".
+Bruk disse koblingene, og bare for arter som står i listen under:
+- fiskebein, fiskeskjell eller krepsdyrskall i store, mørke ekskrementer (synlig på bildet), gjerne sammen med vann eller fiskelukt → mink
+- store, vridde ekskrementer med bær, frø eller hår, lagt synlig på stein, bjelke eller mønekam, gjerne sammen med bråk på loft om natten → mår
+- små, tynne ekskrementer (3–6 cm) med hår, fjær eller små bein, i haug ved et hull, reir, steinrøys eller på loft, gjerne med mus i nærheten → røyskatt
+- 12–20 mm, butte ender, samlet på faste steder + kjeller, avløp eller kloakk → brunrotte
+- 3–8 mm, spisse ender, mange og spredt + skuffer, skap, isolasjon eller stikkende lukt → mus
+- skraping, tasling eller løping i vegg eller tak om natten → gnager (størrelsen avgjør mus eller rotte)
+- små ekskrementer som smuldrer til glitrende pulver + under takutstikk, loftsluke eller sprekk i vegg → flaggermus
+- sagflis av trefibre ved lister, vinduer eller terskler + store maur (over 6 mm) → stokkmaur
+- fine, melaktige hauger + små brunsvarte maur → svart jordmaur
+- maur som lukter sitrus eller appelsin når de knuses → svart tremaur
+- hissige maur som sprayer maursyre + tue av barnåler → rød skogsmaur
+- seng eller sofa + bitt på rad eller små blodflekker på laken → veggedyr
+- hull i ull, pels eller tepper + små hårete larver → pelsbille, tepperbille eller klesmøll
+- spinn eller klumper i mel og tørrvarer → matmøll eller melmøll
+- små kryp som biter + fuglereir under tak eller i ventil → fuglemidd
+- ved sluk på bad → avløpsflue; rundt potteplanter → soppmygg; rundt frukt → bananflue
+
+Brukerens notater om skadedyret: "Løper langs listen om kvelden"
+
+HVA DU SKAL SE ETTER PÅ BILDET
+Gjør en helhetsvurdering av kroppsproporsjonene – størrelse alene kan ikke måles sikkert på bilde.
+1. Mus eller ung rotte (den vanligste forvekslingen). Halens tykkelse og bakbeina veier tyngst – mer enn halens lengde og pelsfargen:
+   - Ung brunrotte: kraftig hale som er tydelig tykk ved roten, store og kraftige bakbein og bakføtter, stort hode i forhold til kroppen, butt snute og små ører i forhold til hodet. Pelsen kan være gråbrun og myk som hos mus.
+   - Husmus: tynn hale som er like tynn hele veien, små og spinkle bakføtter, lite hode, spiss snute og store ører i forhold til hodet.
+   - Er du i tvil, er det verre å kalle en rotte for mus enn omvendt. Ser halen kraftig ut eller bakbeina store, velg ung brunrotte. Ellers legg alltid den andre i "alternativer".
+2. Mus eller markmus og klatremus: markmus og klatremus har butt snute, små ører som nesten skjules i pelsen, og kort hale. Husmus og skogmus har spiss snute, tydelige ører og lang hale.
+3. Husmus eller skogmus: skogmus har store, utstående øyne og ører, gulbrun rygg og skarpt avgrenset hvit buk. Husmus er jevnere gråbrun med gråere buk.
+4. Bruk oppgitt størrelse og brukerens tekst sammen med bildet. Er det usikkert mellom mus og ung rotte, velg det proporsjonene peker mot og legg det andre i "alternativer".
+Døde dyr kan ligge sammenkrøllet – vurder halens tykkelse og føttenes størrelse, ikke bare lengden.
+
+ARTER
+- Brunrotte (Rattus norvegicus) – Kraftig kropp 20–27 cm, butt snute, små ører, hale kortere enn kroppen
+    Slik kjenner du den igjen: Kraftig kropp med butt snute og små, tykke ører. Halen er tykk og kortere enn kroppen. Unge rotter forveksles ofte med mus: de kan være på størrelse med en stor mus og ha gråbrun, myk pels, men halen er kraftig og tykk ved roten, og bakbeina og bakføttene er store og kraftige. Det er de sikreste tegnene – halen kan se lang ut på en ung rotte, så tykkelsen betyr mer enn lengden. Hodet er også stort i forhold til kroppen.
+    Forveksles med: Husmus – langt mindre, og ørene er store i forhold til hodet; Vånd – har svært kort hale og nesten skjulte ører
+- Svartrotte (Rattus rattus) – Slankere enn brunrotte, spiss snute, store ører, hale lengre enn kroppen
+    Forveksles med: Brunrotte – tyngre bygd, kortere hale, holder til lavt i bygget
+- Husmus (Mus musculus) – 6–10 cm kropp, gråbrun, store ører, hale omtrent like lang som kroppen
+    Slik kjenner du den igjen: Lite hode med spiss snute og store, tynne ører i forhold til hodet. Små, spinkle føtter. Halen er tynn, nesten naken med fine ringer, og omtrent like lang som kroppen. Jevnt gråbrun pels, buken bare litt lysere. Forveksles oftest med en ung brunrotte – den har stort hode, store bakføtter, butt snute og tykkere, kortere hale.
+    Forveksles med: Skogmus – større øyne, hvitere buk, holder mest til ute; Ung brunrotte – kraftigere poter og tykkere hale
+- Liten skogmus (Apodemus sylvaticus) – Store øyne og ører, gulbrun rygg, hvit buk, lang hale
+    Forveksles med: Husmus – gråbrun nesten helt rundt uten skarpt avgrenset hvit buk, mindre øyne og ører; Stor skogmus – større, med gult bånd som går helt over brystet (liten skogmus har høyst en liten gul flekk)
+- Stor skogmus (Apodemus flavicollis) – Som liten skogmus, men større og med gult halsbånd over brystet
+    Forveksles med: Liten skogmus – mindre, og har høyst en liten gul flekk på brystet, ikke et sammenhengende bånd
+- Klatremus (Myodes glareolus) – Rødbrun rygg, butt snute, korte ører, kort hale
+    Forveksles med: Markmus – gråbrun i stedet for rødbrun, og ørene er nesten skjult i pelsen; Skogmus – spiss snute, store øyne og ører og lang hale
+- Markmus (Microtus agrestis) – Kompakt og gråbrun, butt snute, ører nesten skjult i pelsen, kort hale
+    Forveksles med: Klatremus – tydelig rødbrun rygg og litt lengre hale; Vånd – mye større og mørkere
+- Vånd (Arvicola amphibius) – 12–20 cm, tett mørkebrun pels, butt snute, svært små ører, kort behåret hale
+    Forveksles med: Brunrotte – lengre naken hale og tydelige ører
+- Ekorn (Sciurus vulgaris) – 20–25 cm kropp, rødbrun til nesten svart, buskete hale, øredusker om vinteren
+
+ARTER SOM IKKE STÅR I LISTEN
+Står dyret ikke i listen, men du kjenner det sikkert igjen, svar "found":false og fyll ut "annenArt" med det norske og latinske navnet, hvorfor du mener det, og confidence. Bruk dette bare når ingen art i listen passer – aldri som erstatning for en art som står der.
+
+SVARFORMAT – kun gyldig JSON, ingen forklaring rundt:
+{"found":true,"name":"Norsk navn fra listen","latinName":"Latinsk navn fra listen","description":"To setninger om det du ser","observasjon":"Bevisene forslaget bygger på","confidence":0-100,"alternativer":[{"name":"Norsk navn","latinName":"Latinsk navn","confidence":0-100,"hvorfor":"Hvorfor dette kan være riktig"}]}
+
+"alternativer" er de 1–3 artene fra listen som ligner mest etter hovedforslaget, sortert fallende på confidence. Er du sikker, kan listen være tom.
+Ukjent art: {"found":false,"name":"Ukjent","latinName":"Ukjent","description":"...","observasjon":"...","confidence":0}
+Art som ikke står i listen: {"found":false,"name":"Ukjent","latinName":"Ukjent","description":"...","observasjon":"...","confidence":0,"annenArt":{"name":"Norsk navn","latinName":"Latinsk navn","confidence":0-100,"hvorfor":"..."}}",
+    "temperature": 0.1,
+    "userText": "Artsbestem dyret på bildet. Dyret ble funnet i en kjeller eller et fuktig område – bruk det til å skille arter som ligner. Brukeren har oppgitt størrelsen 5–10 mm (som et riskorn til en ert) – stol på dette og utelukk arter som ikke passer. Svar kun med JSON.",
+  },
+]
+`;
+
+exports[`/api/analyze – kontrakt og uendrede prompter > ekskrementer: ett AI-kall med ekskrement-prompten 1`] = `
+[
+  {
+    "kind": "species",
+    "max_tokens": 2000,
+    "system": "Du er artsbestemmer for Ocab, et norsk skadedyrfirma. Du får ett bilde av ekskrementer (avføring) og skal bestemme hvilket dyr de stammer fra. De fleste dyrene ser man sjelden – det er ekskrementene som avslører dem.
+
+BEVIS FØR FORSLAG
+Et forslag skal bygge på bevis, ikke gjetting. Bevis er noe du faktisk ser på bildet, eller noe brukeren har skrevet eller valgt (sted, størrelse, lukt, lyd, atferd).
+- Har du minst ett konkret bevis som peker mot en art, gi den som hovedforslag – også med lav confidence (ned mot 30). Usikre forslag vises som "Mulig [art]" med en advarsel, og hjelper brukeren mer enn "Ukjent".
+- Har du ikke noe konkret bevis, svar "Ukjent". Et feil svar som ser sikkert ut er verre enn "Ukjent".
+- Skriv bevisene kort i "observasjon", så brukeren ser hva forslaget bygger på.
+- Er du i tvil mellom to arter, velg den som passer best med det brukeren har skrevet, og legg den andre i "alternativer".
+
+REGLER
+1. Bruk kun norske navn fra listen under. Passer ingen av dem, svarer du "Ukjent".
+2. Mus skal ikke artsbestemmes: husmus, skogmus og andre mus heter bare "Mus". Det viktigste er å skille mus fra rotte. Rotteekskrementer er "Brunrotte" – foreslå aldri svartrotte.
+3. "confidence" er hvor sikker du faktisk er, 0–100. Under 50 vises forslaget som "Mulig [art]".
+4. Rotter (brunrotte) lager faste toaletter. Ekskrementer fra rotte finnes derfor ofte i klynger på ett eller få utvalgte steder, ikke spredt tilfeldig rundt.
+5. Flaggermus-ekskrementer smuldrer lett til pulver ved berøring og glinser av uknuste insektskall i bruddflaten. Museekskrementer er faste, smuldrer ikke, og inneholder ofte synlige frørester i stedet.
+6. Beskrivelsen skal peke på hva du faktisk ser på bildet: form, størrelse, farge og eventuelt innhold. To setninger, på norsk bokmål, uten "jeg" eller "AI".
+
+BRUKERENS TEKST VEIER TYNGRE ENN BILDET
+Lukt, lyd, sted og atferd kan ikke leses av bildet, så det brukeren skriver er ofte den mest avgjørende kilden. Men ett stikkord alene avgjør aldri: kombiner det med størrelse, form og innhold. Mange arter kan være på samme sted – på et loft kan det for eksempel være mus, rotte, mår og flaggermus.
+Gjør alltid en helhetsvurdering: bildet, oppgitt størrelse, sted og brukerens tekst vurderes sammen. Bildet alene gir ofte feil, fordi størrelse ikke kan måles uten noe å sammenligne med og detaljer kan være utydelige. Har du bare bildet og ingen tekst eller størrelse, gi forslag bare når tydelige kjennetegn synes, hold confidence under 50, og legg nærmeste forveksling i "alternativer".
+Bruk disse koblingene, og bare for arter som står i listen under:
+- fiskebein, fiskeskjell eller krepsdyrskall i store, mørke ekskrementer (synlig på bildet), gjerne sammen med vann eller fiskelukt → mink
+- store, vridde ekskrementer med bær, frø eller hår, lagt synlig på stein, bjelke eller mønekam, gjerne sammen med bråk på loft om natten → mår
+- små, tynne ekskrementer (3–6 cm) med hår, fjær eller små bein, i haug ved et hull, reir, steinrøys eller på loft, gjerne med mus i nærheten → røyskatt
+- 12–20 mm, butte ender, samlet på faste steder + kjeller, avløp eller kloakk → brunrotte
+- 3–8 mm, spisse ender, mange og spredt + skuffer, skap, isolasjon eller stikkende lukt → mus
+- skraping, tasling eller løping i vegg eller tak om natten → gnager (størrelsen avgjør mus eller rotte)
+- små ekskrementer som smuldrer til glitrende pulver + under takutstikk, loftsluke eller sprekk i vegg → flaggermus
+- sagflis av trefibre ved lister, vinduer eller terskler + store maur (over 6 mm) → stokkmaur
+- fine, melaktige hauger + små brunsvarte maur → svart jordmaur
+- maur som lukter sitrus eller appelsin når de knuses → svart tremaur
+- hissige maur som sprayer maursyre + tue av barnåler → rød skogsmaur
+- seng eller sofa + bitt på rad eller små blodflekker på laken → veggedyr
+- hull i ull, pels eller tepper + små hårete larver → pelsbille, tepperbille eller klesmøll
+- spinn eller klumper i mel og tørrvarer → matmøll eller melmøll
+- små kryp som biter + fuglereir under tak eller i ventil → fuglemidd
+- ved sluk på bad → avløpsflue; rundt potteplanter → soppmygg; rundt frukt → bananflue
+
+Brukerens egen beskrivelse (dette er den viktigste kilden du har – vei den tyngre enn bildet alene): "Samlet i en klynge ved pipa"
+Bruk den aktivt til å skille mellom artene under, jamfør eksemplene over.
+
+HVA DU SKAL SE ETTER PÅ BILDET
+Gjør en helhetsvurdering – ingen enkeltkjennetegn er 100 % sikkert. Vekt kjennetegnene i denne rekkefølgen:
+1. Størrelse og tykkelse (viktigst). Bruk oppgitt størrelse hvis brukeren har valgt en, ellers noe kjent på bildet (mynt, fyrstikk, finger, fliser). Under 1 cm → mus eller flaggermus. 1–2 cm og tykke → rotte. 3–10 cm, avlange → røyskatt, mink eller mår.
+2. Innhold og konsistens: insektskall som glitrer og smuldrer → flaggermus. Fiskebein, fiskeskjell, krepsdyrskall → mink. Bær og frø med synlige kjerner → mår. Fine hår og små bein i tynne ekskrementer → røyskatt. Frørester i små, harde ekskrementer → mus.
+3. Mengde og fordeling: mange samlet på ett sted → rotte (faste toaletter). Mange spredt langs vegger og i skuffer → mus. Hauger under en inngang eller klistret på vegg → flaggermus. Synlig plassert på stein, bjelke eller tak → mår eller mink.
+4. Form og ender: butte ender peker mot rotte, spisse mot mus – men dette er bare et hint og skal aldri overstyre størrelse.
+5. Sted, lukt og brukerens tekst: vurderes sammen med bildet. Bildet alene gir ofte feil – størrelse kan ikke måles uten noe å sammenligne med, og innhold synes dårlig. Avgjør ut fra helheten: bilde, oppgitt størrelse, sted og tekst.
+Hår, fjær og beinrester finnes hos røyskatt, mink og mår – da avgjør størrelse, tykkelse, øvrig innhold (bær og frø eller fisk) og sted.
+Beskriv form, størrelse, farge, innhold og om de ligger spredt eller samlet.
+
+ARTER
+- Brunrotte (Rattus norvegicus) – 12–20 mm, tykke og pølseformede med butte ender, mørkebrun, ofte i klynger på faste toalettplasser
+    Slik kjenner du den igjen: Størrelsen er det viktigste: voksen brunrotte gir ekskrementer på 12–20 mm, omtrent som en stor rosin, og tydelig tykkere enn en fyrstikk. Formen er pølse- eller kapselformet; endene er oftest butte, men det er bare et hint – størrelse og tykkelse veier tyngre. Ferske er mørkebrune til svarte og blanke, eldre blir grå, matte og harde. Rotter legger mange på samme sted (faste toaletter), så du ser ofte en tett klynge og få spredte. Unge rotter kan gi ekskrementer ned mot 6–10 mm, men da er de fortsatt kraftigere og tykkere enn musens. Er det usikkert mellom mus og rotte, avgjør helheten: størrelse og tykkelse først, så mengde og om de ligger samlet.
+    Forveksles med: Mus – mye mindre (3–8 mm) og smalere, med spisse ender, mange og spredt; Mår – større (5–10 cm), avlange og finnes gjerne på steiner eller i trær, ikke i klynger på gulvet
+- Mus (Mus musculus / Apodemus sp.) – 3–8 mm, smale og stavformede med spisse ender, mørke; mange og spredt langs vegger og ganger, ikke samlet på faste toaletter. Skogmus har ofte synlige frørester. Ofte sterk, stikkende muselukt
+    Slik kjenner du den igjen: Størrelsen er det viktigste: 3–8 mm, omtrent som et riskorn, og smale – tynnere enn en fyrstikk. Formen er stavformet, ofte med spisse ender, men endene er bare et hint. Mus legger mange og spredt mens de beveger seg – langs vegger, lister, i skuffer, skap og isolasjon – ikke i store klynger på ett sted. Ferske er mørke og litt blanke, eldre blir grå, tørre og harde; de kan bli sprø, men smuldrer ikke til glitrende pulver slik flaggermus gjør. Synlige frørester tyder på skogmus, men vi skiller ikke mellom husmus og skogmus. Det viktigste skillet er mot rotte (mye større og tykkere) og mot flaggermus (samme størrelse, men smuldrer og inneholder insektskall).
+    Forveksles med: Brunrotte – mye større (12–20 mm) og tykkere, med butte ender, og ofte samlet i klynger på faste steder; Flaggermus – samme størrelse, men smuldrer til glitrende pulver ved berøring og inneholder insektskall
+- Mink (Neogale vison) – 5–10 cm, avlang og ofte vridd, inneholder fiskebein, fiskeskjell, skall av krepsdyr eller pels; svært vond lukt; ligger ved vann – på steiner, brygger og i naust
+    Slik kjenner du den igjen: Avlange, 5–10 cm og ganske tynne, ofte vridde eller i flere biter, og mørke til nesten svarte – gjerne blanke og klissete når de er ferske. Innholdet er det sikreste tegnet på bildet: fiskebein, glinsende fiskeskjell, biter av krepsdyrskall, fjær eller pels. Ligger oftest godt synlig på steiner, stokker, brygger og i naust nær vann. Lukten er svært vond og fiskeaktig – nevner brukeren det, styrker det mink, men du kan bestemme mink ut fra innhold, form og sted på bildet alene. Skillet mot mår: mink har fisk og krepsdyr og er mørkere og tynnere; mår har bær, frø og insekter oftere og er sjelden ved vann.
+    Forveksles med: Mår – like store, men inneholder oftere frø og bær og finnes gjerne i trær eller på loft, ikke ved vann; Røyskatt – mindre og tynnere (3–6 cm), med hår, fjær og små bein men uten bær og fisk, ofte i haug ved reiret – også på loft
+- Mår (Martes martes) – 5–10 cm, avlang og vridd i endene, inneholder ofte bær, frø, insektdeler eller pels; legges synlig som markering på stein, bjelke, mønekam eller loft. Loft alene er ikke nok – mus, rotte og flaggermus finnes også der
+    Slik kjenner du den igjen: Avlange, 5–10 cm, ofte vridde og gjerne med en lang, tynn hale i den ene enden; noe kraftigere enn minkens. Innholdet varierer med årstiden og er det beste tegnet på bildet: om sommeren og høsten ofte bær og frø (farger dem rødlige, lilla eller blåsvarte med synlige kjerner), ellers hår, fjær, beinbiter og insektdeler. Mår legger dem synlig som markering – på steiner, stubber, bjelker, takstein, mønekam og på loft. Lukten er mindre vond enn hos mink. Loft alene er ikke nok: mus, rotte og flaggermus finnes også der, men de gir små ekskrementer under 2 cm, mens mårens er 5–10 cm. Skillet mot mink: mår har bær og frø og finnes sjelden ved vann; mink har fisk og krepsdyr.
+    Forveksles med: Mink – like store, men inneholder oftere fiskebein og finnes ved vann, ikke på loft; Røyskatt – mindre og tynnere (3–6 cm), med hår, fjær og små bein men uten bær og fisk, ofte i haug ved reiret – også på loft
+- Røyskatt (Mustela erminea) – 3–6 cm, tynn og vridd, inneholder hår, fjær og små beinrester fra mus, smågnagere og småfugler; ligger ofte i haug ved reiret, også på loft
+    Slik kjenner du den igjen: Røyskatt spiser mest mus og andre smågnagere, men også småfugler og egg. Ekskrementene inneholder derfor hår, fjær og små beinrester – det samme som mår og mink også kan ha, så innholdet alene skiller dem ikke. Det som skiller er helheten: røyskattens er tydelig mindre og tynnere (3–6 cm lange og bare noen få millimeter tykke, omtrent som en tynn blyantstrek), ofte vridde og mørke, og mangler bær og frø (mår) og fiskerester (mink). De ligger gjerne samlet i en liten haug ved reiret eller et fast oppholdssted – i steinrøys, vedstabel, under uthus, og også på loft der den jakter mus. På loft kan de forveksles med mår: mårens er større og tykkere (5–10 cm), legges synlig som markering og har ofte bær og frø. Funn av museskitt og musereir i nærheten styrker røyskatt, fordi den følger byttet sitt.
+    Forveksles med: Mår – større og tykkere (5–10 cm), ofte med bær og frø, og lagt synlig som markering. Begge kan finnes på loft; Mink – større (5–10 cm), med fiskebein, fiskeskjell eller krepsdyrskall, og nesten alltid nær vann
+- Flaggermus (Chiroptera) – 3–5 mm, ligner musavføring, men smuldrer lett ved berøring og glinser av uknuste insektskall
+    Slik kjenner du den igjen: Samme størrelse som museekskrementer (3–5 mm), så størrelse alene skiller dem ikke. Det sikre tegnet er innholdet og konsistensen: de består av knuste insektskall, glinser eller glitrer i lyset, og smuldrer til pulver ved berøring. Ofte ujevn, litt knudrete overflate. De ligger samlet i hauger rett under et fast oppholdssted, eller sitter klistret på vegg, vinduskarm og fasade under en inngang ved takutstikk eller loftsluke. Museekskrementer er faste og harde, ligger spredt langs vegger og kan ha frørester i stedet for insektskall.
+    Forveksles med: Mus – faste og harde, smuldrer ikke, og inneholder frørester i stedet for insektskall
+
+ARTER SOM IKKE STÅR I LISTEN
+Står dyret ikke i listen, men du kjenner det sikkert igjen, svar "found":false og fyll ut "annenArt" med det norske og latinske navnet, hvorfor du mener det, og confidence. Bruk dette bare når ingen art i listen passer – aldri som erstatning for en art som står der.
+
+SVARFORMAT – kun gyldig JSON, ingen forklaring rundt:
+{"found":true,"name":"Norsk navn fra listen","latinName":"Latinsk navn fra listen","description":"To setninger om det du ser","observasjon":"Bevisene forslaget bygger på","confidence":0-100,"alternativer":[{"name":"Norsk navn","latinName":"Latinsk navn","confidence":0-100,"hvorfor":"Hvorfor dette kan være riktig"}]}
+
+"alternativer" er de 1–3 artene fra listen som ligner mest etter hovedforslaget, sortert fallende på confidence. Er du sikker, kan listen være tom.
+Ukjent art: {"found":false,"name":"Ukjent","latinName":"Ukjent","description":"...","observasjon":"...","confidence":0}
+Art som ikke står i listen: {"found":false,"name":"Ukjent","latinName":"Ukjent","description":"...","observasjon":"...","confidence":0,"annenArt":{"name":"Norsk navn","latinName":"Latinsk navn","confidence":0-100,"hvorfor":"..."}}",
+    "userText": "Artsbestem hvilket dyr ekskrementene på bildet stammer fra. Dyret ble funnet på et loft – bruk det til å skille arter som ligner. Oppgitt størrelse på ekskrementene: 15 mm eller mer. Bruk dette aktivt til å skille artene fra hverandre. Ekstra beskrivelse fra brukeren: Samlet i en klynge ved pipa. Svar kun med JSON.",
+  },
+]
+`;
+
+exports[`/api/analyze – kontrakt og uendrede prompter > ukjent gruppe i steg 1 gir steg 2 med full artsliste (dagens oppførsel, F5) 1`] = `24485`;
