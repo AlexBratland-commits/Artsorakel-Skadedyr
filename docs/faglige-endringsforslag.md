@@ -28,7 +28,7 @@ som avgjør.
 
 | # | I appen i dag | Forslag | Status |
 |---|---|---|---|
-| 12 | Stokkmaur, forvekslinger: «Svart jordmaur» står to ganger (`:474–475`) | Slå sammen til én linje. Testen `artsbibliotek.test.ts` registrerer funnet. | Bekreftet i koden |
+| 12 | Stokkmaur, forvekslinger: «Svart jordmaur» står to ganger (`:474–475`) | Slå sammen til én linje. | **Rettet** (godkjent av fagansvarlig, PR #15) |
 | 13 | Rødbrun rismelbille: «køllefformede antenner» (`:831`) | Rett skrivefeilen til «kølleformede» | Bekreftet i koden |
 
 ## C. Ekskrementbeskrivelser

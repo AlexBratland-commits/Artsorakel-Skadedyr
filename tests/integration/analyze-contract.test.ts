@@ -154,3 +154,19 @@ describe("/api/analyze – kontrakt og uendrede prompter", () => {
     expect(res.status).toBe(400);
   });
 });
+
+describe("maurlinjen i bildeprompten (FHI felthåndbok 2023, s. 80)", () => {
+  it("stokkmaur bestemmes ikke på størrelse alene", async () => {
+    vi.stubEnv("OPENROUTER_API_KEY", "test-nokkel-ikke-ekte");
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    const ai = installFakeAi({ group: { gruppe: "Maur" }, species: { found: true, name: "Stokkmaur", latinName: "Camponotus spp.", description: "x", confidence: 80 } });
+    const { POST } = await loadRoute();
+    const res = await POST(analyzeRequest({ image: await jpeg(5) }));
+    expect(res.status).toBe(200);
+    const system = ai.calls.find((c) => c.kind === "species")!.system;
+    expect(system).not.toMatch(/store maur \(over 6 mm\) → stokkmaur/);
+    expect(system).toMatch(/store maur med helsvart hode og jevnt buet rygg → stokkmaur \(arbeidere ca\. 5–14 mm; størrelse alene avgjør ikke\)/);
+    expect(system).toMatch(/konkluder aldri med stokkmaur bare ut fra størrelse/);
+    expect(system).toMatch(/Brun tremaur \(Lasius brunneus\)/);
+  });
+});

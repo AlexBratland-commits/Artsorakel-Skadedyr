@@ -3,6 +3,18 @@ import type { AnalysisResult, HistoryEntry } from "./types";
 const KEY = "ocab-skadedyr-historikk";
 const MAX_ENTRIES = 20;
 
+/**
+ * Øk når artsbiblioteket får faglige rettelser. Eldre lagrede funn får da et
+ * diskret varsel, men selve funnet og artsnavnet endres ikke.
+ * 2: brun tremaur / stokkmaur rettet etter FHI.
+ */
+export const ARTSDATA_VERSJON = 2;
+
+/** Lagret med eldre artsdata enn dagens? */
+export function harEldreArtsdata(entry: Pick<HistoryEntry, "artsdata">): boolean {
+  return (entry.artsdata ?? 1) < ARTSDATA_VERSJON;
+}
+
 export function readHistory(): HistoryEntry[] {
   if (typeof window === "undefined") return [];
   try {
@@ -26,6 +38,7 @@ export function addToHistory(
     thumb,
     sted,
     resultat,
+    artsdata: ARTSDATA_VERSJON,
   };
   const next = [entry, ...readHistory()].slice(0, MAX_ENTRIES);
   write(next);

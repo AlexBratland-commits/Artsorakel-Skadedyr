@@ -1,9 +1,12 @@
 "use client";
 
-import { Trash2 } from "lucide-react";
+import { useState } from "react";
+import { ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import type { HistoryEntry } from "@/lib/types";
 import { formatTime } from "@/lib/history";
 import { LOCATIONS, SIKKERHET_ETIKETT, sikkerhetsnivaa } from "@/lib/types";
+
+const FORSIDE_ANTALL = 3;
 
 export default function HistoryPanel({
   entries,
@@ -16,7 +19,11 @@ export default function HistoryPanel({
   onRemove: (id: string) => void;
   onClear: () => void;
 }) {
+  const [visAlle, setVisAlle] = useState(false);
   if (entries.length === 0) return null;
+  // Forsiden viser de tre siste. Resten er ett trykk unna, med samme
+  // muligheter til å åpne og slette.
+  const synlige = visAlle ? entries : entries.slice(0, FORSIDE_ANTALL);
 
   return (
     <section className="no-print mt-12" aria-labelledby="historikk-tittel">
@@ -34,7 +41,7 @@ export default function HistoryPanel({
       </div>
 
       <ul className="mt-3 divide-y hairline overflow-hidden rounded-card surface">
-        {entries.map((e) => (
+        {synlige.map((e) => (
           <li key={e.id} className="flex items-center gap-3 p-3">
             <button
               type="button"
@@ -81,6 +88,27 @@ export default function HistoryPanel({
           </li>
         ))}
       </ul>
+
+      {entries.length > FORSIDE_ANTALL && (
+        <button
+          type="button"
+          onClick={() => setVisAlle((v) => !v)}
+          aria-expanded={visAlle}
+          className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-ocab-900/20 px-4 py-2 text-sm font-semibold transition hover:bg-ocab-50 dark:border-white/15 dark:hover:bg-white/5"
+        >
+          {visAlle ? (
+            <>
+              <ChevronUp className="size-4" aria-hidden />
+              Vis bare de siste
+            </>
+          ) : (
+            <>
+              <ChevronDown className="size-4" aria-hidden />
+              Se alle tidligere funn ({entries.length})
+            </>
+          )}
+        </button>
+      )}
 
       <p className="mt-2 text-xs text-muted">
         Listen og miniatyrbildene ligger bare i denne nettleseren.

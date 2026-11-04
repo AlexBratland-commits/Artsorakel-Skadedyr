@@ -8,6 +8,21 @@ if (process.env.ARTSORAKEL_TEST_MOCK_AI === "1") {
     if (!url.startsWith("https://openrouter.ai/")) return ekteFetch(input, init);
     const body = JSON.parse(String(init.body));
     const system = String(body.messages.find((m) => m.role === "system")?.content ?? "");
+    // «Spør Artsorakel» (generell assistent uten bilde)
+    if (system.includes("Du er Spør Artsorakel")) {
+      const sist = String(body.messages.at(-1)?.content ?? "").toLowerCase();
+      const svar = sist.includes("sagflis")
+        ? "Sagflis ved vinduer kan tyde på stokkmaur, som kan skade treverk. Det er lurt å få en fagperson til å se på det.\n[[KONTAKT_OCAB]]"
+        : sist.includes("store maur")
+          ? "Store maur ved vinduet kan være stokkmaur, men også andre arter. Ta gjerne et bilde, så kan bildeanalysen gi et sikrere svar.\n[[ANALYSER_BILDE]]"
+        : sist.includes("krafsing")
+          ? "Krafsing på loftet kan komme fra mus, rotte eller mår. Når på døgnet hører du det, og har du sett ekskrementer?"
+          : "Takk. Ekskrementer på 3–8 mm tyder oftest på mus. Ligger de spredt langs veggene?";
+      return new Response(JSON.stringify({ choices: [{ message: { content: svar }, finish_reason: "stop" }] }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    }
     // Testtilfelle for bilde uten skadedyr: styres av notatfeltet.
     if (JSON.stringify(body.messages).includes("SKRUE-TEST")) {
       const svar = system.includes("grovsorterer")

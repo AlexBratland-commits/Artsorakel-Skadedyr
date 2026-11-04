@@ -12,11 +12,12 @@ import ThemeToggle from "@/components/ThemeToggle";
 import OcabLogo from "@/components/OcabLogo";
 import AskAboutFinding from "@/components/AskAboutFinding";
 import AccessGate from "@/components/AccessGate";
+import AssistantChat from "@/components/AssistantChat";
 import { useToast } from "@/components/Toast";
 
 import { compressImage, formatBytes, makeThumbnail } from "@/lib/image-tools";
 import { nettverksfeil } from "@/lib/client-errors";
-import { addToHistory, clearHistory, readHistory, removeFromHistory } from "@/lib/history";
+import { addToHistory, clearHistory, harEldreArtsdata, readHistory, removeFromHistory } from "@/lib/history";
 import {
   LOCATIONS,
   DROPPING_SIZES,
@@ -36,6 +37,8 @@ export default function Home() {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [result, setResult] = useState<AnalysisResult | null>(null);
+  // Funnet som vises er åpnet fra historikken og lagret med eldre artsdata.
+  const [eldreArtsdata, setEldreArtsdata] = useState(false);
   const [analyserer, setAnalyserer] = useState(false);
   const [fremdrift, setFremdrift] = useState(0);
   const [sted, setSted] = useState("");
@@ -79,6 +82,7 @@ export default function Home() {
       previewUrl.current = null;
     }
     setResult(null);
+    setEldreArtsdata(false);
     setFile(valgt);
 
     if (valgt) {
@@ -101,6 +105,7 @@ export default function Home() {
 
     setAnalyserer(true);
     setResult(null);
+    setEldreArtsdata(false);
     setFremdrift(8);
 
     // Fremdriften er et estimat, ikke en måling – den stopper på 90 %
@@ -156,6 +161,7 @@ export default function Home() {
       const analysis = data as AnalysisResult;
       setFremdrift(100);
       setResult(analysis);
+      setEldreArtsdata(false);
 
       const thumb = await makeThumbnail(klar);
       setHistorikk(addToHistory(analysis, thumb, sted));
@@ -179,7 +185,7 @@ export default function Home() {
   };
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-3xl flex-col px-4 pb-10 sm:px-6">
+    <div className="mx-auto flex min-h-dvh max-w-3xl flex-col px-4 pb-28 sm:px-6">
       <header className="no-print flex items-center justify-between gap-4 py-6">
         <a href="https://www.ocab.no/" target="_blank" rel="noopener noreferrer">
           <OcabLogo height={26} />
@@ -206,13 +212,15 @@ export default function Home() {
             }}
           />
         ) : (
-          <ImageUploader
-            onImageSelect={velgBilde}
-            imagePreview={preview}
-            fileName={file?.name}
-            fileSize={file?.size}
-            disabled={analyserer}
-          />
+          <div id="bildeopplasting" className="scroll-mt-4">
+            <ImageUploader
+              onImageSelect={velgBilde}
+              imagePreview={preview}
+              fileName={file?.name}
+              fileSize={file?.size}
+              disabled={analyserer}
+            />
+          </div>
         )}
 
         {tilgang === "ok" && file && !result && (
@@ -408,7 +416,7 @@ export default function Home() {
           </div>
         )}
 
-        <ResultDisplay result={result} onReset={nyttBilde} />
+        <ResultDisplay result={result} onReset={nyttBilde} eldreArtsdata={eldreArtsdata} />
 
         {/* Ny samtale for hver analyse: billetten er unik per analyse (F10). */}
         {result && (
@@ -425,6 +433,7 @@ export default function Home() {
           entries={historikk}
           onOpen={(e) => {
             setResult(e.resultat);
+            setEldreArtsdata(harEldreArtsdata(e));
             setPreview(e.thumb || null);
             setFile(null);
           }}
@@ -436,7 +445,7 @@ export default function Home() {
       <footer className="mt-14 border-t hairline pt-6 text-sm text-muted">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <OcabLogo height={20} />
+            <OcabLogo variant="slagord" height={44} />
             <p className="mt-2">Over 40 års erfaring med skadedyr</p>
           </div>
           <div className="flex flex-col gap-1 sm:items-end">
@@ -451,7 +460,7 @@ export default function Home() {
             <p>© {new Date().getFullYear()} Ocab AS</p>
           </div>
         </div>
-        <p className="mt-5 max-w-prose text-xs">
+        <p className="mt-5 max-w-prose text-sm leading-relaxed">
           Bildet og det du skriver sendes til en AI-tjeneste for analyse.
           Posisjon og andre metadata fjernes fra bildet først, og bildet lagres
           ikke hos Ocab. Svaret er veiledende og erstatter ikke en befaring.{" "}
@@ -460,6 +469,9 @@ export default function Home() {
           </Link>
         </p>
       </footer>
+
+      {/* Spør Artsorakel: åpnes bare når brukeren trykker på boblen. */}
+      <AssistantChat />
     </div>
   );
 }

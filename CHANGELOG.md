@@ -1,5 +1,37 @@
 # Endringslogg
 
+## Uutgitt – Artsorakel 2.0
+
+Detaljer: [docs/artsorakel-2.md](docs/artsorakel-2.md). Bildeanalysen, modellene, promptene og
+artsbiblioteket er uendret.
+
+- Offisiell Ocab-logo i toppfelt og bunntekst (fra original-PNG), lys plate i mørk modus.
+- «Spør Artsorakel»: flytende chatboble og skadedyrassistent uten bilde, med fagstoff fra
+  artsbiblioteket, oppfølgingsspørsmål og kontaktkort til Ocab ved behov.
+- Samme chatmodell, delte grenser og samme kostnadsramme som funn-chatten. Ingen nye miljøvariabler.
+- Historikk: tre siste på forsiden, og «Se alle tidligere funn».
+- Personvern: nytt avsnitt om chatten (til godkjenning).
+- Tetteråd for gnagere: ny hovedregel (sikre åpninger, undersøk om det er gnagere inne, fangst
+  eller bekjempelse, skadedyrbekjemper ved omfattende aktivitet) i artsbiblioteket og begge
+  chattene. Den gamle regelen om ikke å tette en aktiv inngang er fjernet. Størrelsene er beholdt.
+- Spør Artsorakel: knappen «Analyser bilde» når et bilde kan gi sikrere artsbestemmelse.
+- Kontaktkortet vises bare ved konkrete grunner, og ikke to svar på rad.
+- Faglig rettelse (FHI): brun tremaur er *Lasius brunneus*, ikke *Camponotus ligniperda*
+  (jordstokkmaur). Rettet størrelse, utseende, utbredelse, tiltak og FHI-lenke for brun tremaur,
+  størrelse og latinsk navn for stokkmaur, maur-nøkkelen og assistentens eksempel. Se
+  [docs/faglig-rettelse-maur.md](docs/faglig-rettelse-maur.md).
+- Maurartene kontrollert mot FHIs felthåndbok 2023 (s. 79–87): svart jordmaur kan skade
+  råteskadet treverk og isopor, rettede utbredelser, størrelser, sverming og kjennetegn, eitermaur
+  og *Formica rufa*-gruppen, og ingen ren størrelsesregel for stokkmaur i bildeanalysen.
+- Faglig kvalitetssikring av maur: godkjent formulering om fukt, råte og vannskader i
+  bygningskonstruksjoner (stokkmaur, brun tremaur, svart tremaur, svart jordmaur og begge chattene),
+  rettede størrelser og forvekslinger, ingen løfter om forsikringsdekning, og et diskret varsel ved
+  eldre lagrede funn.
+- Spør Artsorakel: store maur og utkast/sagflis ved en bygningskonstruksjon gir mistanke om
+  stokkmaur, med forbehold om at andre maurarter ikke kan utelukkes (bare chat-instruksen er endret).
+- Mobil: mer kompakt toppfelt og personverntekst i chatten, og skrivefeltet holdes synlig over
+  tastaturet på iPhone.
+
 ## Uutgitt – justeringer etter test i Preview
 
 - Artsavhengige tetteråd: mus fra omtrent 4–6 mm, rotte fra omtrent 10–14 mm, og

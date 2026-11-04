@@ -34,7 +34,8 @@ test("chat: «Hvem er kong Harald?» gir høflig fagavgrensning", async ({ page 
   await expect(page.getByRole("heading", { name: "Husmus", level: 2 })).toBeVisible();
   // Tetteråd for mus vises i tiltakene
   await expect(page.getByText(/fra omtrent 4–6 mm/)).toBeVisible();
-  await expect(page.getByText(/aktiv inngang bør ikke tettes/)).toBeVisible();
+  await expect(page.getByText(/slik at nye dyr hindres adgang/)).toBeVisible();
+  await expect(page.getByText(/aktiv inngang bør ikke tettes/)).toHaveCount(0);
   await page.getByLabel("Skriv spørsmålet ditt").fill("Hvem er kong Harald?");
   await page.getByRole("button", { name: "Send spørsmål" }).click();
   await expect(page.getByText(/Jeg er Artsorakels fagassistent/)).toBeVisible();

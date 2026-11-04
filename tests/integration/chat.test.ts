@@ -162,8 +162,10 @@ describe("spørsmål utenfor skadedyrfaget", () => {
     expect(resultat.tiltak.join(" ")).toMatch(/polystyren/);
     await chat(jsonRequest("/api/ask-about-findings", { chatToken: resultat.chatToken, messages: [{ role: "user", content: "Hvorfor har jeg fått dem?" }] }));
     const system = ai.calls.find((c) => c.kind === "chat")!.system;
-    expect(system).toMatch(/Stokkmaurangrep i bygninger er ofte knyttet til fukt, råte eller tidligere fuktskader/);
-    expect(system).toMatch(/også kan etablere seg i tørt trevirke/);
+    expect(system).toMatch(/Mauraktivitet i bygningskonstruksjoner kan være knyttet til fukt, råte eller tidligere vannskader/);
+    expect(system).toMatch(/Maur kan imidlertid også etablere seg i tørre konstruksjoner/);
+    expect(system).toMatch(/ikke automatisk ved alle tilfeldige maurfunn/);
+    expect(system).toMatch(/Ikke lov forsikringsdekning/);
     expect(system).toMatch(/isolasjonsmaterialer og polystyren/);
   });
 
@@ -175,7 +177,9 @@ describe("spørsmål utenfor skadedyrfaget", () => {
     const system = ai.calls.find((c) => c.kind === "chat")!.system;
     expect(system).toMatch(/fra omtrent 4–6 mm/);
     expect(system).toMatch(/10–14 mm/);
-    expect(system).toMatch(/aktiv inngang/);
+    expect(system).toContain("Sikre åpninger der mus og rotter kan komme inn, slik at nye dyr hindres adgang.");
+    expect(system).toMatch(/Tetting skal ikke vente til alle dyr er fjernet/);
+    expect(system).not.toMatch(/aktiv inngang/);
     expect(system).toMatch(/svarer du IKKE på innholdsmessig/);
   });
 });

@@ -52,6 +52,17 @@ export default function Personvern() {
           </p>
         </section>
 
+        {/* NYTT I 2.0 – MÅ GODKJENNES AV OCAB FØR PUBLISERING */}
+        <section>
+          <h2 className="text-lg font-semibold">Spør Artsorakel (chat uten bilde)</h2>
+          <p className="mt-2">
+            Det du skriver i «Spør Artsorakel» sendes til AI-tjenesten for å lage et svar. Ocab lagrer
+            ikke samtalene. Samtalen lagres bare i nettleseren din, så du kan fortsette der du slapp,
+            og den slettes når du trykker «Ny samtale». Ikke skriv navn, adresse, telefonnummer eller
+            andre personopplysninger i chatten.
+          </p>
+        </section>
+
         <section>
           <h2 className="text-lg font-semibold">Hva Ocab logger</h2>
           <p className="mt-2">

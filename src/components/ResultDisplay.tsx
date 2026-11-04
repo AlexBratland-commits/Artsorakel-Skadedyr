@@ -53,9 +53,12 @@ function nivaaTrinnFor(confidence: number): number {
 export default function ResultDisplay({
   result,
   onReset,
+  eldreArtsdata = false,
 }: {
   result: AnalysisResult | null;
   onReset: () => void;
+  /** Funnet er åpnet fra historikken og ble lagret med eldre artsdata. */
+  eldreArtsdata?: boolean;
 }) {
   const { vis } = useToast();
   const ref = useRef<HTMLElement>(null);
@@ -141,6 +144,11 @@ export default function ResultDisplay({
             </h2>
             {(result.found || annen) && latinNavn && (
               <p className="mt-1 text-lg italic text-muted">{latinNavn}</p>
+            )}
+            {eldreArtsdata && (
+              <p className="mt-2 text-xs text-muted">
+                Artsopplysninger kan ha blitt oppdatert siden denne analysen ble utført.
+              </p>
             )}
             {annen && (
               <p className="mt-2 max-w-prose text-sm text-muted">
