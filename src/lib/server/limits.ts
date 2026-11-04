@@ -1,4 +1,5 @@
 import { heltall } from "./config";
+import { signerTekst } from "./signing";
 import { tellerLager } from "./store";
 
 /**
@@ -69,6 +70,15 @@ export function sekunderTilMidnatt(dato = new Date()): number {
 
 // ── Regler per funksjon ──────────────────────────────────────────────────
 
+/**
+ * IP-adressen lagres aldri i klartekst i Upstash. Nøkkelen er en HMAC av
+ * adressen (IPv6 per /64): samme adresse gir samme nøkkel, så grensen virker,
+ * men adressen kan ikke leses ut igjen. Tellerne slettes etter maks én time.
+ */
+export function anonymIp(ipNokkel: string): string {
+  return signerTekst(ipNokkel, "ip-teller").slice(0, 22);
+}
+
 export interface Klient {
   ipNokkel: string;
   /** Enhets-ID fra tilgangscookien, når tilgangskode er i bruk. */
@@ -95,10 +105,10 @@ export function analyseRegler(k: Klient): Regel[] {
     const perEnhet = satt || 20;
     return [
       { navn: "enhet_time", nokkel: `analyse:enhet:${k.sid}`, maks: perEnhet, vinduSek: TIME },
-      { navn: "ip_time", nokkel: `analyse:ip:${k.ipNokkel}`, maks: perEnhet * 3, vinduSek: TIME },
+      { navn: "ip_time", nokkel: `analyse:ip:${anonymIp(k.ipNokkel)}`, maks: perEnhet * 3, vinduSek: TIME },
     ];
   }
-  return [{ navn: "ip_time", nokkel: `analyse:ip:${k.ipNokkel}`, maks: satt || 10, vinduSek: TIME }];
+  return [{ navn: "ip_time", nokkel: `analyse:ip:${anonymIp(k.ipNokkel)}`, maks: satt || 10, vinduSek: TIME }];
 }
 
 export function analyseDognRegel(): Regel {
@@ -112,10 +122,10 @@ export function chatRegler(k: Klient): Regel[] {
     const perEnhet = satt || 30;
     return [
       { navn: "enhet_time", nokkel: `chat:enhet:${k.sid}`, maks: perEnhet, vinduSek: TIME },
-      { navn: "ip_time", nokkel: `chat:ip:${k.ipNokkel}`, maks: perEnhet * 3, vinduSek: TIME },
+      { navn: "ip_time", nokkel: `chat:ip:${anonymIp(k.ipNokkel)}`, maks: perEnhet * 3, vinduSek: TIME },
     ];
   }
-  return [{ navn: "ip_time", nokkel: `chat:ip:${k.ipNokkel}`, maks: satt || 10, vinduSek: TIME }];
+  return [{ navn: "ip_time", nokkel: `chat:ip:${anonymIp(k.ipNokkel)}`, maks: satt || 10, vinduSek: TIME }];
 }
 
 export function chatDognRegel(): Regel {
@@ -132,5 +142,5 @@ export function chatBillettRegel(billettId: string): Regel {
 
 /** Grense for forsøk på tilgangskode: 10 per kvarter per IP. */
 export function tilgangsforsokRegel(ipNokkel: string): Regel {
-  return { navn: "tilgang", nokkel: `tilgang:ip:${ipNokkel}`, maks: 10, vinduSek: 15 * 60 };
+  return { navn: "tilgang", nokkel: `tilgang:ip:${anonymIp(ipNokkel)}`, maks: 10, vinduSek: 15 * 60 };
 }

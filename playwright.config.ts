@@ -3,8 +3,9 @@ import { defineConfig, devices } from "@playwright/test";
 
 /**
  * UI-tester mot en ferdig bygget app (`npm run build` først – se
- * `npm run test:ui`) og en falsk AI-tjeneste. To servere startes:
- * én åpen (som i dag) og én med tilgangskode.
+ * `npm run test:ui`) og en falsk AI-tjeneste. Tre servere startes:
+ * én åpen (som i dag), én med tilgangskode, og én der Upstash er satt opp
+ * men ikke svarer (for å teste at AI-kall da avvises med norsk melding).
  */
 const mock = `--import ${path.resolve(process.cwd(), "tests/mocks/openrouter-mock.mjs")}`;
 const felles = {
@@ -25,6 +26,7 @@ export default defineConfig({
   projects: [
     { name: "åpen", testMatch: /app\.spec\.ts/, use: { baseURL: "http://localhost:3201" } },
     { name: "tilgangskode", testMatch: /tilgang\.spec\.ts/, use: { baseURL: "http://localhost:3202" } },
+    { name: "upstash-nede", testMatch: /upstash-nede\.spec\.ts/, use: { baseURL: "http://localhost:3203" } },
   ],
   webServer: [
     {
@@ -38,6 +40,14 @@ export default defineConfig({
       command: "npx next start -p 3202",
       url: "http://localhost:3202",
       env: { ...felles, ARTSORAKEL_TILGANGSKODE: "ansatt-kode-2026" },
+      reuseExistingServer: false,
+      timeout: 60_000,
+    },
+    {
+      command: "npx next start -p 3203",
+      url: "http://localhost:3203",
+      // Upstash er «satt opp», men ingen svarer på adressen.
+      env: { ...felles, UPSTASH_REDIS_REST_URL: "http://127.0.0.1:1", UPSTASH_REDIS_REST_TOKEN: "test" },
       reuseExistingServer: false,
       timeout: 60_000,
     },

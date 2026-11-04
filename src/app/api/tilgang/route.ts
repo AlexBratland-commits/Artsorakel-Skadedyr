@@ -11,6 +11,7 @@ import {
 import { sjekkGrenser, tilgangsforsokRegel } from "@/lib/server/limits";
 import { forStorForesporsel, ipNokkel, klientIp, sjekkOpprinnelse } from "@/lib/server/request-guards";
 import { loggHendelse } from "@/lib/server/log";
+import { medGrensekontroll } from "@/lib/server/svar";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -32,6 +33,12 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  // Forsøksgrensen ligger i Upstash. Svarer den ikke, stoppes innlogging
+  // midlertidig i stedet for å la koden kunne gjettes uten grense.
+  return medGrensekontroll("tilgang", () => loggInn(request));
+}
+
+async function loggInn(request: NextRequest): Promise<NextResponse> {
   const fremmed = sjekkOpprinnelse(request);
   if (fremmed) return fremmed;
 

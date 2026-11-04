@@ -15,6 +15,7 @@ import {
 import { lesChatBillett, signerChatSvar, verifiserChatSvar } from "@/lib/server/chat-ticket";
 import { rensTekst } from "@/lib/server/validation";
 import { loggHendelse } from "@/lib/server/log";
+import { grensekontrollUtilgjengelig, kostnadsrammeNaadd, medGrensekontroll } from "@/lib/server/svar";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -48,6 +49,10 @@ function grenseSvar(grense: Extract<GrenseResultat, { ok: false }>): NextRespons
 }
 
 export async function POST(request: NextRequest) {
+  return medGrensekontroll("chat", () => svarPaaSporsmal(request));
+}
+
+async function svarPaaSporsmal(request: NextRequest): Promise<NextResponse> {
   const fremmed = sjekkOpprinnelse(request);
   if (fremmed) return fremmed;
 
@@ -171,6 +176,8 @@ RAMMER FOR SVARENE
     timeoutMs: 20_000,
   });
 
+  if (!ai.ok && ai.reason === "kostnadsramme") return kostnadsrammeNaadd("chat");
+  if (!ai.ok && ai.reason === "grensekontroll") return grensekontrollUtilgjengelig("chat");
   if (!ai.ok) {
     return NextResponse.json(
       { error: "Fikk ikke svar akkurat nå. Prøv igjen om litt." },

@@ -33,6 +33,8 @@ import { lesAnalyseFelter } from "@/lib/server/validation";
 import { gjenkjennBildeformat, TILLATTE_SHARP_FORMATER } from "@/lib/server/image-format";
 import { lagChatBillett } from "@/lib/server/chat-ticket";
 import { loggHendelse } from "@/lib/server/log";
+import { LagerUtilgjengelig } from "@/lib/server/store";
+import { grensekontrollUtilgjengelig, kostnadsrammeNaadd, medGrensekontroll } from "@/lib/server/svar";
 import { sikkerhetsnivaa } from "@/lib/types";
 
 export const runtime = "nodejs"; // sharp krever Node-runtime, ikke Edge
@@ -206,6 +208,11 @@ ${SVARFORMAT}`;
 }
 
 export async function POST(request: NextRequest) {
+  // Svarer ikke Upstash, avvises forespørselen med et norsk 503-svar.
+  return medGrensekontroll("analyze", () => analyser(request));
+}
+
+async function analyser(request: NextRequest): Promise<NextResponse> {
   const start = Date.now();
 
   // ── CSRF: skjemaposter fra andre nettsteder avvises ──────────────────
@@ -444,6 +451,7 @@ export async function POST(request: NextRequest) {
       { headers: { "X-RateLimit-Remaining": String(gjenstaende) } }
     );
   } catch (error) {
+    if (error instanceof LagerUtilgjengelig) return grensekontrollUtilgjengelig("analyze");
     console.error("❌ Uventet feil i /api/analyze:", error instanceof Error ? error.message : "ukjent feil");
     return NextResponse.json(
       { error: "Noe gikk galt under analysen. Prøv igjen." },
@@ -566,6 +574,10 @@ async function callModel(
 
 function modelError(reason: string): NextResponse {
   switch (reason) {
+    case "kostnadsramme":
+      return kostnadsrammeNaadd("analyze");
+    case "grensekontroll":
+      return grensekontrollUtilgjengelig("analyze");
     case "timeout":
       return NextResponse.json(
         { error: "Analysen tok for lang tid. Prøv igjen." },

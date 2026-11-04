@@ -1,5 +1,13 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { MinneLager, RobustLager, UpstashLager, _settLagerForTester, tellerLager } from "@/lib/server/store";
+import {
+  LagerUtilgjengelig,
+  LUA_OKN,
+  LUA_RESERVER,
+  MinneLager,
+  UpstashLager,
+  _settLagerForTester,
+  tellerLager,
+} from "@/lib/server/store";
 import { analyseRegler, osloDato, sekunderTilMidnatt, sjekkGrenser } from "@/lib/server/limits";
 
 afterEach(() => _settLagerForTester(undefined));
@@ -16,33 +24,46 @@ describe("tellere i minnet", () => {
   });
 });
 
-describe("Upstash (REST-pipeline)", () => {
-  it("sender SET NX + INCR + TTL og leser telleren", async () => {
+describe("Upstash (REST, atomiske Lua-skript)", () => {
+  it("øker telleren med ett udelt EVAL-skript og leser verdi og utløpstid", async () => {
     const fetchMock = vi.fn<(url: string, init?: RequestInit) => Promise<Response>>(
-      async () => new Response(JSON.stringify([{ result: "OK" }, { result: 3 }, { result: 3599 }]), { status: 200 })
+      async () => new Response(JSON.stringify({ result: [3, 3599] }), { status: 200 })
     );
     vi.stubGlobal("fetch", fetchMock);
     const l = new UpstashLager("https://eksempel.upstash.io/", "hemmelig-token");
     expect(await l.okn("artsorakel:test", 3600)).toEqual({ antall: 3, utloperOmSek: 3599 });
 
     const [url, init] = fetchMock.mock.calls[0];
-    expect(url).toBe("https://eksempel.upstash.io/pipeline");
+    expect(url).toBe("https://eksempel.upstash.io");
     expect((init?.headers as Record<string, string>).Authorization).toBe("Bearer hemmelig-token");
-    expect(JSON.parse(String(init?.body))).toEqual([
-      ["SET", "artsorakel:test", "0", "EX", "3600", "NX"],
-      ["INCR", "artsorakel:test"],
-      ["TTL", "artsorakel:test"],
+    expect(JSON.parse(String(init?.body))).toEqual(["EVAL", LUA_OKN, "1", "artsorakel:test", "3600", "1"]);
+  });
+
+  it("reservasjon sender grensen med og respekterer avslag", async () => {
+    const fetchMock = vi.fn<(url: string, init?: RequestInit) => Promise<Response>>(
+      async () => new Response(JSON.stringify({ result: [0, 9_990_000] }), { status: 200 })
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const l = new UpstashLager("https://eksempel.upstash.io", "t");
+    expect(await l.reserver("k", 20_000, 10_000_000, 3600)).toEqual({ ok: false, verdi: 9_990_000 });
+    expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))).toEqual([
+      "EVAL", LUA_RESERVER, "1", "k", "3600", "20000", "10000000",
     ]);
   });
 
-  it("kaster ved feil, og det robuste lageret faller tilbake til minne", async () => {
-    vi.stubGlobal("fetch", vi.fn(async () => new Response("nede", { status: 503 })));
-    vi.spyOn(console, "error").mockImplementation(() => {});
+  it("kaster LagerUtilgjengelig ved nedetid – ingen stille reserve i minnet", async () => {
+    const fetchMock = vi.fn(async () => new Response("nede", { status: 503 }));
+    vi.stubGlobal("fetch", fetchMock);
     const upstash = new UpstashLager("https://eksempel.upstash.io", "t");
-    await expect(upstash.okn("k", 60)).rejects.toThrow(/503/);
-    const robust = new RobustLager(upstash, new MinneLager());
-    expect((await robust.okn("k", 60)).antall).toBe(1);
-    expect((await robust.okn("k", 60)).antall).toBe(2);
+    await expect(upstash.okn("k", 60)).rejects.toBeInstanceOf(LagerUtilgjengelig);
+    expect(fetchMock).toHaveBeenCalledTimes(2); // ett nytt forsøk ved 5xx
+  });
+
+  it("kaster ved nettverksfeil, tidsavbrudd og feilsvar fra Redis", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => { throw new TypeError("fetch failed"); }));
+    await expect(new UpstashLager("https://x", "t").okn("k", 60)).rejects.toBeInstanceOf(LagerUtilgjengelig);
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ error: "WRONGPASS" }), { status: 401 })));
+    await expect(new UpstashLager("https://x", "t").okn("k", 60)).rejects.toThrow(/401/);
   });
 
   it("velger Upstash når miljøvariablene finnes (også Vercel-navnene KV_REST_API_*)", () => {
@@ -59,6 +80,20 @@ describe("Upstash (REST-pipeline)", () => {
     vi.stubEnv("KV_REST_API_URL", "");
     _settLagerForTester(undefined);
     expect(tellerLager().navn).toBe("minne");
+  });
+});
+
+describe("samtidighet i minnet (én prosess)", () => {
+  it("50 samtidige økninger gir 50 ulike verdier", async () => {
+    const l = new MinneLager();
+    const verdier = await Promise.all(Array.from({ length: 50 }, () => l.okn("k", 60)));
+    expect(new Set(verdier.map((v) => v.antall)).size).toBe(50);
+  });
+
+  it("30 samtidige reservasjoner mot plass til 10 gir nøyaktig 10", async () => {
+    const l = new MinneLager();
+    const r = await Promise.all(Array.from({ length: 30 }, () => l.reserver("k", 1, 10, 60)));
+    expect(r.filter((x) => x.ok)).toHaveLength(10);
   });
 });
 

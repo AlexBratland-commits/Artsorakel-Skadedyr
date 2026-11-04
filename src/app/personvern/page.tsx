@@ -57,7 +57,8 @@ export default function Personvern() {
           <p className="mt-2">
             For drift og kostnadskontroll logger Ocab hvilken art som ble foreslått, hvor lang tid
             analysen tok og hvor mye AI-tjenesten ble brukt. Bilder, det du skriver og
-            IP-adresser lagres ikke i disse loggene.
+            IP-adresser lagres ikke i disse loggene. For å begrense antall forespørsler brukes en
+            anonymisert verdi avledet av IP-adressen, som slettes automatisk etter høyst én time.
           </p>
         </section>
 

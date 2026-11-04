@@ -1,16 +1,29 @@
 import { siteUrl } from "./config";
+import { avregnKostnad, reserverKostnad, type Reservasjon } from "./kostnad";
 import { loggHendelse } from "./log";
+import { LagerUtilgjengelig } from "./store";
 
 /**
  * Felles klient for OpenRouter, brukt av både bildeanalysen og chatten.
  * Forespørselen som sendes er den samme som før – bare samlet ett sted.
  * Hvert kall logges med forbruk (tokens, kostnad om OpenRouter oppgir den),
  * tid og utfall – aldri innhold.
+ *
+ * Før hvert kall reserveres et beløp i kostnadsrammen (kostnad.ts). Er
+ * rammen brukt opp, eller svarer ikke Upstash, gjøres ikke kallet.
  */
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 
-export type AiFeil = "timeout" | "rate_limit" | "http" | "network";
+export type AiFeil =
+  | "timeout"
+  | "rate_limit"
+  | "http"
+  | "network"
+  /** Dagens kostnadsramme er brukt opp – kallet ble ikke gjort. */
+  | "kostnadsramme"
+  /** Upstash svarer ikke – kallet ble ikke gjort (fail closed). */
+  | "grensekontroll";
 
 export interface Forbruk {
   tokensInn?: number;
@@ -41,9 +54,6 @@ function tall(v: unknown): number | undefined {
 
 export async function kallOpenRouter(kall: AiKall): Promise<AiSvar> {
   const start = Date.now();
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), kall.timeoutMs);
-
   const logg = (utfall: string, extra: Record<string, string | number | undefined> = {}) =>
     loggHendelse("ai_kall", {
       rute: kall.rute,
@@ -53,6 +63,26 @@ export async function kallOpenRouter(kall: AiKall): Promise<AiSvar> {
       ms: Date.now() - start,
       ...extra,
     });
+
+  // ── Kostnadsramme: hold av et beløp før kallet ────────────────────────
+  let reservasjon: Reservasjon | null | "av";
+  try {
+    reservasjon = await reserverKostnad();
+  } catch (err) {
+    if (!(err instanceof LagerUtilgjengelig)) throw err;
+    console.error("⚠️  Kostnadsrammen kunne ikke sjekkes:", err.message);
+    logg("grensekontroll");
+    return { ok: false, reason: "grensekontroll", ms: Date.now() - start };
+  }
+  if (reservasjon === null) {
+    logg("kostnadsramme");
+    return { ok: false, reason: "kostnadsramme", ms: Date.now() - start };
+  }
+  const avregn = async (utfall: Parameters<typeof avregnKostnad>[1]) =>
+    reservasjon === "av" ? undefined : avregnKostnad(reservasjon, utfall);
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), kall.timeoutMs);
 
   try {
     const response = await fetch(OPENROUTER_URL, {
@@ -82,7 +112,9 @@ export async function kallOpenRouter(kall: AiKall): Promise<AiSvar> {
         .catch(() => "");
       console.error(`❌ OpenRouter svarte ${response.status}${detalj ? `: ${detalj}` : ""}`);
       const reason: AiFeil = response.status === 429 ? "rate_limit" : "http";
-      logg(reason, { status: response.status });
+      // Feilsvar faktureres ikke av OpenRouter – reservasjonen frigis.
+      const avregnet = await avregn({ type: "ikke_fakturert" });
+      logg(reason, { status: response.status, kostnad_kilde: avregnet?.kilde });
       return { ok: false, reason, ms: Date.now() - start };
     }
 
@@ -95,22 +127,29 @@ export async function kallOpenRouter(kall: AiKall): Promise<AiSvar> {
       tokensUt: tall(data?.usage?.completion_tokens),
       kostnadUsd: tall(data?.usage?.cost),
     };
+    const avregnet = await avregn({ type: "ok", forbruk });
     logg("ok", {
       finish: finishReason,
       tokens_inn: forbruk.tokensInn,
       tokens_ut: forbruk.tokensUt,
+      // kostnad_usd = det OpenRouter oppgir; avregnet_usd = det som er ført i kostnadsrammen
       kostnad_usd: forbruk.kostnadUsd,
+      avregnet_usd: avregnet ? avregnet.mikro / 1_000_000 : undefined,
+      kostnad_kilde: avregnet?.kilde,
       svar_tegn: content.length,
     });
     return { ok: true, content, finishReason, forbruk, ms: Date.now() - start };
   } catch (err) {
     if (err instanceof Error && err.name === "AbortError") {
       console.error("⏱️ OpenRouter-kall tok for lang tid");
-      logg("timeout");
+      // Ukjent om kallet ble fakturert – reservasjonen beholdes.
+      await avregn({ type: "ukjent" });
+      logg("timeout", { kostnad_kilde: "reservert" });
       return { ok: false, reason: "timeout", ms: Date.now() - start };
     }
     console.error("❌ OpenRouter-kall feilet:", err instanceof Error ? err.message : "ukjent feil");
-    logg("network");
+    await avregn({ type: "ukjent" });
+    logg("network", { kostnad_kilde: "reservert" });
     return { ok: false, reason: "network", ms: Date.now() - start };
   } finally {
     clearTimeout(timeout);

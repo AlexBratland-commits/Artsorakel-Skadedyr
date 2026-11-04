@@ -1,12 +1,19 @@
 /**
- * Tellere for bruksgrenser og døgnbudsjett.
+ * Tellere for bruksgrenser, døgnbudsjett og kostnadsramme.
  *
  * I produksjon (Vercel) brukes Upstash Redis, slik at alle serverinstanser
- * deler de samme tellerne. Mangler Upstash-oppsettet, eller svarer ikke
- * Upstash, faller vi tilbake til tellere i minnet på hver instans – samme
- * vern som appen hadde før. Feil i Upstash stopper altså aldri appen.
+ * deler de samme tellerne. Alle operasjoner er ett Lua-skript, som Redis
+ * kjører udelt (atomisk): to samtidige forespørsler kan aldri lese samme
+ * verdi og begge slippe gjennom.
  *
- * Upstash brukes via REST-API-et deres (pipeline), uten ekstra pakker:
+ * Er Upstash satt opp, men ikke svarer, kastes LagerUtilgjengelig. API-ene
+ * avviser da nye AI-kall midlertidig («fail closed») i stedet for å bruke
+ * tellere i minnet, som ikke er felles for instansene og derfor ikke kan
+ * håndheve et felles budsjett.
+ *
+ * Uten Upstash-oppsett (lokal utvikling) brukes tellere i minnet.
+ *
+ * Upstash brukes via REST-API-et, uten ekstra pakker:
  * https://upstash.com/docs/redis/features/restapi
  */
 
@@ -15,31 +22,83 @@ export interface Teller {
   utloperOmSek: number;
 }
 
-export interface TellerLager {
-  readonly navn: "upstash" | "minne";
-  /** Øker telleren og starter et nytt vindu hvis det forrige er utløpt. */
-  okn(nokkel: string, vinduSek: number): Promise<Teller>;
+export interface Reservasjonsresultat {
+  ok: boolean;
+  /** Tellerens verdi etter operasjonen (eller nåverdi hvis avslått). */
+  verdi: number;
 }
 
-// ── Minne ────────────────────────────────────────────────────────────────
+export interface TellerLager {
+  readonly navn: "upstash" | "minne";
+  /** Øker telleren med `mengde` (standard 1). Nytt vindu starter når det forrige er utløpt. */
+  okn(nokkel: string, vinduSek: number, mengde?: number): Promise<Teller>;
+  /** Øker med `mengde` bare hvis resultatet ikke overstiger `grense` – i én udelt operasjon. */
+  reserver(nokkel: string, mengde: number, grense: number, vinduSek: number): Promise<Reservasjonsresultat>;
+}
+
+/** Upstash er satt opp, men svarer ikke eller svarer med feil. */
+export class LagerUtilgjengelig extends Error {
+  constructor(melding: string) {
+    super(melding);
+    this.name = "LagerUtilgjengelig";
+  }
+}
+
+// ── Lua-skript (kjøres atomisk av Redis) ─────────────────────────────────
+
+/** KEYS[1]=nøkkel, ARGV[1]=vindu i sekunder, ARGV[2]=mengde. Returnerer {verdi, ttl}. */
+export const LUA_OKN = `local n = redis.call('INCRBY', KEYS[1], ARGV[2])
+local t = redis.call('TTL', KEYS[1])
+if t < 0 then
+  redis.call('EXPIRE', KEYS[1], ARGV[1])
+  t = tonumber(ARGV[1])
+end
+return {n, t}`;
+
+/** KEYS[1]=nøkkel, ARGV[1]=vindu, ARGV[2]=mengde, ARGV[3]=grense. Returnerer {1|0, verdi}. */
+export const LUA_RESERVER = `local naa = tonumber(redis.call('GET', KEYS[1]) or '0')
+local mengde = tonumber(ARGV[2])
+if naa + mengde > tonumber(ARGV[3]) then
+  return {0, naa}
+end
+local n = redis.call('INCRBY', KEYS[1], mengde)
+if redis.call('TTL', KEYS[1]) < 0 then
+  redis.call('EXPIRE', KEYS[1], ARGV[1])
+end
+return {1, n}`;
+
+// ── Minne (lokal utvikling) ──────────────────────────────────────────────
 
 export class MinneLager implements TellerLager {
   readonly navn = "minne" as const;
-  private tellere = new Map<string, { antall: number; utloper: number }>();
+  private tellere = new Map<string, { verdi: number; utloper: number }>();
 
-  async okn(nokkel: string, vinduSek: number): Promise<Teller> {
+  // JavaScript kjører én ting om gangen, så hver metode er udelt innenfor
+  // én prosess. (Den er IKKE felles for flere serverinstanser.)
+  private hent(nokkel: string, vinduSek: number) {
     const naa = Date.now();
     let t = this.tellere.get(nokkel);
     if (!t || t.utloper <= naa) {
-      t = { antall: 0, utloper: naa + vinduSek * 1000 };
+      t = { verdi: 0, utloper: naa + vinduSek * 1000 };
       this.tellere.set(nokkel, t);
     }
-    // Enkel opprydding så kartet ikke vokser i det uendelige
     if (this.tellere.size > 5000) {
       for (const [k, v] of this.tellere) if (v.utloper <= naa) this.tellere.delete(k);
     }
-    t.antall += 1;
-    return { antall: t.antall, utloperOmSek: Math.max(1, Math.ceil((t.utloper - naa) / 1000)) };
+    return t;
+  }
+
+  async okn(nokkel: string, vinduSek: number, mengde = 1): Promise<Teller> {
+    const t = this.hent(nokkel, vinduSek);
+    t.verdi += mengde;
+    return { antall: t.verdi, utloperOmSek: Math.max(1, Math.ceil((t.utloper - Date.now()) / 1000)) };
+  }
+
+  async reserver(nokkel: string, mengde: number, grense: number, vinduSek: number): Promise<Reservasjonsresultat> {
+    const t = this.hent(nokkel, vinduSek);
+    if (t.verdi + mengde > grense) return { ok: false, verdi: t.verdi };
+    t.verdi += mengde;
+    return { ok: true, verdi: t.verdi };
   }
 }
 
@@ -53,65 +112,65 @@ export class UpstashLager implements TellerLager {
     private readonly timeoutMs = 2000
   ) {}
 
-  async okn(nokkel: string, vinduSek: number): Promise<Teller> {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), this.timeoutMs);
-    try {
-      const res = await fetch(`${this.url.replace(/\/+$/, "")}/pipeline`, {
-        method: "POST",
-        signal: controller.signal,
-        cache: "no-store",
-        headers: { Authorization: `Bearer ${this.token}`, "Content-Type": "application/json" },
-        // Opprett telleren med utløpstid bare hvis den ikke finnes, øk den,
-        // og les gjenstående tid. INCR beholder utløpstiden.
-        body: JSON.stringify([
-          ["SET", nokkel, "0", "EX", String(vinduSek), "NX"],
-          ["INCR", nokkel],
-          ["TTL", nokkel],
-        ]),
-      });
-      if (!res.ok) throw new Error(`Upstash svarte ${res.status}`);
-      const data: unknown = await res.json();
-      if (!Array.isArray(data) || data.length !== 3) throw new Error("Uventet svar fra Upstash");
-      const feil = data.find((d) => d && typeof d === "object" && "error" in d);
-      if (feil) throw new Error(`Upstash-feil: ${String((feil as { error: unknown }).error).slice(0, 100)}`);
-      const antall = Number((data[1] as { result: unknown }).result);
-      const ttl = Number((data[2] as { result: unknown }).result);
-      if (!Number.isInteger(antall)) throw new Error("Uventet tellerverdi fra Upstash");
-      return { antall, utloperOmSek: ttl > 0 ? ttl : vinduSek };
-    } finally {
-      clearTimeout(timer);
-    }
-  }
-}
-
-// ── Robust: Upstash med minne som reserve ────────────────────────────────
-
-export class RobustLager implements TellerLager {
-  private sisteVarsel = 0;
-  constructor(
-    private readonly primar: TellerLager,
-    private readonly reserve: TellerLager
-  ) {}
-
-  get navn() {
-    return this.primar.navn;
-  }
-
-  async okn(nokkel: string, vinduSek: number): Promise<Teller> {
-    try {
-      return await this.primar.okn(nokkel, vinduSek);
-    } catch (err) {
-      const naa = Date.now();
-      if (naa - this.sisteVarsel > 60_000) {
-        this.sisteVarsel = naa;
-        console.error(
-          "⚠️  Upstash utilgjengelig – bruker tellere i minnet inntil videre:",
-          err instanceof Error ? err.message : "ukjent feil"
+  private async kjor(kommando: string[]): Promise<unknown> {
+    let sisteFeil: unknown;
+    // Ett nytt forsøk ved nettverksfeil eller 5xx – ikke ved 4xx (feil oppsett).
+    for (let forsok = 0; forsok < 2; forsok++) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), this.timeoutMs);
+      try {
+        const res = await fetch(this.url.replace(/\/+$/, ""), {
+          method: "POST",
+          signal: controller.signal,
+          cache: "no-store",
+          headers: { Authorization: `Bearer ${this.token}`, "Content-Type": "application/json" },
+          body: JSON.stringify(kommando),
+        });
+        const data = (await res.json().catch(() => null)) as { result?: unknown; error?: unknown } | null;
+        if (res.ok && data && !("error" in data)) return data.result;
+        sisteFeil = new LagerUtilgjengelig(
+          `Upstash svarte ${res.status}${data?.error ? `: ${String(data.error).slice(0, 100)}` : ""}`
         );
+        if (res.status < 500) break;
+      } catch (err) {
+        sisteFeil = new LagerUtilgjengelig(
+          err instanceof Error && err.name === "AbortError" ? "Upstash svarte ikke i tide" : "Fikk ikke kontakt med Upstash"
+        );
+      } finally {
+        clearTimeout(timer);
       }
-      return this.reserve.okn(nokkel, vinduSek);
+      if (forsok === 0) await new Promise((r) => setTimeout(r, 100));
     }
+    throw sisteFeil;
+  }
+
+  private static toTall(svar: unknown): [number, number] {
+    if (!Array.isArray(svar) || svar.length !== 2) throw new LagerUtilgjengelig("Uventet svar fra Upstash");
+    const [a, b] = svar.map(Number);
+    if (!Number.isFinite(a) || !Number.isFinite(b)) throw new LagerUtilgjengelig("Uventet svar fra Upstash");
+    return [a, b];
+  }
+
+  async okn(nokkel: string, vinduSek: number, mengde = 1): Promise<Teller> {
+    const [antall, ttl] = UpstashLager.toTall(
+      await this.kjor(["EVAL", LUA_OKN, "1", nokkel, String(vinduSek), String(Math.round(mengde))])
+    );
+    return { antall, utloperOmSek: ttl > 0 ? ttl : vinduSek };
+  }
+
+  async reserver(nokkel: string, mengde: number, grense: number, vinduSek: number): Promise<Reservasjonsresultat> {
+    const [ok, verdi] = UpstashLager.toTall(
+      await this.kjor([
+        "EVAL",
+        LUA_RESERVER,
+        "1",
+        nokkel,
+        String(vinduSek),
+        String(Math.round(mengde)),
+        String(Math.round(grense)),
+      ])
+    );
+    return { ok: ok === 1, verdi };
   }
 }
 
@@ -133,10 +192,12 @@ export function tellerLager(): TellerLager {
   if (lager) return lager;
   const oppsett = upstashOppsett();
   if (oppsett) {
-    lager = new RobustLager(new UpstashLager(oppsett.url, oppsett.token), new MinneLager());
+    lager = new UpstashLager(oppsett.url, oppsett.token);
   } else {
     if (process.env.NODE_ENV === "production") {
-      console.warn("⚠️  Upstash er ikke satt opp – bruksgrensene gjelder bare per serverinstans");
+      console.warn(
+        "⚠️  Upstash er ikke satt opp – bruksgrenser og budsjetter gjelder bare per serverinstans"
+      );
     }
     lager = new MinneLager();
   }
