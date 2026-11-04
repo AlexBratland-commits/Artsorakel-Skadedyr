@@ -17,8 +17,12 @@
  *   {"location":"kjeller","storrelse":"...","notesAnimal":"...",
  *    "droppingSize":"6-15mm","beskrivelse":"..."}
  *
+ * NB: "storrelse", "location" og "droppingSize" må være nøyaktig en av
+ * verdiene i src/lib/types.ts (ANIMAL_SIZES, LOCATIONS, DROPPING_SIZES).
+ * Andre verdier ignoreres av API-et, akkurat som et tomt felt.
+ *
  * Kjør:
- *   1. EVAL_MODE=1 npm run dev        (slår av rate limit og cache, kun i dev)
+ *   1. EVAL_MODE=1 npm run dev        (slår av tilgangskode, grenser og cache, kun i dev)
  *   2. npm run eval                   (i et annet vindu)
  *
  * Valg: --dir=testbilder  --url=http://localhost:3000  --samtidig=2
