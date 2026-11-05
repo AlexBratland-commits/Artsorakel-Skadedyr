@@ -81,15 +81,19 @@ export function beskrivFunn(billett: ChatBillett): FunnBeskrivelse {
     const ekskrement = pest.gruppe === "Ekskrementer" ? ", ut fra ekskrementer" : "";
     const usikker = billett.usikker || billett.nivaa === "lav";
     const sterkere = billett.sterkereAlternativ?.map((a) => rens(a)).join(", ");
-    const innledning = usikker
+    // Nivåets egen regel først – deretter, uansett nivå, M3-instruksen om et
+    // alternativ som er minst like sannsynlig. Da brukes aldri «naturlig».
+    const nivaaRegel = usikker
       ? `Bildeanalysen foreslår at det kan være ${navn}${ekskrement}, men sikkerheten er lav. Omtal den alltid som «mulig ${pest.norsk}», aldri som sikker. Gi ikke råd som forutsetter at det er ${pest.norsk} uten å si at arten først bør bekreftes.`
       : billett.nivaa === "middels"
         ? `Bildeanalysen foreslår ${navn}${ekskrement} med middels sikkerhet. Omtal arten som sannsynlig, ikke sikker. Bestemmelsen bør bekreftes av en fagperson.`
-        : sterkere
-          ? `Bildeanalysen foreslår ${navn}${ekskrement}${billett.nivaa ? ` med ${billett.nivaa} sikkerhet` : ""}. Et alternativ ble vurdert som minst like sannsynlig: ${sterkere}. Omtal arten som usikker, og ikke velg mellom dem på egen hånd. Bestemmelsen bør bekreftes av en fagperson.`
-          : billett.nivaa === "høy"
-          ? `Bildeanalysen foreslår ${navn}${ekskrement} med høy sikkerhet. Du kan bruke artsnavnet naturlig.`
+        : billett.nivaa === "høy"
+          ? `Bildeanalysen foreslår ${navn}${ekskrement} med høy sikkerhet.${sterkere ? "" : " Du kan bruke artsnavnet naturlig."}`
           : `Bildeanalysen foreslår ${navn}${ekskrement}.`;
+    const alternativRegel = sterkere
+      ? ` Et alternativ ble vurdert som minst like sannsynlig: ${sterkere}. Omtal arten som usikker, og ikke velg mellom dem på egen hånd. Bestemmelsen bør bekreftes av en fagperson.`
+      : "";
+    const innledning = `${nivaaRegel}${alternativRegel}`;
     const generelt = billett.generelt ? `\n${rens(billett.generelt, 300)}` : "";
     return {
       tekst: `${innledning}${generelt}\n${IKKE_BEKREFTET}${alternativer}\n\n${artsfakta(pest)}\n\n${ARTSAVHENGIGE_RAAD}`,

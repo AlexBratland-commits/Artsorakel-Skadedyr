@@ -74,6 +74,35 @@ describe("M3: chatten får vite om motstriden", () => {
     expect(s).not.toMatch(/Du kan bruke artsnavnet naturlig/);
   });
 
+  // Rettelse etter gjennomgang av 6532725: instruksen må med uansett hovedforslagets nivå.
+  const MOTSTRID_INSTRUKS = "Et alternativ ble vurdert som minst like sannsynlig: Brunrotte (Rattus norvegicus). Omtal arten som usikker, og ikke velg mellom dem på egen hånd.";
+  for (const [nivaa, main, alt, egenRegel] of [
+    ["lav («Mulig»)", 35, 40, /Omtal den alltid som «mulig Husmus»/],
+    ["lav – like høy", 35, 35, /Omtal den alltid som «mulig Husmus»/],
+    ["middels", 65, 70, /med middels sikkerhet\. Omtal arten som sannsynlig, ikke sikker/],
+    ["middels – like høy", 65, 65, /med middels sikkerhet/],
+    ["høy", 85, 90, /med høy sikkerhet/],
+  ] as const) {
+    it(`${nivaa}: instruksen om alternativet er med, og nivåets egen regel beholdes`, async () => {
+      const s = await system({ confidence: main, alternativer: [{ ...ALT, confidence: alt }] });
+      expect(s).toContain(MOTSTRID_INSTRUKS);
+      expect(s).toMatch(egenRegel);
+      expect(s).not.toMatch(/Du kan bruke artsnavnet naturlig/);
+      expect(s.match(/minst like sannsynlig/g)).toHaveLength(1);
+    });
+  }
+
+  for (const [nivaa, main, regel] of [
+    ["lav", 35, /Omtal den alltid som «mulig Husmus»/],
+    ["middels", 65, /med middels sikkerhet/],
+  ] as const) {
+    it(`${nivaa} uten konkurrerende alternativ: uendret`, async () => {
+      const s = await system({ confidence: main, alternativer: [{ ...ALT, confidence: main - 5 }] });
+      expect(s).toMatch(regel);
+      expect(s).not.toMatch(/minst like sannsynlig/);
+    });
+  }
+
   it("vanlig høy sikkerhet med svakere alternativ: som før", async () => {
     const s = await system({ confidence: 85, alternativer: [{ ...ALT, confidence: 40 }] });
     expect(s).toMatch(/Du kan bruke artsnavnet naturlig/);
