@@ -43,7 +43,9 @@ if (process.env.ARTSORAKEL_TEST_MOCK_AI === "1") {
           ? { gruppe: "Biller", name: "Pelsbille", latinName: "Attagenus pellio" }
           : meldinger.includes("GENERELL-TEST")
             ? { gruppe: "Gnagere", name: "Mus", latinName: "" }
-            : meldinger.includes("SKOGKAKERLAKK-TEST")
+            : meldinger.includes("UKLART-TEST")
+              ? { gruppe: "Gnagere", name: "Husmus", latinName: "Mus musculus", grunnlag: "uklart" }
+              : meldinger.includes("SKOGKAKERLAKK-TEST")
               ? { gruppe: "Kakerlakker", name: "Kakerlakk", latinName: "Ectobius sylvestris" }
               : meldinger.includes("MARKKAKERLAKK-TEST")
               ? { gruppe: "Kakerlakker", name: "Kakerlakk", latinName: "Ectobius lapponicus" }

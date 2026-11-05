@@ -62,6 +62,19 @@ export function visningsSikkerhet(result: AnalysisResult): { confidence: number;
   return { confidence: c, etikett: SIKKERHET_ETIKETT[sikkerhetsnivaa(c)] };
 }
 
+/** H5: forklaring når sikkerheten er satt ned fordi grunnlaget ikke holder til et høyere nivå. */
+const BEGRENSNING_TEKST: Record<string, string> = {
+  uklart: "Bildet er uklart, så sikkerheten er satt ned. Et skarpere bilde, tatt nærmere og med godt lys, gir en sikrere vurdering.",
+  delvis: "Ikke alle kjennetegnene som skiller arten fra liknende arter, synes på bildet. Sikkerheten er derfor ikke satt til høy.",
+  uten_storrelse: "Størrelsen er ikke oppgitt, og den kan ikke måles sikkert på et bilde. Oppgi omtrentlig størrelse for en sikrere vurdering.",
+};
+
+/** H5: forklaringene som gjelder dette resultatet. Tåler ødelagte felt fra eldre historikk. */
+export function sikkerhetsbegrensninger(result: AnalysisResult): string[] {
+  const liste = Array.isArray(result.sikkerhetBegrenset) ? result.sikkerhetBegrenset : [];
+  return [...new Set(liste)].flatMap((g) => (typeof g === "string" && BEGRENSNING_TEKST[g] ? [BEGRENSNING_TEKST[g]] : []));
+}
+
 /** H3: tekst til «Meld fra om feil bestemmelse» – samme navn og sikkerhet som på skjermen. */
 export function feilmeldingTekst(result: AnalysisResult): string {
   const sikkerhet = visningsSikkerhet(result);

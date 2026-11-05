@@ -7,7 +7,7 @@ import {
   type Pest,
   type PestGroup,
 } from "@/lib/pests";
-import type { AnalysisResult, AnnenArt, Candidate, Severity } from "@/lib/types";
+import type { AnalysisResult, AnnenArt, Candidate, Severity, SikkerhetsBegrensning } from "@/lib/types";
 
 /**
  * Identifiseringslogikken etter AI-svaret: tolker svaret, slår opp arten i
@@ -45,6 +45,63 @@ export const IKKE_SKADEDYR_TEKST =
 
 /** Høyeste sikkerhet når arten bare er utledet av et generelt ord som «rotte» (under «Høy»). */
 const MAKS_VED_GENERELT_NAVN = 79;
+
+// ── H5: sikkerheten skal ikke være høyere enn grunnlaget ────────────────
+// Modellens confidence er ikke en kalibrert sannsynlighet, og vi innfører
+// ingen nye prosentgrenser. Takene under er de eksisterende nivågrensene
+// (Lav < 50 ≤ Middels < 80 ≤ Høy): de sørger bare for at modellens egen
+// beskrivelse av grunnlaget, eller en kjent mangel, ikke vises som et høyere
+// nivå. Arten byttes aldri, og et lavere nivå heves aldri.
+
+/** Høyeste verdi som fortsatt vises som «Lav» / «Middels». */
+const TAK_LAV = LOW_CONFIDENCE_LABEL - 1;
+const TAK_MIDDELS = 79;
+
+/** Hva modellen sier at bildet viser. Ukjente verdier ignoreres (ingen begrensning). */
+export type Bildegrunnlag = "tydelig" | "delvis" | "uklart";
+
+/** Opplysninger fra brukeren som påvirker hvor sikker en bestemmelse kan være. */
+export interface AnalyseKontekst {
+  /** Ekskrementer: har brukeren oppgitt størrelsen (valg eller mål i beskrivelsen)? */
+  storrelseOppgitt?: boolean;
+}
+
+export function lesBildegrunnlag(verdi: unknown): Bildegrunnlag | undefined {
+  const v = typeof verdi === "string" ? verdi.trim().toLowerCase() : "";
+  return v === "tydelig" || v === "delvis" || v === "uklart" ? v : undefined;
+}
+
+/** Takene som gjelder for dette svaret, med grunnen til hvert. */
+function sikkerhetstak(raw: Record<string, unknown>, erEkskrementer: boolean, kontekst?: AnalyseKontekst) {
+  const tak: { grunn: SikkerhetsBegrensning; maks: number }[] = [];
+  const grunnlag = lesBildegrunnlag(raw.grunnlag);
+  if (grunnlag === "uklart") tak.push({ grunn: "uklart", maks: TAK_LAV });
+  if (grunnlag === "delvis") tak.push({ grunn: "delvis", maks: TAK_MIDDELS });
+  // Størrelse er det viktigste skillet for ekskrementer og kan ikke måles på et bilde.
+  if (erEkskrementer && kontekst?.storrelseOppgitt === false) tak.push({ grunn: "uten_storrelse", maks: TAK_MIDDELS });
+  return tak;
+}
+
+/** Senker en verdi til takene; gir også hvilke grunner som faktisk senket den. */
+function begrens(confidence: number, tak: ReturnType<typeof sikkerhetstak>) {
+  const grunner = tak.filter((t) => confidence > t.maks).map((t) => t.grunn);
+  const verdi = Math.min(confidence, ...tak.map((t) => t.maks));
+  return { verdi, grunner };
+}
+
+/**
+ * Alternativene får samme tak. Rangerte modellen et alternativ lavere enn
+ * hovedforslaget, beholdes den rekkefølgen – taket skal ikke lage en kunstig
+ * «like sannsynlig»-motstrid (M3). Var alternativet minst like høyt, forblir det det.
+ */
+function begrensAlternativer(alternativer: Candidate[], tak: ReturnType<typeof sikkerhetstak>, foer: number, etter: number): Candidate[] {
+  if (!tak.length) return alternativer;
+  return alternativer.map((a) => {
+    let c = begrens(a.confidence, tak).verdi;
+    if (a.confidence < foer && c >= etter) c = Math.max(0, etter - 1);
+    return { ...a, confidence: c };
+  });
+}
 
 /**
  * F3: tolker modellens sikkerhet robust. «85%», «85 %», «0,85» og 0.85 gir 85.
@@ -247,7 +304,7 @@ export function parseAnnenArt(raw: unknown): AnnenArt | undefined {
  * Alvorlighet, tiltak, utbredelse og sesong tar vi fra vår egen database,
  * ikke fra modellen.
  */
-export function enrich(raw: Record<string, unknown>, gruppe: PestGroup | null): AnalysisResult {
+export function enrich(raw: Record<string, unknown>, gruppe: PestGroup | null, kontekst?: AnalyseKontekst): AnalysisResult {
   const name = typeof raw.name === "string" ? raw.name : "";
   const latinName = String(raw.latinName ?? "");
   const erEkskrementer = gruppe === "Ekskrementer";
@@ -298,19 +355,24 @@ export function enrich(raw: Record<string, unknown>, gruppe: PestGroup | null): 
       // M4 (revisjon): typen beholdes, så forbehold og råd passer til ekskrementer.
       return { ...UNKNOWN, gruppe: "Ekskrementer", tiltak: EKSKREMENT_UKJENT_TILTAK, description: EKSKREMENT_UKJENT_TEKST, observasjon };
     }
-    const annenArt = utenforListen ?? parseAnnenArt(raw.annenArt);
-    if (annenArt) {
+    const funnetAnnen = utenforListen ?? parseAnnenArt(raw.annenArt);
+    if (funnetAnnen) {
+      // H5: samme tak for en art utenfor listen.
+      const tak = sikkerhetstak(raw, false, kontekst);
+      const { verdi, grunner } = begrens(funnetAnnen.confidence, tak);
+      const annenArt = { ...funnetAnnen, confidence: verdi };
       return {
         ...UNKNOWN,
         description: description || UNKNOWN.description,
         observasjon,
         annenArt,
+        ...(grunner.length ? { sikkerhetBegrenset: grunner } : {}),
         tiltak: [
           "Arten finnes ikke i Ocabs database, så vi har ingen kvalitetssikrede råd for den",
           "Kontakt Ocab hvis du er usikker, ser mange av dem eller de gjør skade",
           "Ta gjerne et nytt bilde nærmere dyret for å bekrefte",
         ],
-        alternativer: parseAlternatives(raw.alternativer, gruppe),
+        alternativer: begrensAlternativer(parseAlternatives(raw.alternativer, gruppe), tak, funnetAnnen.confidence, verdi),
       };
     }
     return { ...UNKNOWN, description: description || UNKNOWN.description, observasjon };
@@ -330,9 +392,18 @@ export function enrich(raw: Record<string, unknown>, gruppe: PestGroup | null): 
         ? MUS_FLAGGERMUS_FORBEHOLD
         : undefined;
 
+  // H5: bildegrunnlaget og kjente mangler begrenser nivået (etter F4 og generelle navn).
+  const tak = sikkerhetstak(raw, erEkskrementer, kontekst);
+  const foer = confidence;
+  const begrenset = begrens(confidence, tak);
+  confidence = begrenset.verdi;
+
   const severity: Severity = pest.alvorlighet;
-  const alternativer = parseAlternatives(raw.alternativer, gruppe).filter(
-    (a) => a.name !== pest.norsk
+  const alternativer = begrensAlternativer(
+    parseAlternatives(raw.alternativer, gruppe).filter((a) => a.name !== pest.norsk),
+    tak,
+    foer,
+    confidence
   );
 
   return {
@@ -352,6 +423,7 @@ export function enrich(raw: Record<string, unknown>, gruppe: PestGroup | null): 
     forveksles: pest.forveksles,
     usikkerKandidat: confidence < LOW_CONFIDENCE_LABEL,
     ...(generelltNavn ? { generelltNavn: generelltNavn.slice(0, 80) } : {}),
+    ...(begrenset.grunner.length ? { sikkerhetBegrenset: begrenset.grunner } : {}),
     bekreftelse: pest.bekreftelse,
     notat: pest.notat,
     forbehold,

@@ -28,6 +28,13 @@ export interface AnnenArt {
   hvorfor: string;
 }
 
+/**
+ * H5: hvorfor sikkerheten er begrenset under det modellen oppga.
+ * «uklart»/«delvis» er modellens egen vurdering av bildegrunnlaget;
+ * «uten_storrelse» gjelder ekskrementer uten oppgitt størrelse.
+ */
+export type SikkerhetsBegrensning = "uklart" | "delvis" | "uten_storrelse";
+
 /** Navnene modellen oppga, og artene de peker på i Ocabs database (H1). */
 export interface Motstrid {
   navn: string;
@@ -72,6 +79,8 @@ export interface AnalysisResult extends AiIdentification {
    * vises som alternativer med lav sikkerhet.
    */
   motstrid?: Motstrid;
+  /** H5: grunnene til at sikkerheten er satt ned (bare når den faktisk ble satt ned). */
+  sikkerhetBegrenset?: SikkerhetsBegrensning[];
   /**
    * H1: modellen brukte bare et generelt navn (f.eks. «mus») uten et
    * vitenskapelig navn som bekrefter arten. Vises som «Mulig …».

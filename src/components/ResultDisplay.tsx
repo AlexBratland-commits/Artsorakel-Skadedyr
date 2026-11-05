@@ -30,6 +30,7 @@ import {
   GENERELT_FORBEHOLD,
   feilmeldingTekst,
   generelltNavnTekst,
+  sikkerhetsbegrensninger,
   motstridKandidater,
   MOTSTRID_KANDIDATER_TITTEL,
   MOTSTRID_TITTEL,
@@ -93,6 +94,7 @@ export default function ResultDisplay({
   const opprydding = oppryddingFor(result);
   const motstrid = motstridTekst(result);
   const generelt = generelltNavnTekst(result);
+  const begrensninger = sikkerhetsbegrensninger(result);
   const latinNavn = annen ? annen.latinName : result.latinName;
 
   const delingstekst = result.found
@@ -178,6 +180,12 @@ export default function ResultDisplay({
               </div>
             )}
             {generelt && <p className="mt-2 max-w-prose text-sm text-muted">{generelt}</p>}
+            {/* H5: hvorfor sikkerheten er satt ned – samme tekst i PDF og chat */}
+            {begrensninger.map((t) => (
+              <p key={t} className="mt-2 max-w-prose text-sm text-muted">
+                {t}
+              </p>
+            ))}
             {result.usikkerKandidat && (
               <p className="mt-2 max-w-prose text-sm text-muted">
                 {USIKKER_KANDIDAT_TEKST}

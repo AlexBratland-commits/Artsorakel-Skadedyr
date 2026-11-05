@@ -1,4 +1,4 @@
-import { generelltNavnTekst, motstridKandidater, sterkereAlternativer, visningsSikkerhet } from "@/lib/resultat-tekst";
+import { generelltNavnTekst, motstridKandidater, sikkerhetsbegrensninger, sterkereAlternativer, visningsSikkerhet } from "@/lib/resultat-tekst";
 import { sikkerhetsnivaa, type AnalysisResult, type Sikkerhetsnivaa } from "@/lib/types";
 import { CHAT_BILLETT_LEVETID_SEK } from "./limits";
 import { signer, signerTekst, tilfeldigId, verifiser, verifiserTekst } from "./signing";
@@ -32,6 +32,8 @@ export interface ChatBillett {
   motstrid?: string[];
   /** M3: alternativer vurdert som minst like sannsynlige som hovedforslaget. */
   sterkereAlternativ?: string[];
+  /** H5: hvorfor sikkerheten er satt ned (faste tekster). */
+  begrensning?: string[];
 }
 
 const NIVAAER: readonly Sikkerhetsnivaa[] = ["lav", "middels", "høy"];
@@ -58,6 +60,8 @@ export function lagChatBillett(result: AnalysisResult): string {
   if (motstrid.length) billett.motstrid = motstrid;
   const sterkere = sterkereAlternativer(result).slice(0, 3).map((a) => artMedLatin(a.name, a.latinName));
   if (sterkere.length) billett.sterkereAlternativ = sterkere;
+  const begrensning = sikkerhetsbegrensninger(result);
+  if (begrensning.length) billett.begrensning = begrensning;
   return signer(billett, "chat-billett");
 }
 
@@ -81,6 +85,9 @@ export function lesChatBillett(token: unknown): ChatBillett | null {
     alternativer: liste(b.alternativer),
     motstrid: liste(b.motstrid),
     sterkereAlternativ: liste(b.sterkereAlternativ),
+    begrensning: Array.isArray(b.begrensning)
+      ? b.begrensning.filter((x): x is string => typeof x === "string").slice(0, 3).map((x) => x.slice(0, 300))
+      : undefined,
   };
 }
 
