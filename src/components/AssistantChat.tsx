@@ -206,12 +206,22 @@ export default function AssistantChat() {
   };
 
   // Sjekk plassen ved scrolling, endret størrelse, tastatur og endret innhold.
+  // Mens brukeren scroller, står boblen stille: plassen vurderes først når
+  // scrollingen har stoppet. Ellers byttet den mellom stor og liten og
+  // hoppet opp og ned hver gang en knapp passerte hjørnet (hakking på mobil).
+  // iPhone Safari endrer også vindushøyden mens verktøylinjen skjules under
+  // scrolling – den endringen venter også til scrollingen er ferdig.
   useEffect(() => {
     if (apen) return;
     let ramme = 0;
+    let sistScroll = 0;
+    let rolig = 0;
     const KOMPAKT = 52;
+    /** Hvor lenge siden må stå stille før boblen kan flytte seg (ms). */
+    const ROLIG_MS = 150;
     const sjekk = () => {
       ramme = 0;
+      if (performance.now() - sistScroll < ROLIG_MS) return; // vurderes når scrollingen stopper
       const knapp = knappRef.current;
       if (!knapp) return;
       // Hjørnet boblen er festet til (uten løft), fra CSS-plasseringen – påvirkes ikke av animasjonen.
@@ -241,9 +251,14 @@ export default function AssistantChat() {
     const planlegg = () => {
       if (!ramme) ramme = requestAnimationFrame(sjekk);
     };
+    const vedScroll = () => {
+      sistScroll = performance.now();
+      window.clearTimeout(rolig);
+      rolig = window.setTimeout(planlegg, ROLIG_MS);
+    };
     const etterFokus = () => setTimeout(planlegg, 0);
     planlegg();
-    window.addEventListener("scroll", planlegg, { passive: true, capture: true });
+    window.addEventListener("scroll", vedScroll, { passive: true, capture: true });
     window.addEventListener("resize", planlegg);
     window.visualViewport?.addEventListener("resize", planlegg);
     document.addEventListener("focusin", etterFokus);
@@ -254,7 +269,8 @@ export default function AssistantChat() {
     const intervall = window.setInterval(planlegg, 1000);
     return () => {
       cancelAnimationFrame(ramme);
-      window.removeEventListener("scroll", planlegg, { capture: true });
+      window.clearTimeout(rolig);
+      window.removeEventListener("scroll", vedScroll, { capture: true });
       window.removeEventListener("resize", planlegg);
       window.visualViewport?.removeEventListener("resize", planlegg);
       document.removeEventListener("focusin", etterFokus);
@@ -340,7 +356,7 @@ export default function AssistantChat() {
           style={loft ? { transform: `translateY(-${loft}px)` } : undefined}
           data-flytende=""
           title={synligModus === "kompakt" ? "Spør Artsorakel" : undefined}
-          className={`no-print fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 z-40 inline-flex items-center justify-center rounded-full bg-ocab-900 text-sm font-semibold text-white shadow-lifted ring-1 ring-white/10 transition-[opacity,transform,background-color] duration-200 hover:bg-ocab-950 active:scale-[0.98] motion-reduce:transition-none dark:bg-ocab-200 dark:text-ocab-950 dark:hover:bg-white ${
+          className={`no-print fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-[max(1rem,env(safe-area-inset-right))] z-40 inline-flex will-change-transform items-center justify-center rounded-full bg-ocab-900 text-sm font-semibold text-white shadow-lifted ring-1 ring-white/10 transition-[opacity,transform,background-color] duration-200 hover:bg-ocab-950 active:scale-[0.98] motion-reduce:transition-none dark:bg-ocab-200 dark:text-ocab-950 dark:hover:bg-white ${
             synligModus === "full" ? "gap-2 px-5 py-3.5" : "size-[52px]"
           } ${
             modus === "skjult"
