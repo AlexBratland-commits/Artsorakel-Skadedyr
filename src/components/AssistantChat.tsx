@@ -206,12 +206,24 @@ export default function AssistantChat() {
   };
 
   // Sjekk plassen ved scrolling, endret størrelse, tastatur og endret innhold.
+  // Mens brukeren scroller, står boblen stille: plassen vurderes først når
+  // scrollingen har stoppet. Ellers byttet den mellom stor og liten og
+  // hoppet opp og ned hver gang en knapp passerte hjørnet (hakking på mobil).
+  // iPhone Safari endrer også vindushøyden mens verktøylinjen skjules under
+  // scrolling – den endringen venter også til scrollingen er ferdig.
+  // Gjelder bare PC: på mobil er boblen alltid synlig, rund og fast i hjørnet,
+  // så ingen måling, skjuling eller flytting kjører der (siden har luft nederst).
   useEffect(() => {
-    if (apen) return;
+    if (apen || erMobil) return;
     let ramme = 0;
+    let sistScroll = 0;
+    let rolig = 0;
     const KOMPAKT = 52;
+    /** Hvor lenge siden må stå stille før boblen kan flytte seg (ms). */
+    const ROLIG_MS = 150;
     const sjekk = () => {
       ramme = 0;
+      if (performance.now() - sistScroll < ROLIG_MS) return; // vurderes når scrollingen stopper
       const knapp = knappRef.current;
       if (!knapp) return;
       // Hjørnet boblen er festet til (uten løft), fra CSS-plasseringen – påvirkes ikke av animasjonen.
@@ -241,9 +253,14 @@ export default function AssistantChat() {
     const planlegg = () => {
       if (!ramme) ramme = requestAnimationFrame(sjekk);
     };
+    const vedScroll = () => {
+      sistScroll = performance.now();
+      window.clearTimeout(rolig);
+      rolig = window.setTimeout(planlegg, ROLIG_MS);
+    };
     const etterFokus = () => setTimeout(planlegg, 0);
     planlegg();
-    window.addEventListener("scroll", planlegg, { passive: true, capture: true });
+    window.addEventListener("scroll", vedScroll, { passive: true, capture: true });
     window.addEventListener("resize", planlegg);
     window.visualViewport?.addEventListener("resize", planlegg);
     document.addEventListener("focusin", etterFokus);
@@ -254,7 +271,8 @@ export default function AssistantChat() {
     const intervall = window.setInterval(planlegg, 1000);
     return () => {
       cancelAnimationFrame(ramme);
-      window.removeEventListener("scroll", planlegg, { capture: true });
+      window.clearTimeout(rolig);
+      window.removeEventListener("scroll", vedScroll, { capture: true });
       window.removeEventListener("resize", planlegg);
       window.visualViewport?.removeEventListener("resize", planlegg);
       document.removeEventListener("focusin", etterFokus);
@@ -262,7 +280,7 @@ export default function AssistantChat() {
       ro.disconnect();
       window.clearInterval(intervall);
     };
-  }, [apen]);
+  }, [apen, erMobil]);
 
   const nySamtale = () => {
     setMeldinger([]);
@@ -328,6 +346,7 @@ export default function AssistantChat() {
 
   return (
     <>
+      {/* Mobil: alltid kompakt, synlig og uten løft – uansett hva PC-logikken sist satte. */}
       {!apen && (
         <button
           ref={knappRef}
@@ -335,21 +354,22 @@ export default function AssistantChat() {
           onClick={() => setApen(true)}
           aria-expanded={false}
           aria-controls="assistent-panel"
-          data-modus={modus}
-          data-loft={loft}
-          style={loft ? { transform: `translateY(-${loft}px)` } : undefined}
+          data-modus={erMobil ? "kompakt" : modus}
+          data-loft={erMobil ? 0 : loft}
+          style={!erMobil && loft ? { transform: `translateY(-${loft}px)` } : undefined}
           data-flytende=""
-          title={synligModus === "kompakt" ? "Spør Artsorakel" : undefined}
-          className={`no-print fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 z-40 inline-flex items-center justify-center rounded-full bg-ocab-900 text-sm font-semibold text-white shadow-lifted ring-1 ring-white/10 transition-[opacity,transform,background-color] duration-200 hover:bg-ocab-950 active:scale-[0.98] motion-reduce:transition-none dark:bg-ocab-200 dark:text-ocab-950 dark:hover:bg-white ${
-            synligModus === "full" ? "gap-2 px-5 py-3.5" : "size-[52px]"
+          title="Spør Artsorakel"
+          className={`no-print fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-[max(1rem,env(safe-area-inset-right))] z-40 inline-flex will-change-transform items-center justify-center rounded-full bg-ocab-900 text-sm font-semibold text-white shadow-lifted ring-1 ring-white/10 transition-[opacity,transform,background-color] duration-200 hover:bg-ocab-950 active:scale-[0.98] motion-reduce:transition-none dark:bg-ocab-200 dark:text-ocab-950 dark:hover:bg-white ${
+            // Mobil (under sm): alltid liten rund boble. PC: knapp med tekst når det er plass.
+            !erMobil && synligModus === "full" ? "size-[52px] sm:size-auto sm:gap-2 sm:px-5 sm:py-3.5" : "size-[52px]"
           } ${
-            modus === "skjult"
+            !erMobil && modus === "skjult"
               ? "pointer-events-none translate-y-3 opacity-0 focus-visible:pointer-events-auto focus-visible:translate-y-0 focus-visible:opacity-100"
               : ""
           }`}
         >
           <MessageCircle className="size-5 shrink-0" aria-hidden />
-          <span className={synligModus === "full" ? "" : "sr-only"}>Spør Artsorakel</span>
+          <span className={!erMobil && synligModus === "full" ? "sr-only sm:not-sr-only" : "sr-only"}>Spør Artsorakel</span>
         </button>
       )}
 

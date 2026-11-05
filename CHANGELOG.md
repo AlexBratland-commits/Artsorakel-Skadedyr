@@ -1,5 +1,16 @@
 # Endringslogg
 
+## Uutgitt – stabil chatboble på mobil
+
+- Mobil (under 640 px): chatboblen «Spør Artsorakel» er alltid synlig, rund (52 × 52 px) med
+  chatikonet og fast nede til høyre med safe-area. Den skjules, tones ut, flyttes eller endrer
+  størrelse aldri – verken under scrolling, over andre knapper eller med tastaturet oppe.
+  Plassberegningen (scroll-lytter, kollisjonsmåling, skjuling og løft) kjører ikke på mobil.
+- Siden har mer luft nederst på mobil (6,5 rem + safe-area), så bunnteksten og andre knapper
+  kan scrolles fri av boblen.
+- PC: uendret – knappen med teksten «Spør Artsorakel», som viker for knapper. Plassen
+  vurderes når scrollingen har stoppet, ikke i hver animasjonsramme.
+
 ## Uutgitt – H5: sikkerhetsnivå etter grunnlaget
 
 AI-modell, artsbibliotek, råd og visningen (Høy/Middels/Lav, ingen prosenter) er uendret.

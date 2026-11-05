@@ -32,12 +32,12 @@ export default defineConfig({
     },
     {
       name: "iphone-se",
-      testMatch: /(boble-og-pdf|pdf-samtale)\.spec\.ts/,
+      testMatch: /(boble-og-pdf|boble-scroll|pdf-samtale)\.spec\.ts/,
       use: { ...devices["iPhone SE"], browserName: "chromium", baseURL: "http://localhost:3201" },
     },
     {
       name: "iphone-13",
-      testMatch: /(boble-og-pdf|pdf-samtale)\.spec\.ts/,
+      testMatch: /(boble-og-pdf|boble-scroll|pdf-samtale)\.spec\.ts/,
       use: { ...devices["iPhone 13"], browserName: "chromium", baseURL: "http://localhost:3201" },
     },
     { name: "tilgangskode", testMatch: /tilgang\.spec\.ts/, use: { baseURL: "http://localhost:3202" } },

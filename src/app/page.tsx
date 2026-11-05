@@ -213,7 +213,9 @@ export default function Home() {
   };
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-3xl flex-col px-4 pb-28 sm:px-6">
+    // Luft nederst: på mobil ligger chatboblen alltid fast i hjørnet, så det
+    // nederste innholdet (bunnteksten) må kunne scrolles fri av den.
+    <div className="mx-auto flex min-h-dvh max-w-3xl flex-col px-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))] sm:px-6 sm:pb-28">
       <header className="no-print flex items-center justify-between gap-4 py-6">
         <a href="https://www.ocab.no/" target="_blank" rel="noopener noreferrer">
           <OcabLogo height={26} />

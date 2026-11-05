@@ -17,3 +17,12 @@ test("PC: full personverntekst og undertittel i chatten", async ({ page }) => {
   await expect(chat.getByText(/Meldinger sendes til en AI-tjeneste/)).toBeVisible();
   await expect(chat.getByText("Fagassistent for skadedyr")).toBeVisible();
 });
+
+test("PC: boblen er fortsatt knappen med teksten «Spør Artsorakel»", async ({ page }) => {
+  await page.goto("/");
+  await page.waitForTimeout(400);
+  const boble = page.getByRole("button", { name: "Spør Artsorakel" });
+  await expect(boble).toHaveAttribute("data-modus", "full");
+  await expect(boble.getByText("Spør Artsorakel")).toBeVisible();
+  expect((await boble.boundingBox())!.width).toBeGreaterThan(100);
+});
