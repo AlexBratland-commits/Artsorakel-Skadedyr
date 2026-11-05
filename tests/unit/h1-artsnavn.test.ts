@@ -11,7 +11,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { enrich, markerIkkeSkadedyr, parseAlternatives } from "@/lib/identification";
-import { PESTS, findPest, findPestInGroup, type PestGroup } from "@/lib/pests";
+import { GENERELLE_ALIASER, PESTS, findPest, findPestInGroup, type PestGroup } from "@/lib/pests";
 import { lagRapportInnhold } from "@/lib/rapport/innhold";
 import {
   generelltNavnTekst,
@@ -134,8 +134,12 @@ describe("H1: motstridende navn gir usikkert resultat – appen velger ikke art"
     ["Pelsbille", "Attagenus smirnovi", "Biller", "Pelsbille", "Brun pelsbille"],
     ["Museumsbille", "Anthrenus verbasci", "Biller", "Museumsbille", "Tepperbille"],
     ["Husmus", "Rattus norvegicus", "Gnagere", "Husmus", "Brunrotte"],
-    // Alias mot latinsk navn i en annen gruppe
-    ["Mus", "Apodemus sylvaticus", "Gnagere", "Husmus", "Liten skogmus"],
+    // Spesifikt norsk navn mot latinsk navn for en annen art
+    ["Liten skogmus", "Apodemus flavicollis", "Gnagere", "Liten skogmus", "Stor skogmus"],
+    ["Tysk kakerlakk", "Periplaneta americana", "Kakerlakker", "Tysk kakerlakk", "Amerikansk kakerlakk"],
+    // Generelt navn mot latinsk navn for en art utenfor navnet
+    ["Mus", "Rattus norvegicus", "Gnagere", "Husmus", "Brunrotte"],
+    ["Kakerlakk", "Lepisma saccharinum", "Kakerlakker", "Tysk kakerlakk", "Sølvkre"],
   ];
   for (const [navn, latin, gruppe, etterNavn, etterLatin] of tilfeller) {
     it(`${navn} / ${latin}`, () => {
@@ -299,16 +303,48 @@ describe("H1: generelle navn gir aldri en sikker artsbestemmelse alene", () => {
     }
   });
 
-  it("generelt navn med vitenskapelig navn for en annen art i listen er motstridende", () => {
-    const r = svar({ name: "Kakerlakk", latinName: "Periplaneta americana" }, "Kakerlakker");
-    expect(r.found).toBe(false);
-    expect(motstridKandidater(r)).toEqual(["Tysk kakerlakk (Blattella germanica)", "Amerikansk kakerlakk (Periplaneta americana)"]);
+  it("generelt navn + vitenskapelig navn for en art innenfor navnet → den spesifikke arten, uten motstrid", () => {
+    const tilfeller: [string, string, PestGroup, string][] = [
+      ["Kakerlakk", "Periplaneta americana", "Kakerlakker", "Amerikansk kakerlakk"],
+      ["Kakerlakk", "Blatta orientalis", "Kakerlakker", "Orientalsk kakerlakk"],
+      ["Kakerlakk", "Supella longipalpa", "Kakerlakker", "Brunbåndet kakerlakk"],
+      ["Mus", "Apodemus sylvaticus", "Gnagere", "Liten skogmus"],
+      ["Mus", "Apodemus flavicollis", "Gnagere", "Stor skogmus"],
+      ["Mus", "Myodes rutilus", "Gnagere", "Rødmus"],
+      ["Rotte", "Rattus rattus", "Gnagere", "Svartrotte"],
+      ["Veps", "Dolichovespula media", "Veps og bier", "Treveps"],
+      ["Møll", "Plodia interpunctella", "Møll", "Matmøll"],
+      ["Flue", "Calliphora vicina", "Fluer og mygg", "Spyflue"],
+      ["Jordmaur", "Lasius brunneus", "Maur", "Brun tremaur"],
+    ];
+    for (const [navn, latin, gruppe, art] of tilfeller) {
+      const r = svar({ name: navn, latinName: latin, confidence: 90 }, gruppe);
+      expect(r, `${navn} + ${latin}`).toMatchObject({ found: true, name: art, latinName: latin, confidence: 90, usikkerKandidat: false });
+      expect(r.motstrid).toBeUndefined();
+      expect(generelltNavnTekst(r)).toBeUndefined();
+    }
   });
 
-  it("generelt navn med ukjent vitenskapelig navn gir bare et mulig forslag", () => {
-    const r = svar({ name: "Veps", latinName: "Vespula rufa", confidence: 90 }, "Veps og bier");
-    expect(r).toMatchObject({ name: "Vanlig veps", usikkerKandidat: true });
-    expect(r.confidence).toBeLessThan(50);
+  it("generelt navn + ukjent vitenskapelig navn → art utenfor listen, ingen art velges fra biblioteket", () => {
+    const tilfeller: [string, string, PestGroup][] = [
+      ["Veps", "Vespula rufa", "Veps og bier"],
+      ["Mus", "Apodemus agrarius", "Gnagere"],
+      ["Kakerlakk", "Ectobius lapponicus", "Kakerlakker"],
+      ["Møll", "Hofmannophila pseudospretella", "Møll"],
+    ];
+    for (const [navn, latin, gruppe] of tilfeller) {
+      const r = svar({ name: navn, latinName: latin, confidence: 80 }, gruppe);
+      expect(r.found, `${navn} + ${latin}`).toBe(false);
+      expect(r.annenArt).toMatchObject({ name: navn, latinName: latin });
+      expect(visningsnavn(r)).toBe(`Mulig ${navn}`);
+      expect(r.severity).toBe("lav");
+      expect(r.tiltak.join(" ")).toMatch(/finnes ikke i Ocabs database/);
+    }
+  });
+
+  it("spesifikt norsk navn + ukjent vitenskapelig navn → det norske navnet går foran", () => {
+    expect(svar({ name: "Tysk kakerlakk", latinName: "Blattella sp.", confidence: 90 }, "Kakerlakker")).toMatchObject({ name: "Tysk kakerlakk", confidence: 90 });
+    expect(svar({ name: "Amerikansk kakerlakk", latinName: "", confidence: 90 }, "Kakerlakker")).toMatchObject({ name: "Amerikansk kakerlakk", confidence: 90 });
   });
 
   it("artsnavn og faglig riktige synonymer gir fortsatt sikker bestemmelse", () => {
@@ -363,5 +399,55 @@ describe("H1: generelle navn gir aldri en sikker artsbestemmelse alene", () => {
     expect(mus.generelltNavn).toBeUndefined();
     const rotte = svar({ name: "Rotte", latinName: "", confidence: 95 }, "Ekskrementer");
     expect(rotte).toMatchObject({ found: true, name: "Brunrotte", confidence: 79 });
+  });
+});
+
+describe("H1: kakerlakker skilles fra hverandre – og markkakerlakk blir aldri tysk kakerlakk", () => {
+  it("tysk og amerikansk kakerlakk skilles på norsk navn, latinsk navn og begge", () => {
+    for (const [navn, latin] of [["Tysk kakerlakk", "Blattella germanica"], ["Amerikansk kakerlakk", "Periplaneta americana"]]) {
+      for (const [n, l] of [[navn, latin], [navn, ""], ["", latin], ["Kakerlakk", latin]]) {
+        expect(svar({ name: n, latinName: l, confidence: 90 }, "Kakerlakker"), `${n} / ${l}`).toMatchObject({ found: true, name: navn, confidence: 90 });
+      }
+    }
+  });
+
+  it("markkakerlakk finnes ikke i biblioteket (forslag til ny oppføring er rapportert)", () => {
+    expect(findPest("Markkakerlakk")).toBeUndefined();
+    expect(findPest("Ectobius lapponicus")).toBeUndefined();
+  });
+
+  it("markkakerlakk – på norsk, latin eller som «kakerlakk» – får aldri tysk kakerlakks bekjempelsesråd", () => {
+    const tilfeller: Record<string, unknown>[] = [
+      { found: true, name: "Markkakerlakk", latinName: "Ectobius lapponicus", confidence: 85 },
+      { found: true, name: "Kakerlakk", latinName: "Ectobius lapponicus", confidence: 85 },
+      { found: true, name: "Kakerlakk", latinName: "Ectobius sp.", confidence: 85 },
+      { found: false, name: "Ukjent", latinName: "Ukjent", confidence: 0, annenArt: { name: "Markkakerlakk", latinName: "Ectobius lapponicus", confidence: 85, hvorfor: "" } },
+      { found: false, name: "Ukjent", latinName: "Ukjent", confidence: 0, annenArt: { name: "Kakerlakk", latinName: "Ectobius lapponicus", confidence: 85, hvorfor: "" } },
+    ];
+    const tyskeRaad = findPest("Tysk kakerlakk")!.tiltak;
+    for (const raw of tilfeller) {
+      const r = enrich({ description: "x", alternativer: [], ...raw }, "Kakerlakker");
+      expect(r.found, JSON.stringify(raw)).toBe(false);
+      expect(r.name).not.toMatch(/Tysk/);
+      expect(r.severity).toBe("lav");
+      for (const t of tyskeRaad) expect(r.tiltak).not.toContain(t);
+    }
+  });
+
+  it("markkakerlakk som alternativ gjøres ikke om til tysk kakerlakk", () => {
+    const alt = parseAlternatives([{ name: "Kakerlakk", latinName: "Ectobius lapponicus", confidence: 40, hvorfor: "" }], "Kakerlakker");
+    expect(alt).toEqual([]);
+  });
+});
+
+describe("H1: omfanget til generelle navn", () => {
+  it("hvert generelt navn er et alias i biblioteket, og omfanget består av ekte arter i biblioteket", () => {
+    const n = (x: string) => x.toLowerCase();
+    for (const [navn, omfang] of Object.entries(GENERELLE_ALIASER)) {
+      const eier = PESTS.find((p) => p.gruppe !== "Ekskrementer" && (p.aliaser ?? []).some((a) => n(a) === n(navn)));
+      expect(eier, navn).toBeDefined();
+      expect(omfang, navn).toContain(eier!.norsk);
+      for (const art of omfang) expect(PESTS.some((p) => p.norsk === art && p.gruppe !== "Ekskrementer"), `${navn}: ${art}`).toBe(true);
+    }
   });
 });

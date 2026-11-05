@@ -1458,24 +1458,61 @@ function normalize(s: string): string {
 }
 
 /**
- * H1: generelle navn som dekker flere arter (f.eks. «mus», «veps», «møll»).
- * De slår fortsatt opp arten, men gir aldri en sikker bestemmelse alene –
- * bare et mulig forslag, med mindre det vitenskapelige navnet bekrefter
- * arten. Gjelder ikke ekskrementer, der «mus» og «rotte» er hovedsvarene.
+ * H1: generelle navn som dekker flere arter (f.eks. «mus», «veps», «møll»),
+ * med artene i biblioteket hvert navn kan gjelde. Norsk navn går foran:
+ * - Bekrefter det vitenskapelige navnet en art innenfor navnet, velges den
+ *   spesifikke arten («Kakerlakk» + Periplaneta americana → Amerikansk kakerlakk).
+ * - Peker det på en art i biblioteket utenfor navnet, er svaret motstridende
+ *   («Mus» + Rattus norvegicus).
+ * - Er det vitenskapelige navnet ukjent, er det en art utenfor listen – appen
+ *   velger ikke en art fra biblioteket.
+ * - Uten vitenskapelig navn blir det bare et mulig forslag («Mulig …»).
+ * Gjelder ikke ekskrementer, der «mus» og «rotte» er hovedsvarene.
  */
-export const GENERELLE_ALIASER: readonly string[] = [
-  "rotte", "mus", "skogmus", "rev", "due", "spurv", "måke", "måse",
-  "kakerlakk", "kakkerlakk", "jordmaur", "veps", "stor veps", "bie",
-  "borebille", "treorm", "lasioderma", "oryzaephilus", "møll", "flue",
-  "kjøttflue", "blåflue", "klyngeflue", "fruktflue", "midd", "blodmidd",
-  "edderkopp", "tegenaria", "flått",
-];
+const MUS = ["Husmus", "Liten skogmus", "Stor skogmus", "Klatremus", "Rødmus", "Markmus"];
+export const GENERELLE_ALIASER: Readonly<Record<string, readonly string[]>> = {
+  rotte: ["Brunrotte", "Svartrotte"],
+  mus: MUS,
+  skogmus: ["Liten skogmus", "Stor skogmus"],
+  rev: ["Rødrev"],
+  due: ["Bydue"],
+  spurv: ["Gråspurv"],
+  måke: ["Gråmåke"],
+  måse: ["Gråmåke"],
+  kakerlakk: ["Tysk kakerlakk", "Amerikansk kakerlakk", "Orientalsk kakerlakk", "Brunbåndet kakerlakk"],
+  kakkerlakk: ["Tysk kakerlakk", "Amerikansk kakerlakk", "Orientalsk kakerlakk", "Brunbåndet kakerlakk"],
+  jordmaur: ["Svart jordmaur", "Brun tremaur", "Svart tremaur"],
+  veps: ["Vanlig veps", "Jordveps", "Treveps", "Geithams"],
+  "stor veps": ["Geithams", "Treveps"],
+  bie: ["Honningbie", "Humle"],
+  borebille: ["Stripet borebille", "Brødbille", "Tobakksbille"],
+  treorm: ["Stripet borebille", "Husbukk"],
+  lasioderma: ["Tobakksbille"],
+  oryzaephilus: ["Sagtannet kornbille"],
+  møll: ["Klesmøll", "Pelsmøll", "Matmøll", "Melmøll"],
+  flue: ["Husflue", "Spyflue", "Vindusflue", "Bananflue", "Avløpsflue"],
+  kjøttflue: ["Spyflue"],
+  blåflue: ["Spyflue"],
+  klyngeflue: ["Vindusflue"],
+  fruktflue: ["Bananflue"],
+  midd: ["Husstøvmidd", "Fuglemidd"],
+  blodmidd: ["Fuglemidd"],
+  edderkopp: ["Husedderkopp"],
+  tegenaria: ["Husedderkopp"],
+  flått: ["Skogflått"],
+};
+
+/** Artene i biblioteket et generelt navn kan gjelde, eller undefined for et spesifikt navn. */
+export function generelltNavnOmfang(navn?: string | null): readonly string[] | undefined {
+  if (!navn) return undefined;
+  const n = normalize(navn);
+  const treff = Object.keys(GENERELLE_ALIASER).find((a) => normalize(a) === n);
+  return treff ? GENERELLE_ALIASER[treff] : undefined;
+}
 
 /** Er navnet et generelt navn som kan gjelde flere arter? */
 export function erGenereltNavn(navn?: string | null): boolean {
-  if (!navn) return false;
-  const n = normalize(navn);
-  return GENERELLE_ALIASER.some((a) => normalize(a) === n);
+  return generelltNavnOmfang(navn) !== undefined;
 }
 
 /** Slår opp art på norsk navn, latinsk navn eller alias. */

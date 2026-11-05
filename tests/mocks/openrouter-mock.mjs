@@ -43,7 +43,11 @@ if (process.env.ARTSORAKEL_TEST_MOCK_AI === "1") {
           ? { gruppe: "Biller", name: "Pelsbille", latinName: "Attagenus pellio" }
           : meldinger.includes("GENERELL-TEST")
             ? { gruppe: "Gnagere", name: "Mus", latinName: "" }
-            : null;
+            : meldinger.includes("MARKKAKERLAKK-TEST")
+              ? { gruppe: "Kakerlakker", name: "Kakerlakk", latinName: "Ectobius lapponicus" }
+              : meldinger.includes("KAKERLAKK-TEST")
+                ? { gruppe: "Kakerlakker", name: "Kakerlakk", latinName: "Periplaneta americana" }
+                : null;
     if (navnepar) {
       const { gruppe, ...art } = navnepar;
       const svar = system.includes("grovsorterer")

@@ -109,3 +109,22 @@ test("riktig navnepar: pelsbille blir pelsbille, ikke brun pelsbille", async ({ 
   expect(tekst).toContain("Attagenus pellio");
   expect(tekst).not.toContain("Attagenus smirnovi");
 });
+
+test("«Kakerlakk» + Periplaneta americana: amerikansk kakerlakk, ingen motstrid", async ({ page }) => {
+  await analyser(page, 115, "KAKERLAKK-TEST");
+  await expect(page.getByRole("heading", { level: 2, name: "Amerikansk kakerlakk" })).toBeVisible();
+  await expect(page.getByText("Analysen inneholder motstridende artsnavn")).toHaveCount(0);
+  const tekst = await pdf(page);
+  expect(tekst).toContain("Amerikansk kakerlakk");
+  expect(tekst).not.toContain("Tysk kakerlakk –");
+});
+
+test("«Kakerlakk» + Ectobius lapponicus (markkakerlakk): art utenfor listen, ikke tysk kakerlakk", async ({ page }) => {
+  await analyser(page, 116, "MARKKAKERLAKK-TEST");
+  await expect(page.getByRole("heading", { level: 2, name: "Mulig Kakerlakk" })).toBeVisible();
+  await expect(page.getByText(/Ikke i Ocabs database/)).toBeVisible();
+  await expect(page.getByText(/Tysk kakerlakk|Ikke sprøyt selv|Meld fra til huseier/)).toHaveCount(0);
+  const tekst = await pdf(page);
+  expect(tekst).toContain("Ectobius lapponicus");
+  expect(tekst).not.toMatch(/Tysk kakerlakk|Ikke sprøyt selv|Bør håndteres raskt/);
+});
