@@ -13,7 +13,9 @@ fått markkakerlakk.
 - Brun pelsbille (FHI s. 26): voksen og larve beskrevet hver for seg, utbredelse og sesong
   rettet (formerer seg bare innendørs, hele året), råd etter situasjon (én bille, gjentatte
   funn/larver, skade).
-- Pelsbille (FHI s. 27): én bille er ikke tegn på angrep; hva larvene skader.
+- Pelsbille (FHI s. 27 og FHIs nettside): voksen 3,5–5,5 mm, larve opptil 10 mm; én bille er
+  ikke tegn på angrep; hva larvene skader; varme 60 °C der materialet tåler det, frysing mulig,
+  men arten tåler kulde godt og en hjemmefryser gir ikke alltid god nok effekt.
 - Museumsbille (FHI s. 30): kjennetegn og utbredelse rettet; varmebehandling i stedet for
   frysing (billene tåler kulde); de fleste hus har museumsbille uten skade.
 - Fleskeklanner (FHI s. 24): larve opptil 13 mm; enkeltindivider må tolereres.

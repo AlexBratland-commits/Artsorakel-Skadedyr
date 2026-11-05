@@ -80,14 +80,29 @@ describe("Pelsbiller: kjennetegn og råd etter FHI", () => {
     expect(raad).not.toMatch(/insektmid|sprøyt/i);
   });
 
-  it("pelsbille: én bille er ikke tegn på angrep; varme, ikke frysing (tåler kulde)", () => {
+  // FHIs nettside (https://www.fhi.no/sk/skadedyrhandboka/biller/pelsbille/), kontrollert av fagansvarlig
+  it("pelsbille: 3,5–5,5 mm, larve opptil 10 mm; varme 60 °C der materialet tåler det, frysing mulig med forbehold", () => {
     const p = findPest("Pelsbille")!;
-    expect(p.kjennetegn).toMatch(/Voksen: 3,5–6 mm, svart/);
-    expect(p.kjennetegn).toMatch(/Larve: brun og hårete/);
+    expect(p.kjennetegn).toMatch(/Voksen: 3,5–5,5 mm, svart/);
+    expect(p.kjennetegn).toMatch(/Larve: brun og hårete, opptil 10 mm/);
     const raad = p.tiltak.join(" ");
     expect(raad).toMatch(/Én voksen bille kan ha fløyet inn utenfra/);
-    expect(raad).toMatch(/60 °C – dyrene tåler kulde godt/);
-    expect(raad).not.toMatch(/frys/i);
+    expect(raad).toMatch(/60 °C der materialet tåler det/);
+    expect(raad).toMatch(/Frysing kan også brukes, men arten tåler lave temperaturer godt, og en vanlig hjemmefryser gir ikke alltid god nok effekt/);
+    expect(raad).not.toMatch(/ikke frys|frysing (er )?uaktuel|frysing virker ikke/i);
+  });
+
+  it("frysing: ingen motstridende råd mellom pelsbillene og museumsbille – hver art etter sin kuldetoleranse", () => {
+    const raad = (art: string) => findPest(art)!.tiltak.join(" ");
+    // Brun pelsbille: frysing eller varme (FHI)
+    expect(raad("Brun pelsbille")).toMatch(/fryses eller varmebehandles/);
+    // Pelsbille: varme først, frysing mulig med forbehold om at arten tåler kulde
+    expect(raad("Pelsbille")).toMatch(/varme.*60 °C.*Frysing kan også brukes, men arten tåler lave temperaturer godt/);
+    // Museumsbille: varme – billene tåler kulde (FHI felthåndbok)
+    expect(raad("Museumsbille")).toMatch(/60 °C.*billene tåler kulde/);
+    expect(raad("Museumsbille")).not.toMatch(/frys/i);
+    // Ingen av dem sier at frysing er uaktuelt
+    for (const art of ["Brun pelsbille", "Pelsbille", "Museumsbille"]) expect(raad(art), art).not.toMatch(/frysing (er )?uaktuel|ikke frys/i);
   });
 
   it("museumsbille: FHI-kjennetegn, nord til Nordland, varme – ikke frysing", () => {

@@ -67,9 +67,9 @@ describe("H1: aliaser", () => {
 });
 
 describe("H1: fagdata for nye arter (FHI felthåndbok 2023)", () => {
-  it("pelsbille: 3,5–6 mm, svart med hvite flekker, utendørs opp til Troms", () => {
+  it("pelsbille: 3,5–5,5 mm (FHIs nettside), svart med hvite flekker, utendørs opp til Troms", () => {
     const p = findPest("Pelsbille")!;
-    expect(p.kjennetegn).toMatch(/3,5–6 mm/);
+    expect(p.kjennetegn).toMatch(/3,5–5,5 mm/);
     expect(p.kjennetegn).toMatch(/svart/i);
     expect(p.kjennetegn).toMatch(/hvite flekker/);
     expect(p.utbredelse).toMatch(/Troms/);

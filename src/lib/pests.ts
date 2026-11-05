@@ -815,9 +815,10 @@ export const PESTS: Pest[] = [
     ],
   },
   {
-    // H1: egen art, ikke alias for brun pelsbille (FHI felthåndbok 2023 s. 27)
+    // H1: egen art, ikke alias for brun pelsbille (FHI felthåndbok 2023 s. 27).
+    // Størrelser og frysing etter FHIs nettside: https://www.fhi.no/sk/skadedyrhandboka/biller/pelsbille/
     norsk: "Pelsbille", latin: "Attagenus pellio", slug: "pelsbille", gruppe: "Biller",
-    kjennetegn: "Voksen: 3,5–6 mm, svart med to hvite flekker på dekkvingene og tre hvite flekker bakerst på halsskjoldet. Larve: brun og hårete, opptil 8 mm, med lang haledusk",
+    kjennetegn: "Voksen: 3,5–5,5 mm, svart med to hvite flekker på dekkvingene og tre hvite flekker bakerst på halsskjoldet. Larve: brun og hårete, opptil 10 mm, med lang haledusk",
     forklaring: "Den voksne billen er svart med én tydelig hvit flekk på hver dekkvinge og tre små hvite flekker ved bakkanten av halsskjoldet. Brun pelsbille er omtrent like stor, men har brune dekkvinger og ingen hvite flekker. Larvene forveksles lett med larvene til brun pelsbille, som er mer vanlig – en larve alene gir derfor ikke en sikker bestemmelse.",
     utbredelse: "Utendørs opp til Troms, innendørs i hele landet",
     sesong: "Voksne biller svermer i blomsterenger i slutten av mai",
@@ -831,7 +832,7 @@ export const PESTS: Pest[] = [
       "Pakk utsatte gjenstander, som ull- og skinnklær, i plast eller tette beholdere",
       "Støvsug grundig – det fjerner dyr og reduserer mattilgangen",
       "Fjern fuglereder og tørre rotte- eller musekadavre i og ved huset",
-      "Behandle angrepne gjenstander med varme, for eksempel 60 °C – dyrene tåler kulde godt",
+      "Behandle angrepne gjenstander med varme, for eksempel 60 °C der materialet tåler det. Frysing kan også brukes, men arten tåler lave temperaturer godt, og en vanlig hjemmefryser gir ikke alltid god nok effekt",
     ],
   },
   {
