@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { findPest, findPestInGroup } from "@/lib/pests";
 import { chatModel, openRouterApiKey } from "@/lib/server/config";
 import { MAUR_FUKT_REGEL, TETTEREGEL_GNAGERE } from "@/lib/server/fagregler";
 import { kallOpenRouter } from "@/lib/server/openrouter";
@@ -14,6 +13,7 @@ import {
   type GrenseResultat,
 } from "@/lib/server/limits";
 import { lesChatBillett, signerChatSvar, verifiserChatSvar } from "@/lib/server/chat-ticket";
+import { beskrivFunn } from "@/lib/server/chat-funn";
 import { rensTekst } from "@/lib/server/validation";
 import { loggHendelse } from "@/lib/server/log";
 import { erHeltUtenforFaget, UTENFOR_FAGET_SVAR } from "@/lib/server/chat-tema";
@@ -144,28 +144,8 @@ async function svarPaaSporsmal(request: NextRequest): Promise<NextResponse> {
   const dogn = await sjekkGrenser([chatDognRegel()]);
   if (!dogn.ok) return grenseSvar(dogn);
 
-  // Samme navn kan finnes i flere grupper (Brunrotte som dyr og som
-  // ekskrementer), så gruppen avgjør hvilken oppføring vi bruker.
-  const pest =
-    (billett.gruppe ? findPestInGroup(billett.art, billett.gruppe) : undefined) ?? findPest(billett.art);
-  // Art AI-en kjente igjen, men som ikke er i databasen. Kort og uten
-  // linjeskift, siden den havner i systemprompten.
-  const annenArt = billett.annenArt?.replace(/\s+/g, " ").replace(/["\\]/g, "").trim().slice(0, 80) || "";
-
-  const funn = pest
-    ? `Funnet er ${pest.norsk} (${pest.latin})${pest.gruppe === "Ekskrementer" ? ", bestemt ut fra ekskrementer" : ""}.
-
-DETTE VET VI OM ARTEN
-Kjennetegn: ${pest.kjennetegn}
-Utbredelse: ${pest.utbredelse}
-Aktiv: ${pest.sesong}
-Alvorlighet: ${pest.alvorlighet}
-Anbefalte tiltak: ${pest.tiltak.join(" | ")}
-${pest.forveksles?.length ? `Forveksles med: ${pest.forveksles.join(" | ")}` : ""}
-${pest.notat ? `Viktig: ${pest.notat}` : ""}`
-    : annenArt
-      ? `Bildeanalysen foreslo "${annenArt}", en art som ikke finnes i Ocabs database. Du har ingen kvalitetssikret informasjon om den, så svar generelt og med forbehold, og anbefal å kontakte Ocab for en sikker vurdering.`
-      : `Bildeanalysen klarte ikke å bestemme arten. Hjelp brukeren med generelle råd, med hva de kan se etter for å finne ut hva det er, og med å ta et bedre bilde (nærmere, skarpt, noe kjent ved siden av for størrelse).`;
+  // H3: funnet beskrives fra den signerte billetten, med analysens usikkerhet.
+  const { tekst: funn, loggArt } = beskrivFunn(billett);
 
   const system = `Du er Ocabs skadedyrassistent og svarer på spørsmål etter en bildeanalyse.
 
@@ -211,7 +191,7 @@ ${MAUR_FUKT_REGEL}
   const svar = ai.content.trim();
   // finish_reason "length" = modellen gikk tom for tokens og svaret ble kuttet.
   loggHendelse("chat", {
-    art: pest?.norsk ?? (annenArt ? "annen_art" : "ukjent_funn"),
+    art: loggArt,
     svar_tegn: svar.length,
     finish: ai.finishReason,
     tur: messages.length,

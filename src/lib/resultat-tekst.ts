@@ -50,6 +50,34 @@ export const ELDRE_ARTSDATA_TEKST = "Artsopplysninger kan ha blitt oppdatert sid
 
 export const OCAB_SKADEDYR_URL = "https://www.ocab.no/skade/skadedyr/";
 
+/**
+ * H3: sikkerheten som vises for resultatet – for en art i biblioteket
+ * analysens tall, for en art utenfor listen AI-ens tall for den arten.
+ * Ukjente og motstridende funn har ingen sikkerhet (aldri «0»).
+ */
+export function visningsSikkerhet(result: AnalysisResult): { confidence: number; etikett: string } | undefined {
+  const annen = !result.found ? result.annenArt : undefined;
+  const c = result.found ? result.confidence : annen?.confidence;
+  if (typeof c !== "number" || !Number.isFinite(c)) return undefined;
+  return { confidence: c, etikett: SIKKERHET_ETIKETT[sikkerhetsnivaa(c)] };
+}
+
+/** H3: tekst til «Meld fra om feil bestemmelse» – samme navn og sikkerhet som på skjermen. */
+export function feilmeldingTekst(result: AnalysisResult): string {
+  const sikkerhet = visningsSikkerhet(result);
+  const annen = !result.found && result.annenArt;
+  const latin = latinskNavn(result);
+  const hva =
+    result.found || annen
+      ? `Appen foreslo ${visningsnavn(result)}${latin ? ` (${latin})` : ""}${annen ? " – ikke i databasen" : ""}${
+          sikkerhet ? `, sikkerhet: ${sikkerhet.etikett.toLowerCase()} (tall i analysen: ${sikkerhet.confidence})` : ""
+        }.`
+      : "Appen kunne ikke identifisere funnet sikkert.";
+  const motstrid = motstridKandidater(result);
+  const motstridLinje = motstrid.length ? `\nMotstridende artsnavn – mulige arter: ${motstrid.join(", ")}.` : "";
+  return `${hva}${motstridLinje}\n\nJeg tror det egentlig er: \n\nHva jeg så: \n`;
+}
+
 export function annenArtTekst(result: AnalysisResult): string | undefined {
   const annen = !result.found ? result.annenArt : undefined;
   if (!annen) return undefined;

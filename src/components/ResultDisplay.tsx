@@ -28,6 +28,7 @@ import {
   harSterkereAlternativ,
   ELDRE_ARTSDATA_TEKST,
   GENERELT_FORBEHOLD,
+  feilmeldingTekst,
   generelltNavnTekst,
   motstridKandidater,
   MOTSTRID_KANDIDATER_TITTEL,
@@ -122,9 +123,7 @@ export default function ResultDisplay({
 
   const rapporter = `mailto:post@ocab.no?subject=${encodeURIComponent(
     `Feil artsbestemmelse: ${visningsnavn}`
-  )}&body=${encodeURIComponent(
-    `Appen foreslo ${visningsnavn} (${latinNavn})${annen ? " – ikke i databasen" : ""}, sikkerhet: ${SIKKERHET_ETIKETT[nivaa].toLowerCase()} (modellens tall: ${result.confidence}).\n\nJeg tror det egentlig er: \n\nHva jeg så: \n`
-  )}`;
+  )}&body=${encodeURIComponent(feilmeldingTekst(result))}`;
 
   return (
     <section

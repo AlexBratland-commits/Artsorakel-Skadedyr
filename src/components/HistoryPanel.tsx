@@ -4,7 +4,8 @@ import { useState } from "react";
 import { ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import type { HistoryEntry } from "@/lib/types";
 import { formatTime } from "@/lib/history";
-import { LOCATIONS, SIKKERHET_ETIKETT, sikkerhetsnivaa } from "@/lib/types";
+import { LOCATIONS } from "@/lib/types";
+import { visningsSikkerhet } from "@/lib/resultat-tekst";
 
 const FORSIDE_ANTALL = 3;
 
@@ -73,8 +74,8 @@ export default function HistoryPanel({
                 <span className="block truncate text-xs text-muted">
                   {formatTime(e.tid)}
                   {e.sted && ` · ${stedLabel(e.sted)}`}
-                  {e.resultat.found &&
-                    ` · ${SIKKERHET_ETIKETT[sikkerhetsnivaa(e.resultat.confidence)]}`}
+                  {/* H3: samme sikkerhet som på skjermen – også for arter utenfor listen */}
+                  {visningsSikkerhet(e.resultat) && ` · ${visningsSikkerhet(e.resultat)!.etikett}`}
                 </span>
               </span>
             </button>

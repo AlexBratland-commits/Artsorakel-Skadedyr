@@ -1,5 +1,24 @@
 # Endringslogg
 
+## Uutgitt – H3: funn-chatten bevarer usikkerheten
+
+AI-modeller, identifiseringsprompter og artsbibliotek er uendret.
+
+- Chatbilletten (signert av serveren) har nå med sikkerhetsnivå, «Mulig …», forklaring ved
+  generelt navn, alternativer, motstridende artsnavn og vitenskapelig navn for art utenfor
+  listen. Eldre billetter virker fortsatt.
+- Chatten omtaler funnet som et forslag fra bildeanalysen, aldri som bekreftet. Ved lav
+  sikkerhet alltid «mulig …»; ved middels «sannsynlig, bør bekreftes»; ved motstridende navn
+  skal den ikke velge art.
+- Råd for akkurat den arten som er foreslått, ikke for hele dyregruppen; lite alvorlige arter
+  omtales slik.
+- Art utenfor biblioteket: ingen automatiske råd om bekjempelse, gift, limfeller eller
+  profesjonell bekjempelse. Markkakerlakk får FHIs råd (ikke et skadedyr, skal ikke bekjempes).
+  Markkakerlakk er fortsatt ikke i artsbiblioteket.
+- «Meld fra om feil bestemmelse» og historikken bruker samme sikkerhet som resultatsiden. For
+  en art utenfor listen var det «lav sikkerhet (modellens tall: 0)» i e-posten mens siden sa
+  «høy sikkerhet». Ukjente og motstridende funn får ingen sikkerhet i e-posten.
+
 ## Uutgitt – H1: artsaliaser og motstridende artsnavn
 
 AI-modeller og analyseprompter er uendret, bortsett fra at artslisten som sendes til modellen

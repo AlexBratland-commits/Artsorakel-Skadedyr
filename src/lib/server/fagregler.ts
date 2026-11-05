@@ -20,3 +20,16 @@ export const MAUR_FUKT_REGEL = `- Maur og fukt: ved mistanke om maurreir i en by
 - Ikke påstå at alle maurproblemer skyldes vannskade, og ikke at fravær av synlig fukt utelukker stokkmaur. Stokkmaur kan også etablere seg i tørt treverk og isolasjon.
 - Ikke bagatelliser et etablert angrep i en bygning, heller ikke av mindre arter som brun tremaur: reir inne i bygningskonstruksjoner bør undersøkes, og profesjonell bekjempelse kan være nødvendig. Gi aldri instruksjoner om bruk av giftmidler.
 - Forsikring: om skaden dekkes av forsikringen, avhenger av vilkårene i den enkelte forsikringsavtalen. Ikke lov forsikringsdekning.`;
+
+/**
+ * H3: kjente arter utenfor artsbiblioteket som ikke skal behandles som
+ * skadedyr i funn-chatten. Kilde: FHI felthåndbok 2023 s. 19 (markkakerlakk).
+ * Markkakerlakk legges i artsbiblioteket separat etter faglig godkjenning.
+ */
+export const ARTER_UTENFOR_BIBLIOTEKET: readonly { treff: readonly string[]; regel: string }[] = [
+  {
+    treff: ["markkakerlakk", "ectobius"],
+    regel:
+      "Gjelder det markkakerlakk (Ectobius lapponicus), er den etter FHI ikke et skadedyr og skal ikke bekjempes. Den er den eneste frilevende kakerlakkarten i Norge, vanlig utendørs over hele landet, og forviller seg ofte inn i hus, men kan ikke formere seg innendørs og gjør ingen skade. Forklar at den kan forveksles med tysk og brunbeltet kakerlakk, og at Ocab kan bekrefte arten ved tvil – særlig hvis det er mange, eller de sees innendørs over tid.",
+  },
+];
