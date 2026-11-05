@@ -15,7 +15,7 @@
     "check": "npm run typecheck && npm run lint && npm test"
   },
   "dependencies": {
-    "lucide-react": "^1.42.0",
+    "lucide-react": "^1.66.0",
     "next": "16.4.5",
     "pdf-lib": "1.17.1",
     "react": "19.2.8",
