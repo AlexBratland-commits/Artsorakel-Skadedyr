@@ -370,8 +370,7 @@ export default function Home() {
                   maxLength={300}
                   rows={6}
                   placeholder={
-                    "F.eks. smuldrer lett til pulver når jeg trykker på det, glinser litt, " +
-                    "funnet i en haug rett under en sprekk på loftet. Eller: sterk, skarp " +
+                    "F.eks. tørre og glinsende, ligger i en haug rett under en sprekk på loftet. Eller: sterk, skarp " +
                     "lukt, ligger på en stein ved bekken, inneholder det som ser ut som " +
                     "fiskebein. Ta med lukt, konsistens (fast/smuldrer/glinsende), om det " +
                     "ligger spredt eller i haug/klynge, og nøyaktig hvor du fant det."
@@ -402,12 +401,13 @@ export default function Home() {
               </>
             )}
 
-            {/* Oppgave 3: mus og flaggermus er like store på bilder – størrelse,
-                funnsted og om de smuldrer avgjør. Tipset stopper ikke analysen. */}
+            {/* Mus og flaggermus er like store på bilder – størrelse, utseende og
+                funnsted avgjør. Brukeren skal aldri ta på funnet (M9). Tipset stopper ikke analysen. */}
             {analyseType === "ekskrementer" && !beskrivelse.trim() && !droppingSize && (
               <p className="mt-6 rounded-lg border-l-2 border-ocab-500 bg-[color:var(--surface-sunken)] px-4 py-3 text-sm">
-                Tips: Oppgi omtrentlig størrelse, hvor du fant dem og om de smuldrer når du
-                trykker på dem. Det gir et sikrere svar, særlig for å skille mus fra flaggermus.
+                Ikke ta på ekskrementene. Beskriv det du ser: omtrentlig størrelse, form, farge, om
+                de er tørre og glinsende, og hvor de ligger. Ta helst et nærbilde med en mynt eller
+                linjal ved siden av.
               </p>
             )}
 

@@ -29,6 +29,7 @@ import {
   ELDRE_ARTSDATA_TEKST,
   GENERELT_FORBEHOLD,
   OCAB_SKADEDYR_URL,
+  oppryddingFor,
   SIKKERHET_FORKLARING,
   SIKKERHET_USIKKER_TILLEGG,
   USIKKER_KANDIDAT_TEKST,
@@ -81,6 +82,7 @@ export default function ResultDisplay({
   const usikker = nivaa !== "høy";
   const annen = !result.found ? result.annenArt : undefined;
   const visningsnavn = lagVisningsnavn(result);
+  const opprydding = oppryddingFor(result);
   const latinNavn = annen ? annen.latinName : result.latinName;
 
   const delingstekst = result.found
@@ -340,6 +342,13 @@ export default function ResultDisplay({
               <p className="rounded-lg border-l-2 border-signal-500 bg-signal-100/50 px-4 py-3 text-sm dark:bg-signal-600/10">
                 {EKSKREMENT_FORBEHOLD}
               </p>
+            )}
+
+            {opprydding && (
+              <div className="rounded-lg border-l-2 border-ocab-500 bg-[color:var(--surface-sunken)] px-4 py-3 text-sm">
+                <h3 className="font-semibold">Trygg opprydding</h3>
+                <p className="mt-1">{opprydding}</p>
+              </div>
             )}
 
             <p className="rounded-lg border-l-2 border-signal-500 bg-signal-100/50 px-4 py-3 text-sm dark:bg-signal-600/10">

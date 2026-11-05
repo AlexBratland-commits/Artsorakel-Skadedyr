@@ -506,6 +506,7 @@ export async function lagPdfRapport(
     o.overskrift("Anbefalte tiltak", o.punktStart(innhold.tiltak));
     o.punktliste(innhold.tiltak);
   }
+  if (innhold.opprydding) o.boks(innhold.opprydding, { bakgrunn: FARGE.ocab50, kant: FARGE.ocab500, tittel: "Trygg opprydding" });
   if (innhold.bekreftelse.length) {
     o.overskrift("Slik bekrefter du funnet", o.punktStart(innhold.bekreftelse));
     o.punktliste(innhold.bekreftelse, FARGE.ocab500);

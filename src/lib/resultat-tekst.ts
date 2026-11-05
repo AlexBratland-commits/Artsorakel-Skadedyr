@@ -27,6 +27,22 @@ export const SIKKERHET_USIKKER_TILLEGG =
 export const EKSKREMENT_FORBEHOLD =
   "Dette er en AI-vurdering basert på bilde og oppgitte kjennetegn, ikke en laboratorieprøve. Er du usikker, eller gjelder det et sted der sikker bestemmelse er viktig – kontakt Ocab for bekreftelse.";
 
+/**
+ * Trygg opprydding av gnager- og flaggermusekskrementer (M9). Bygger på FHIs
+ * råd: fukt med klut, ikke kost eller støvsuger, bruk hansker og munnbind.
+ */
+export const OPPRYDDING_EKSKREMENTER =
+  "Ved opprydding: bruk hansker og munnbind, fukt ekskrementene med såpevann og tørk opp med klut. Ikke fei eller støvsug – det kan virvle opp smittestoffer.";
+
+/** Ekskrementtyper som får oppryddingsrådet. Ukjente ekskrementer får det også. */
+const OPPRYDDING_ARTER = new Set(["Mus", "Brunrotte", "Flaggermus"]);
+
+/** Oppryddingsråd for ekskrementfunn, ellers undefined (bilder av dyr, mårdyr). */
+export function oppryddingFor(result: AnalysisResult): string | undefined {
+  if (result.gruppe !== "Ekskrementer") return undefined;
+  return !result.found || OPPRYDDING_ARTER.has(result.name) ? OPPRYDDING_EKSKREMENTER : undefined;
+}
+
 export const GENERELT_FORBEHOLD =
   "Svaret er et forslag fra en bildeanalyse og kan være feil. Arter som ligner på hverandre – for eksempel skjeggkre og sølvkre – krever limfeller og en fagperson for sikker bestemmelse.";
 
