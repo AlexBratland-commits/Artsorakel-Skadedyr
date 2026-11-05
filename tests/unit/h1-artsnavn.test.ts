@@ -1,7 +1,7 @@
 /**
  * H1 (revisjon): feilaktige aliaser og motstridende artsnavn.
  * - Pelsbille (Attagenus pellio) og rødmus (Myodes rutilus) er egne arter,
- *   ikke aliaser for brun pelsbille og klatremus (FHI felthåndbok 2023 s. 25 og 119).
+ *   ikke aliaser for brun pelsbille og klatremus (FHI felthåndbok 2023 s. 27 og 120).
  * - «anthrenus» (slekt med to arter i biblioteket) og «hundelopp»/«loppe»
  *   peker ikke lenger på én art.
  * - Peker norsk og vitenskapelig navn på forskjellige arter, blir resultatet

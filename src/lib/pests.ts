@@ -160,7 +160,7 @@ export const PESTS: Pest[] = [
     ],
   },
   {
-    // H1: egen art, ikke alias for klatremus (FHI felthåndbok 2023 s. 119)
+    // H1: egen art, ikke alias for klatremus (FHI felthåndbok 2023 s. 120)
     norsk: "Rødmus", latin: "Myodes rutilus", slug: "mus", gruppe: "Gnagere",
     kjennetegn: "8–12 cm kropp, rødbrun rygg, gulbrune sider, gråhvit buk, små ører, kort og tett behåret hale (2,5–4 cm)",
     forklaring: "Ligner klatremus: rødbrun rygg, litt butt snute og små ører. Rødmus har gulbrune sider og en kort, tett behåret hale på 2,5–4 cm. Klatremus har grå sider og en lengre, tydelig tofarget hale på 3–7 cm. Utbredelsen hjelper: rødmus finnes fra Salten og nordover, klatremus nord til Salten. Er funnsted eller hale usikker, legg den andre i \"alternativer\".",
@@ -786,7 +786,7 @@ export const PESTS: Pest[] = [
     ],
   },
   {
-    // H1: egen art, ikke alias for brun pelsbille (FHI felthåndbok 2023 s. 25)
+    // H1: egen art, ikke alias for brun pelsbille (FHI felthåndbok 2023 s. 27)
     norsk: "Pelsbille", latin: "Attagenus pellio", slug: "pelsbille", gruppe: "Biller",
     kjennetegn: "3,5–6 mm, svart med to hvite flekker på dekkvingene og tre hvite flekker bakerst på halsskjoldet. Larven er brun og hårete, opptil 8 mm, med lang haledusk",
     forklaring: "Den voksne billen er svart med én tydelig hvit flekk på hver dekkvinge og tre små hvite flekker ved bakkanten av halsskjoldet. Brun pelsbille er omtrent like stor, men har brune dekkvinger og ingen hvite flekker. Larvene forveksles lett med larvene til brun pelsbille, som er mer vanlig – en larve alene gir derfor ikke en sikker bestemmelse.",

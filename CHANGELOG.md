@@ -6,7 +6,7 @@ AI-modeller og analyseprompter er uendret, bortsett fra at artslisten som sendes
 nå har med de to nye artene.
 
 - Pelsbille (*Attagenus pellio*) og rødmus (*Myodes rutilus*) er egne arter med fagdata fra FHIs
-  felthåndbok 2023 (s. 25 og 119). De var før aliaser for brun pelsbille og klatremus.
+  felthåndbok 2023 (s. 27 og 120). De var før aliaser for brun pelsbille og klatremus.
 - Fjernet aliaser som pekte på feil art: «anthrenus» (to arter i slekten), «hundelopp» og «loppe»
   (katteloppe er etter FHI en sjeldnere art i Norge).
 - Etter FHI: klatremus finnes nord til Salten, brun pelsbille har svart halsskjold, og
