@@ -176,3 +176,46 @@ test("tastatur og skjermleser: boblen har navn, nås med Tab og åpner chatten",
   await page.keyboard.press("Escape");
   await expect(boble).toBeFocused();
 });
+
+test("Safari-adresselinjen: boblen er samme element, med samme class/style, synlig og rund mens vindushøyden endres under scrolling", async ({ page }) => {
+  const bilde = await testbilde(164);
+  await page.goto("/");
+  await page.locator('input[type="file"]').setInputFiles(bilde);
+  await page.getByRole("button", { name: "Artsbestem bildet" }).click();
+  await expect(page.getByRole("button", { name: "Last ned PDF-rapport" })).toBeVisible();
+  slettFil(bilde);
+  await page.waitForTimeout(400);
+
+  // Husk elementet og følg med på alle endringer i class, style og data-*
+  await page.evaluate((sel) => {
+    const w = window as unknown as { __boble: Element; __endringer: string[] };
+    w.__boble = document.querySelector(sel)!;
+    w.__endringer = [];
+    new MutationObserver((m) => m.forEach((e) => w.__endringer.push(e.attributeName ?? "?"))).observe(w.__boble, { attributes: true });
+  }, BOBLE);
+
+  const { width, height } = page.viewportSize()!;
+  const b = await bunn(page);
+  const maalinger: string[] = [];
+  // Safari viser og skjuler adresselinjen mens man scroller: vindushøyden veksler
+  for (const [i, y] of [0, b / 4, b / 2, (3 * b) / 4, b, b / 2, 0].entries()) {
+    await page.setViewportSize({ width, height: i % 2 ? height - 80 : height });
+    maalinger.push(...(await scrollOgMal(page, await page.evaluate(() => window.scrollY), Math.round(y))));
+  }
+  await page.setViewportSize({ width, height });
+
+  // Samme størrelse, synlig og ikke løftet hele veien (avstand til hjørnet kan bare
+  // følge vindushøyden, ikke endre seg ellers)
+  for (const m of new Set(maalinger)) {
+    const [bredde, hoyde, hoyre, nederst, opacity, visibility, , modus, transform] = m.split("|");
+    expect([bredde, hoyde, opacity, visibility, modus, transform]).toEqual(["52", "52", "1", "visible", "kompakt", "-"]);
+    expect(Number(hoyre)).toBeGreaterThanOrEqual(16);
+    expect(Number(nederst)).toBeGreaterThanOrEqual(16);
+  }
+  const resultat = await page.evaluate((sel) => {
+    const w = window as unknown as { __boble: Element; __endringer: string[] };
+    return { sammeElement: document.querySelector(sel) === w.__boble, endringer: w.__endringer };
+  }, BOBLE);
+  expect(resultat.sammeElement, "boblen ble montert på nytt").toBe(true);
+  expect(resultat.endringer, "class/style/data endret seg").toEqual([]);
+});
