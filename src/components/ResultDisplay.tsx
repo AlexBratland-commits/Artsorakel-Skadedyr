@@ -28,6 +28,7 @@ import {
   harSterkereAlternativ,
   ELDRE_ARTSDATA_TEKST,
   GENERELT_FORBEHOLD,
+  motstridTekst,
   OCAB_SKADEDYR_URL,
   oppryddingFor,
   SIKKERHET_FORKLARING,
@@ -83,6 +84,7 @@ export default function ResultDisplay({
   const annen = !result.found ? result.annenArt : undefined;
   const visningsnavn = lagVisningsnavn(result);
   const opprydding = oppryddingFor(result);
+  const motstrid = motstridTekst(result);
   const latinNavn = annen ? annen.latinName : result.latinName;
 
   const delingstekst = result.found
@@ -155,6 +157,11 @@ export default function ResultDisplay({
                 Ikke i Ocabs database – forslaget kommer fra AI-en alene
                 ({SIKKERHET_ETIKETT[sikkerhetsnivaa(annen.confidence)].toLowerCase()}).
                 {annen.hvorfor && <span className="mt-1 block">{annen.hvorfor}</span>}
+              </p>
+            )}
+            {motstrid && (
+              <p className="mt-3 max-w-prose rounded-lg border-l-2 border-grad-middels bg-[color:var(--surface-sunken)] px-4 py-2 text-sm">
+                {motstrid}
               </p>
             )}
             {result.usikkerKandidat && (

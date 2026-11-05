@@ -56,6 +56,19 @@ export function annenArtTekst(result: AnalysisResult): string | undefined {
   return `Ikke i Ocabs database – forslaget kommer fra AI-en alene (${SIKKERHET_ETIKETT[sikkerhetsnivaa(annen.confidence)].toLowerCase()}).`;
 }
 
+/**
+ * H1: modellen oppga et norsk og et vitenskapelig navn som peker på
+ * forskjellige arter. Samme tekst på skjermen, i historikken og i PDF-en.
+ * Tåler ødelagte felt fra eldre lagret historikk.
+ */
+export function motstridTekst(result: AnalysisResult): string | undefined {
+  const m = result.motstrid as Partial<Record<string, unknown>> | undefined;
+  if (result.found || !m) return undefined;
+  const { navn, latin, navnArt, latinArt } = m;
+  if (![navn, latin, navnArt, latinArt].every((x) => typeof x === "string" && x.trim())) return undefined;
+  return `AI-en oppga navn som peker på forskjellige arter: «${navn}» er ${navnArt}, mens «${latin}» er ${latinArt}. Artsorakel velger ikke mellom dem. Bestemmelsen er usikker og bør bekreftes av en fagperson.`;
+}
+
 /** Navnet som vises som overskrift for resultatet. */
 export function visningsnavn(result: AnalysisResult): string {
   const annen = !result.found ? result.annenArt : undefined;

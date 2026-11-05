@@ -24,7 +24,7 @@ export default defineConfig({
   reporter: [["list"]],
   use: { ...devices["Pixel 7"], trace: "retain-on-failure" },
   projects: [
-    { name: "åpen", testMatch: /(app|ekskrementer|heic|endringer-etter-test|assistent|historikk|tema|revisjon|m9)\.spec\.ts/, use: { baseURL: "http://localhost:3201" } },
+    { name: "åpen", testMatch: /(app|ekskrementer|heic|endringer-etter-test|assistent|historikk|tema|revisjon|m9|h1)\.spec\.ts/, use: { baseURL: "http://localhost:3201" } },
     {
       name: "pc",
       testMatch: /(assistent-pc|tema|pdf-samtale)\.spec\.ts/,

@@ -28,6 +28,16 @@ export interface AnnenArt {
   hvorfor: string;
 }
 
+/** Navnene modellen oppga, og artene de peker på i Ocabs database (H1). */
+export interface Motstrid {
+  navn: string;
+  latin: string;
+  /** Arten det norske navnet peker på, f.eks. «Klatremus (Myodes glareolus)». */
+  navnArt: string;
+  /** Arten det vitenskapelige navnet peker på. */
+  latinArt: string;
+}
+
 /** Det klienten faktisk får – AI-svar + berikelse fra vår egen artsdatabase. */
 export interface AnalysisResult extends AiIdentification {
   confidence: number;
@@ -54,6 +64,12 @@ export interface AnalysisResult extends AiIdentification {
   usikkerKandidat?: boolean;
   /** Satt når ingen art i databasen passet, men modellen kjente igjen dyret. */
   annenArt?: AnnenArt;
+  /**
+   * H1: norsk og vitenskapelig navn fra modellen pekte på forskjellige arter.
+   * Resultatet er da ikke en bestemmelse (found: false), og begge artene
+   * vises som alternativer med lav sikkerhet.
+   */
+  motstrid?: Motstrid;
   /** Satt hvis svaret kom fra serverens cache (samme bilde analysert før). */
   cached?: boolean;
   /**

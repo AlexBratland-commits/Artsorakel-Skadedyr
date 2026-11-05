@@ -33,6 +33,22 @@ if (process.env.ARTSORAKEL_TEST_MOCK_AI === "1") {
         headers: { "content-type": "application/json" },
       });
     }
+    // H1: motstridende og riktige navnepar, styres av notatfeltet.
+    const meldinger = JSON.stringify(body.messages);
+    const navnepar = meldinger.includes("MOTSTRID-TEST")
+      ? { gruppe: "Gnagere", name: "Klatremus", latinName: "Myodes rutilus" }
+      : meldinger.includes("PELSBILLE-TEST")
+        ? { gruppe: "Biller", name: "Pelsbille", latinName: "Attagenus pellio" }
+        : null;
+    if (navnepar) {
+      const svar = system.includes("grovsorterer")
+        ? JSON.stringify({ gruppe: navnepar.gruppe })
+        : JSON.stringify({ found: true, name: navnepar.name, latinName: navnepar.latinName, description: "Testbeskrivelse.", observasjon: "Testobservasjon.", confidence: 92, alternativer: [] });
+      return new Response(JSON.stringify({ choices: [{ message: { content: svar }, finish_reason: "stop" }] }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    }
     // Testtilfeller for ekskrementer styres av ord i brukerens beskrivelse.
     const ekskrementSvar = system.includes("UKJENT-TEST")
       ? { found: false, name: "Ukjent", latinName: "Ukjent", description: "x", observasjon: "Runde, 6 mm", confidence: 0,

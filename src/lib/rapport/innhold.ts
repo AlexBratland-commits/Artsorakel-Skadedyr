@@ -18,6 +18,7 @@ import {
   ELDRE_ARTSDATA_TEKST,
   GENERELT_FORBEHOLD,
   latinskNavn,
+  motstridTekst,
   OCAB_SKADEDYR_URL,
   oppryddingFor,
   SIKKERHET_FORKLARING,
@@ -122,6 +123,8 @@ export function lagRapportInnhold(result: AnalysisResult, valg: RapportValg): Ra
   const merknader: string[] = [];
   const annen = annenArtTekst(result);
   if (annen) merknader.push(annen);
+  const motstrid = motstridTekst(result);
+  if (motstrid) merknader.push(motstrid);
   if (!result.found && result.annenArt?.hvorfor) merknader.push(result.annenArt.hvorfor);
   if (result.usikkerKandidat) merknader.push(USIKKER_KANDIDAT_TEKST);
   if (valg.eldreArtsdata) merknader.push(ELDRE_ARTSDATA_TEKST);
