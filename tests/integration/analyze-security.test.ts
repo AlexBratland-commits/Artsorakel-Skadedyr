@@ -67,8 +67,10 @@ describe("S1: ubegrensede felter", () => {
     const ai = installFakeAi();
     const { POST } = await load();
     await POST(analyzeRequest({ image: await jpeg(11), fields: { notesAnimal: "a".repeat(10_000) } }));
-    expect(ai.calls[1].system).toContain(`"${"a".repeat(300)}"`);
-    expect(ai.calls[1].system).not.toContain("a".repeat(301));
+    // M1: notatene ligger i brukermeldingen (avgrenset), ikke i systemprompten.
+    expect(ai.calls[1].userText).toContain(`<brukernotater>\n${"a".repeat(300)}\n</brukernotater>`);
+    expect(ai.calls[1].userText).not.toContain("a".repeat(301));
+    expect(ai.calls[1].system).not.toContain("a".repeat(300));
   });
 });
 

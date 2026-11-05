@@ -9,7 +9,7 @@ import {
   tilgangskoder,
 } from "@/lib/server/access";
 import { sjekkGrenser, tilgangsforsokRegel } from "@/lib/server/limits";
-import { forStorForesporsel, ipNokkel, klientIp, sjekkOpprinnelse } from "@/lib/server/request-guards";
+import { forStorForesporsel, ipNokkel, klientIp, lesBegrensetJson, sjekkOpprinnelse } from "@/lib/server/request-guards";
 import { loggHendelse } from "@/lib/server/log";
 import { medGrensekontroll } from "@/lib/server/svar";
 import { sjekkSikkerhetsoppsett } from "@/lib/server/oppsett";
@@ -64,12 +64,10 @@ async function loggInn(request: NextRequest): Promise<NextResponse> {
   if (forStorForesporsel(request, 4096)) {
     return NextResponse.json({ error: "Ugyldig forespørsel." }, { status: 400 });
   }
-  let kode: unknown;
-  try {
-    kode = (await request.json())?.kode;
-  } catch {
-    return NextResponse.json({ error: "Ugyldig forespørsel." }, { status: 400 });
-  }
+  // M2: grensen gjelder faktisk innhold, også uten eller med feil Content-Length.
+  const lest = await lesBegrensetJson(request, 4096);
+  if (!lest.ok) return NextResponse.json({ error: "Ugyldig forespørsel." }, { status: 400 });
+  const kode: unknown = (lest.data as { kode?: unknown } | null)?.kode;
 
   const gyldig = sjekkKode(kode);
   if (!gyldig) {

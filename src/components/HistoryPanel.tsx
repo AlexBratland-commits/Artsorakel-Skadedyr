@@ -5,7 +5,7 @@ import { ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import type { HistoryEntry } from "@/lib/types";
 import { formatTime } from "@/lib/history";
 import { LOCATIONS } from "@/lib/types";
-import { visningsSikkerhet } from "@/lib/resultat-tekst";
+import { historikkMerknad, visningsSikkerhet } from "@/lib/resultat-tekst";
 
 const FORSIDE_ANTALL = 3;
 
@@ -76,6 +76,7 @@ export default function HistoryPanel({
                   {e.sted && ` · ${stedLabel(e.sted)}`}
                   {/* H3: samme sikkerhet som på skjermen – også for arter utenfor listen */}
                   {visningsSikkerhet(e.resultat) && ` · ${visningsSikkerhet(e.resultat)!.etikett}`}
+                  {historikkMerknad(e.resultat) && ` · ${historikkMerknad(e.resultat)}`}
                 </span>
               </span>
             </button>

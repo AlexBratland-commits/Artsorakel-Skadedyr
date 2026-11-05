@@ -85,7 +85,9 @@ export default function ResultDisplay({
   const grad = SEVERITY[result.severity] ?? SEVERITY.middels;
   const nivaa = sikkerhetsnivaa(result.confidence);
   const nivaaTrinn = { lav: 1, middels: 2, høy: 3 }[nivaa];
-  const usikker = nivaa !== "høy";
+  // M3: et alternativ som er minst like sannsynlig, gjør bestemmelsen usikker – nivået vises som før.
+  const sterkereAlternativ = harSterkereAlternativ(result);
+  const usikker = nivaa !== "høy" || sterkereAlternativ;
   const annen = !result.found ? result.annenArt : undefined;
   const visningsnavn = lagVisningsnavn(result);
   const opprydding = oppryddingFor(result);
@@ -237,17 +239,17 @@ export default function ResultDisplay({
                   {SIKKERHET_FORKLARING}
                   {usikker && ` ${SIKKERHET_USIKKER_TILLEGG}`}
                 </p>
+                {sterkereAlternativ && (
+                  <p className="mt-2 rounded-lg border-l-2 border-grad-middels bg-[color:var(--surface-sunken)] px-4 py-2 text-sm">
+                    {ALTERNATIV_MOTSTRID_TEKST}
+                  </p>
+                )}
               </div>
             )}
 
             {result.alternativer.length > 0 && (
               <div>
                 <h3 className="text-sm font-semibold">Kan også være</h3>
-                {harSterkereAlternativ(result) && (
-                  <p className="mt-2 rounded-lg border-l-2 border-grad-middels bg-[color:var(--surface-sunken)] px-4 py-2 text-sm">
-                    {ALTERNATIV_MOTSTRID_TEKST}
-                  </p>
-                )}
                 <ul className="mt-3 space-y-2">
                   {result.alternativer.map((alt) => (
                     <li
