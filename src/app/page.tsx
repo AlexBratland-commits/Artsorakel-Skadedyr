@@ -5,6 +5,8 @@ import Link from "next/link";
 import { Search } from "lucide-react";
 
 import ImageUploader from "@/components/ImageUploader";
+import type { RapportKontekst } from "@/components/PdfRapportKnapp";
+import { samtaleForVisning, type FunnMelding, type LagretFunnSamtale } from "@/lib/rapport/samtale";
 import ResultDisplay from "@/components/ResultDisplay";
 import HistoryPanel from "@/components/HistoryPanel";
 import InstallBanner from "@/components/InstallBanner";
@@ -39,6 +41,12 @@ export default function Home() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   // Funnet som vises er åpnet fra historikken og lagret med eldre artsdata.
   const [eldreArtsdata, setEldreArtsdata] = useState(false);
+  // Bilde, tidspunkt og funnsted til PDF-rapporten for resultatet som vises.
+  const [rapport, setRapport] = useState<RapportKontekst | undefined>();
+  // Løpenummer for hver visning av et funn (ny analyse eller åpnet fra historikken).
+  // Funn-chatten kobles til nummeret, så en samtale aldri havner i feil rapport.
+  const [visning, setVisning] = useState(0);
+  const [funnSamtale, setFunnSamtale] = useState<LagretFunnSamtale | null>(null);
   const [analyserer, setAnalyserer] = useState(false);
   const [fremdrift, setFremdrift] = useState(0);
   const [sted, setSted] = useState("");
@@ -99,6 +107,12 @@ export default function Home() {
       setNotesAnimal("");
     }
   }, []);
+
+  const chatTokenNaa = result?.chatToken;
+  const lagreFunnSamtale = useCallback(
+    (meldinger: FunnMelding[]) => setFunnSamtale({ visning, chatToken: chatTokenNaa, meldinger }),
+    [visning, chatTokenNaa]
+  );
 
   const analyser = async () => {
     if (!file || analyserer) return;
@@ -161,7 +175,9 @@ export default function Home() {
       const analysis = data as AnalysisResult;
       setFremdrift(100);
       setResult(analysis);
+      setVisning((v) => v + 1);
       setEldreArtsdata(false);
+      setRapport({ bilde: klar, analyseTid: new Date().toISOString(), sted });
 
       const thumb = await makeThumbnail(klar);
       setHistorikk(addToHistory(analysis, thumb, sted));
@@ -199,8 +215,8 @@ export default function Home() {
             Hva er det du har funnet?
           </h1>
           <p className="mt-3 max-w-md text-base leading-relaxed text-muted">
-            Ta et bilde, så foreslår vi hvilken art det er, hvor alvorlig det er
-            og hva du bør gjøre videre.
+            Ta bilde av et skadedyr eller ekskrementer. Artsorakelet hjelper deg å
+            finne ut hva det kan være, hvor alvorlig det er og hva du bør gjøre videre.
           </p>
         </div>
 
@@ -416,14 +432,22 @@ export default function Home() {
           </div>
         )}
 
-        <ResultDisplay result={result} onReset={nyttBilde} eldreArtsdata={eldreArtsdata} />
+        <ResultDisplay
+          result={result}
+          onReset={nyttBilde}
+          eldreArtsdata={eldreArtsdata}
+          rapport={rapport}
+          samtale={samtaleForVisning(funnSamtale, visning, result)}
+        />
 
-        {/* Ny samtale for hver analyse: billetten er unik per analyse (F10). */}
+        {/* Ny samtale for hver visning av et funn: billetten er unik per analyse (F10),
+            og visningsnummeret skiller to visninger av samme funn. */}
         {result && (
           <AskAboutFinding
-            key={result.chatToken ?? result.name}
+            key={`${visning}:${result.chatToken ?? result.name}`}
             result={result}
             onTilgangKreves={() => setTilgang("kreves")}
+            onSamtale={lagreFunnSamtale}
           />
         )}
 
@@ -433,7 +457,9 @@ export default function Home() {
           entries={historikk}
           onOpen={(e) => {
             setResult(e.resultat);
+            setVisning((v) => v + 1);
             setEldreArtsdata(harEldreArtsdata(e));
+            setRapport({ bilde: e.thumb || null, analyseTid: e.tid, sted: e.sted });
             setPreview(e.thumb || null);
             setFile(null);
           }}

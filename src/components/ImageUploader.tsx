@@ -137,10 +137,10 @@ export default function ImageUploader({
 
       <ImageUp className="mx-auto size-9 text-ocab-500" aria-hidden />
 
-      <p className="mt-4 text-lg font-semibold">Legg inn et bilde av dyret</p>
+      <p className="mt-4 text-balance text-lg font-semibold">Legg inn bilde av dyret eller ekskrementene</p>
       <p className="mx-auto mt-1 max-w-sm text-sm text-muted">
-        Gå så nær du tør, hold kameraet i ro, og få med hele dyret. Jo skarpere
-        bilde, jo sikrere svar.
+        Ta et tydelig bilde av dyret eller ekskrementene du har funnet. Jo skarpere
+        bildet er, desto bedre kan vi hjelpe deg.
       </p>
 
       <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">

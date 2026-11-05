@@ -27,8 +27,18 @@ export default defineConfig({
     { name: "åpen", testMatch: /(app|ekskrementer|heic|endringer-etter-test|assistent|historikk|tema)\.spec\.ts/, use: { baseURL: "http://localhost:3201" } },
     {
       name: "pc",
-      testMatch: /(assistent-pc|tema)\.spec\.ts/,
+      testMatch: /(assistent-pc|tema|pdf-samtale)\.spec\.ts/,
       use: { ...devices["Desktop Chrome"], baseURL: "http://localhost:3201" },
+    },
+    {
+      name: "iphone-se",
+      testMatch: /(boble-og-pdf|pdf-samtale)\.spec\.ts/,
+      use: { ...devices["iPhone SE"], browserName: "chromium", baseURL: "http://localhost:3201" },
+    },
+    {
+      name: "iphone-13",
+      testMatch: /(boble-og-pdf|pdf-samtale)\.spec\.ts/,
+      use: { ...devices["iPhone 13"], browserName: "chromium", baseURL: "http://localhost:3201" },
     },
     { name: "tilgangskode", testMatch: /tilgang\.spec\.ts/, use: { baseURL: "http://localhost:3202" } },
     { name: "upstash-nede", testMatch: /upstash-nede\.spec\.ts/, use: { baseURL: "http://localhost:3203" } },
@@ -37,9 +47,9 @@ export default defineConfig({
     {
       command: "npx next start -p 3201",
       url: "http://localhost:3201",
-      // Mange chattester etter hverandre fra samme IP: hev bare spamgrensen
-      // per minutt her. Selve grensen testes i Vitest.
-      env: { ...felles, ARTSORAKEL_CHAT_PER_MINUTT: "100" },
+      // Mange analyser og chattespørsmål etter hverandre fra samme IP i UI-testene:
+      // hev bare disse grensene her. Selve grensene testes i Vitest.
+      env: { ...felles, ARTSORAKEL_CHAT_PER_MINUTT: "100", ARTSORAKEL_ANALYSER_PER_TIME: "500" },
       reuseExistingServer: false,
       timeout: 60_000,
     },

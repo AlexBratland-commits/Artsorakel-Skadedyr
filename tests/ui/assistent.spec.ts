@@ -130,7 +130,12 @@ test("mobil: chatten fyller skjermen, og bildeanalyse og funn-chat virker som f�
   await expect(page.getByRole("heading", { name: "Husmus", level: 2 })).toBeVisible();
   await page.getByRole("button", { name: "Er den farlig?" }).click();
   await expect(page.getByText("Testsvar fra falsk AI.")).toBeVisible();
-  // Den generelle chatten er ikke blandet inn i funn-chatten
+  // Den generelle chatten er ikke blandet inn i funn-chatten.
+  // Boblen trekker seg unna mens tastaturet er oppe og over knapper – lukk
+  // tastaturet og gå til bunnen av siden, der det er ledig plass.
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await expect(page.getByRole("button", { name: "Spør Artsorakel" })).not.toHaveAttribute("data-modus", "skjult");
   await page.getByRole("button", { name: "Spør Artsorakel" }).click();
   await expect(page.getByRole("dialog", { name: "Spør Artsorakel" }).getByText("Testsvar fra falsk AI.")).toHaveCount(0);
   slettFil(bilde);

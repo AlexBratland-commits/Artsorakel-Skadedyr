@@ -1,5 +1,18 @@
 # Endringslogg
 
+## Uutgitt – PDF-rapport og chatboble
+
+Detaljer: [docs/pdf-rapport.md](docs/pdf-rapport.md). AI-logikken, promptene, modellene og
+artsbiblioteket er uendret.
+
+- «Last ned PDF-rapport» etter analyse og fra historikken. Lages lokalt i nettleseren fra det
+  eksisterende resultatet (ny avhengighet: `pdf-lib`).
+- PDF-dialog med valgfri samtale som vedlegg – bare meldinger fra «Spør om dette funnet» for funnet
+  som vises (koblet med visningsnummer og chat-billett, ikke tidspunkt). Bedre sideskift.
+- Chatboblen dekker aldri knapper eller skjemafelt: blir kompakt, flytter seg til ledig plass eller
+  tones ut, og skjules mens tastaturet er oppe.
+- Forsiden: ny tekst om skadedyr og ekskrementer.
+
 ## Uutgitt – Artsorakel 2.0
 
 Detaljer: [docs/artsorakel-2.md](docs/artsorakel-2.md). Bildeanalysen, modellene, promptene og

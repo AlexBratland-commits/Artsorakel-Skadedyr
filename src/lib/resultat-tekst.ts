@@ -1,0 +1,57 @@
+/**
+ * Faste tekster for et analyseresultat. Brukes både av resultatvisningen og
+ * av PDF-rapporten, så de alltid sier det samme. Endres bare med faglig
+ * godkjenning – ingen av tekstene er laget spesielt for PDF-en.
+ */
+import { SIKKERHET_ETIKETT, sikkerhetsnivaa, type AnalysisResult, type Severity } from "./types";
+
+export const ALVORLIGHET: Record<Severity, { etikett: string; tekst: string }> = {
+  lav: { etikett: "Lite alvorlig", tekst: "Sjelden behov for profesjonell hjelp." },
+  middels: { etikett: "Bør følges opp", tekst: "Gjør tiltak nå, så slipper du et større problem senere." },
+  høy: { etikett: "Bør håndteres raskt", tekst: "Denne arten sprer seg eller gjør skade – ta kontakt med fagfolk." },
+};
+
+/** Overskrift når funnet ikke kunne bestemmes (godkjent tekst, F1). */
+export const IKKE_IDENTIFISERT = "Kunne ikke identifisere funnet sikkert";
+
+/** Overskrift når bildet tydelig ikke viser et skadedyr. */
+export const IKKE_SKADEDYR_OVERSKRIFT = "Ingen skadedyr på bildet";
+
+export const USIKKER_KANDIDAT_TEKST =
+  "Dette er det mest sannsynlige forslaget, men sikkerheten er for lav til en trygg bestemmelse. Bruk kjennetegnene under til å sjekke selv, eller kontakt Ocab for bekreftelse.";
+
+export const SIKKERHET_FORKLARING = "Dette er modellens egen vurdering av bildet, ikke en måling.";
+export const SIKKERHET_USIKKER_TILLEGG =
+  "Ved lav eller middels sikkerhet bør bestemmelsen bekreftes av en fagperson.";
+
+export const EKSKREMENT_FORBEHOLD =
+  "Dette er en AI-vurdering basert på bilde og oppgitte kjennetegn, ikke en laboratorieprøve. Er du usikker, eller gjelder det et sted der sikker bestemmelse er viktig – kontakt Ocab for bekreftelse.";
+
+export const GENERELT_FORBEHOLD =
+  "Svaret er et forslag fra en bildeanalyse og kan være feil. Arter som ligner på hverandre – for eksempel skjeggkre og sølvkre – krever limfeller og en fagperson for sikker bestemmelse.";
+
+export const ELDRE_ARTSDATA_TEKST = "Artsopplysninger kan ha blitt oppdatert siden denne analysen ble utført.";
+
+export const OCAB_SKADEDYR_URL = "https://www.ocab.no/skade/skadedyr/";
+
+export function annenArtTekst(result: AnalysisResult): string | undefined {
+  const annen = !result.found ? result.annenArt : undefined;
+  if (!annen) return undefined;
+  return `Ikke i Ocabs database – forslaget kommer fra AI-en alene (${SIKKERHET_ETIKETT[sikkerhetsnivaa(annen.confidence)].toLowerCase()}).`;
+}
+
+/** Navnet som vises som overskrift for resultatet. */
+export function visningsnavn(result: AnalysisResult): string {
+  const annen = !result.found ? result.annenArt : undefined;
+  if (annen) return `Mulig ${annen.name}`;
+  if (result.found && result.usikkerKandidat) return `Mulig ${result.name}`;
+  if (result.ikkeSkadedyr) return IKKE_SKADEDYR_OVERSKRIFT;
+  if (!result.found) return IKKE_IDENTIFISERT;
+  return result.name;
+}
+
+export function latinskNavn(result: AnalysisResult): string | undefined {
+  const annen = !result.found ? result.annenArt : undefined;
+  const navn = annen ? annen.latinName : result.found ? result.latinName : undefined;
+  return navn && navn !== "Ukjent" ? navn : undefined;
+}
