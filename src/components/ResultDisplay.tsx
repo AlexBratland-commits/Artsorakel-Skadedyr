@@ -21,8 +21,11 @@ import { useToast } from "./Toast";
 import PdfRapportKnapp, { type RapportKontekst } from "./PdfRapportKnapp";
 import type { FunnMelding } from "@/lib/rapport/samtale";
 import {
+  ALTERNATIV_MOTSTRID_TEKST,
   ALVORLIGHET,
+  alternativNivaa,
   EKSKREMENT_FORBEHOLD,
+  harSterkereAlternativ,
   ELDRE_ARTSDATA_TEKST,
   GENERELT_FORBEHOLD,
   OCAB_SKADEDYR_URL,
@@ -46,9 +49,6 @@ const SEVERITY: Record<Severity, { etikett: string; farge: string; tekst: string
 const OCAB_TELEFON = "+4740003527"; // ← bytt til riktig nummer
 const OCAB_SKADEDYR = OCAB_SKADEDYR_URL;
 
-function nivaaTrinnFor(confidence: number): number {
-  return { lav: 1, middels: 2, høy: 3 }[sikkerhetsnivaa(confidence)];
-}
 
 export default function ResultDisplay({
   result,
@@ -222,6 +222,11 @@ export default function ResultDisplay({
             {result.alternativer.length > 0 && (
               <div>
                 <h3 className="text-sm font-semibold">Kan også være</h3>
+                {harSterkereAlternativ(result) && (
+                  <p className="mt-2 rounded-lg border-l-2 border-grad-middels bg-[color:var(--surface-sunken)] px-4 py-2 text-sm">
+                    {ALTERNATIV_MOTSTRID_TEKST}
+                  </p>
+                )}
                 <ul className="mt-3 space-y-2">
                   {result.alternativer.map((alt) => (
                     <li
@@ -232,10 +237,8 @@ export default function ResultDisplay({
                       <span className="italic text-muted">{alt.latinName}</span>
         {/* F7: vis bare nivået når det er lavere enn hovedforslagets,
                           så to forslag aldri begge står som «Høy sikkerhet». */}
-                      {(!result.found || nivaaTrinnFor(alt.confidence) < nivaaTrinn) && (
-                        <span className="ml-auto shrink-0 text-muted">
-                          {SIKKERHET_ETIKETT[sikkerhetsnivaa(alt.confidence)]}
-                        </span>
+                      {alternativNivaa(result, alt) && (
+                        <span className="ml-auto shrink-0 text-muted">{alternativNivaa(result, alt)}</span>
                       )}
                       {alt.hvorfor && (
                         <span className="w-full text-muted">{alt.hvorfor}</span>

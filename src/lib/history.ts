@@ -15,13 +15,42 @@ export function harEldreArtsdata(entry: Pick<HistoryEntry, "artsdata">): boolean
   return (entry.artsdata ?? 1) < ARTSDATA_VERSJON;
 }
 
+/**
+ * L1 (revisjon): lagret historikk kan være ødelagt eller fra en eldre
+ * datamodell. Hver oppføring kontrolleres; ugyldige forkastes, slik at en
+ * enkelt feil aldri tar ned hele siden. Manglende lister blir tomme lister.
+ */
+function tilOppforing(verdi: unknown): HistoryEntry | null {
+  if (typeof verdi !== "object" || verdi === null) return null;
+  const e = verdi as Record<string, unknown>;
+  const r = e.resultat as Record<string, unknown> | null | undefined;
+  if (typeof e.id !== "string" || typeof e.tid !== "string") return null;
+  if (typeof r !== "object" || r === null || typeof r.name !== "string") return null;
+  const resultat = {
+    ...r,
+    tiltak: Array.isArray(r.tiltak) ? r.tiltak.filter((t): t is string => typeof t === "string") : [],
+    alternativer: Array.isArray(r.alternativer)
+      ? r.alternativer.filter((a) => typeof a === "object" && a !== null && typeof (a as { name?: unknown }).name === "string")
+      : [],
+  } as unknown as AnalysisResult;
+  return {
+    id: e.id,
+    tid: e.tid,
+    thumb: typeof e.thumb === "string" ? e.thumb : "",
+    sted: typeof e.sted === "string" ? e.sted : "",
+    resultat,
+    ...(typeof e.artsdata === "number" ? { artsdata: e.artsdata } : {}),
+  };
+}
+
 export function readHistory(): HistoryEntry[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = window.localStorage.getItem(KEY);
     if (!raw) return [];
     const parsed: unknown = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as HistoryEntry[]) : [];
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map(tilOppforing).filter((e): e is HistoryEntry => e !== null);
   } catch {
     return [];
   }

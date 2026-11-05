@@ -1,5 +1,20 @@
 # Endringslogg
 
+## Uutgitt – tekniske rettelser etter uavhengig revisjon
+
+Gjelder funn H2, L1, M3, M4, M5, L2 og L4. AI-modeller, artsbibliotek og faglige prompter er uendret.
+
+- H2: Et analysesvar som kommer etter at brukeren har åpnet et annet funn, overtar ikke lenger
+  visningen. Det legges i historikken med eget bilde.
+- L1: Ødelagt eller gammel lokal lagring (historikk og chat) krasjer ikke lenger siden.
+- M3: Alternativer tolker prosent som hovedforslaget, og et alternativ som er minst like
+  sannsynlig vises med nivå og merknad på skjermen og i PDF-en.
+- M4: Ukjente ekskrementfunn beholder typen, med råd og forbehold om ekskrementer.
+- M5: Tidligere chatsvar sendes i sin helhet til modellen (ikke kuttet til 500 tegn).
+- L2: Chatboblen sammenligner rektangler i stedet for tusenvis av punktsøk (ingen hakking).
+- L4: Funn-chatten har 16 px skrift på mobil (ingen zoom på iPhone), og mobilchatten er en
+  modal dialog med fokus som holdes inne.
+
 ## Uutgitt – opprydding i avhengigheter
 
 - Fjernet ubrukte pakker: `dotenv`, `clsx` og `tailwind-merge` (ingen kode, konfigurasjon,

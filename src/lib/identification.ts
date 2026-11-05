@@ -51,13 +51,21 @@ const MAKS_VED_GENERELT_NAVN = 79;
  * i stedet for et oppdiktet tall.
  */
 export function tolkSikkerhet(verdi: unknown): number {
+  return tolkProsent(verdi) ?? MIN_CONFIDENCE;
+}
+
+/**
+ * Felles tolking av en prosent fra modellen (M3, revisjon): hovedforslag,
+ * alternativer og «annen art» tolkes likt. Gir undefined hvis tallet mangler.
+ */
+export function tolkProsent(verdi: unknown): number | undefined {
   let n: number;
   if (typeof verdi === "number") n = verdi;
   else if (typeof verdi === "string") {
     const t = verdi.trim().replace(/\s*%$/, "").replace(",", ".");
     n = t === "" ? NaN : Number(t);
   } else n = NaN;
-  if (!Number.isFinite(n)) return MIN_CONFIDENCE;
+  if (!Number.isFinite(n)) return undefined;
   if (n > 0 && n < 1) n *= 100; // andel (0,85) i stedet for prosent
   return Math.min(100, Math.max(0, Math.round(n)));
 }
@@ -78,6 +86,13 @@ export const UNKNOWN: AnalysisResult = {
   alternativer: [],
   fhiUrl: fhiUrl(),
 };
+
+/** Samme råd som for ukjente dyr, men om ekskrementene brukeren fotograferte. */
+export const EKSKREMENT_UKJENT_TILTAK = [
+  "Ta et nytt bilde nærmere ekskrementene, med god belysning og skarpt fokus",
+  "Legg noe kjent ved siden av for størrelse, for eksempel en mynt eller fyrstikk",
+  "Oppgi hvor du fant ekskrementene – det skiller arter som ligner på hverandre",
+];
 
 export function parseJson(content: string): Record<string, unknown> | null {
   const cleaned = content
@@ -146,9 +161,7 @@ export function parseAlternatives(raw: unknown, gruppe: PestGroup | null): Candi
     const pest = lookupPest(name, latinName, gruppe);
     if (!pest) continue;
 
-    let confidence = Number(rec.confidence);
-    if (!Number.isFinite(confidence)) confidence = 0;
-    confidence = Math.min(100, Math.max(0, Math.round(confidence)));
+    const confidence = tolkProsent(rec.confidence) ?? 0;
 
     const hvorfor = typeof rec.hvorfor === "string" ? rec.hvorfor.trim() : "";
     out.push({ name: pest.norsk, latinName: pest.latin, confidence, hvorfor });
@@ -172,10 +185,8 @@ export function parseAnnenArt(raw: unknown): AnnenArt | undefined {
   if (!name || /^ukjent$/i.test(name)) return undefined;
   if (findPest(name) || findPest(latinName)) return undefined;
 
-  let confidence = Number(rec.confidence);
-  if (!Number.isFinite(confidence)) return undefined;
-  confidence = Math.min(100, Math.max(0, Math.round(confidence)));
-  if (confidence < MIN_CONFIDENCE) return undefined;
+  const confidence = tolkProsent(rec.confidence);
+  if (confidence === undefined || confidence < MIN_CONFIDENCE) return undefined;
 
   const hvorfor = typeof rec.hvorfor === "string" ? rec.hvorfor.trim().slice(0, 300) : "";
   return { name, latinName, confidence, hvorfor };
@@ -219,7 +230,8 @@ export function enrich(raw: Record<string, unknown>, gruppe: PestGroup | null): 
     // F1: på ekskrementer vises ingen artsnavn utenfor biblioteket – bare den
     // godkjente forklaringen. Det AI-en faktisk observerte, beholdes.
     if (erEkskrementer) {
-      return { ...UNKNOWN, description: EKSKREMENT_UKJENT_TEKST, observasjon };
+      // M4 (revisjon): typen beholdes, så forbehold og råd passer til ekskrementer.
+      return { ...UNKNOWN, gruppe: "Ekskrementer", tiltak: EKSKREMENT_UKJENT_TILTAK, description: EKSKREMENT_UKJENT_TEKST, observasjon };
     }
     const annenArt = parseAnnenArt(raw.annenArt);
     if (annenArt) {

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Camera, ExternalLink, MessageCircle, RotateCcw, Send, X } from "lucide-react";
 import { nettverksfeil } from "@/lib/client-errors";
 import { velgPlass, type BobleModus } from "@/lib/bobleplass";
@@ -51,13 +51,46 @@ function lesLagret(): Lagret {
     const raw = window.localStorage.getItem(LAGRING);
     if (!raw) return { meldinger: [] };
     const d = JSON.parse(raw);
-    return Array.isArray(d?.meldinger) ? { samtaleToken: d.samtaleToken, meldinger: d.meldinger } : { meldinger: [] };
+    if (!Array.isArray(d?.meldinger)) return { meldinger: [] };
+    // L1 (revisjon): bare gyldige meldinger beholdes, så ødelagt lagring ikke krasjer chatten.
+    // Mangler et svar, avviser serveren samtalen, og den startes på nytt som før.
+    const meldinger: Melding[] = d.meldinger
+      .filter(
+        (m: unknown): m is Melding =>
+          typeof m === "object" &&
+          m !== null &&
+          ((m as Melding).role === "user" || (m as Melding).role === "assistant") &&
+          typeof (m as Melding).content === "string"
+      )
+      .map((m: Melding) => ({
+        role: m.role,
+        content: m.content,
+        ...(typeof m.sig === "string" ? { sig: m.sig } : {}),
+        ...(m.visKontakt === true ? { visKontakt: true } : {}),
+        ...(m.visBilde === true ? { visBilde: true } : {}),
+      }));
+    return { samtaleToken: typeof d.samtaleToken === "string" ? d.samtaleToken : undefined, meldinger };
   } catch {
     return { meldinger: [] };
   }
 }
 
+/** Mobil: chatten dekker hele skjermen og er da en modal dialog (L4, revisjon). */
+const MOBIL = "(max-width: 639px)";
+function useErMobil(): boolean {
+  return useSyncExternalStore(
+    (varsle) => {
+      const mq = window.matchMedia(MOBIL);
+      mq.addEventListener("change", varsle);
+      return () => mq.removeEventListener("change", varsle);
+    },
+    () => window.matchMedia(MOBIL).matches,
+    () => false
+  );
+}
+
 export default function AssistantChat() {
+  const erMobil = useErMobil();
   const [apen, setApen] = useState(false);
   const [meldinger, setMeldinger] = useState<Melding[]>([]);
   const [samtaleToken, setSamtaleToken] = useState<string | undefined>();
@@ -108,9 +141,28 @@ export default function AssistantChat() {
   useEffect(() => {
     if (!apen) return;
     inputRef.current?.focus();
-    const tast = (e: KeyboardEvent) => e.key === "Escape" && lukk();
+    const mobil = window.matchMedia(MOBIL).matches;
+    const tast = (e: KeyboardEvent) => {
+      if (e.key === "Escape") lukk();
+      // L4 (revisjon): på mobil dekker chatten hele skjermen – Tab holdes inne i chatten.
+      if (e.key !== "Tab" || !mobil) return;
+      const panel = document.getElementById("assistent-panel");
+      if (!panel) return;
+      const fokuserbare = [
+        ...panel.querySelectorAll<HTMLElement>("button:not([disabled]), textarea:not([disabled]), a[href], input:not([disabled])"),
+      ];
+      const forste = fokuserbare[0];
+      const siste = fokuserbare.at(-1);
+      const inne = panel.contains(document.activeElement);
+      if (e.shiftKey && (document.activeElement === forste || !inne)) {
+        e.preventDefault();
+        siste?.focus();
+      } else if (!e.shiftKey && (document.activeElement === siste || !inne)) {
+        e.preventDefault();
+        forste?.focus();
+      }
+    };
     window.addEventListener("keydown", tast);
-    const mobil = window.matchMedia("(max-width: 639px)").matches;
     if (mobil) document.body.style.overflow = "hidden";
     return () => {
       window.removeEventListener("keydown", tast);
@@ -306,6 +358,7 @@ export default function AssistantChat() {
           id="assistent-panel"
           ref={panelRef}
           role="dialog"
+          aria-modal={erMobil ? true : undefined}
           aria-labelledby="assistent-tittel"
           className="no-print fixed inset-0 z-50 flex flex-col bg-[color:var(--surface)] sm:inset-auto sm:bottom-4 sm:right-4 sm:h-[min(640px,calc(100dvh-2rem))] sm:w-[400px] sm:overflow-hidden sm:rounded-card sm:border sm:hairline sm:shadow-lifted"
         >

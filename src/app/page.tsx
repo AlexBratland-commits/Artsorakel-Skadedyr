@@ -60,6 +60,10 @@ export default function Home() {
   const [tilgang, setTilgang] = useState<"ok" | "kreves">("ok");
 
   const previewUrl = useRef<string | null>(null);
+  // H2 (revisjon): hver analyse får et nummer. Bytter brukeren visning (nytt
+  // bilde eller funn fra historikken) mens analysen pågår, økes nummeret, og
+  // svaret overtar da ikke det som vises – det legges bare i historikken.
+  const aktivAnalyse = useRef(0);
   const { vis } = useToast();
 
   // Historikk leses fra localStorage én gang etter mount (kun tilgjengelig på klienten).
@@ -85,6 +89,7 @@ export default function Home() {
   }, []);
 
   const velgBilde = useCallback((valgt: File | null) => {
+    aktivAnalyse.current++;
     if (previewUrl.current) {
       URL.revokeObjectURL(previewUrl.current);
       previewUrl.current = null;
@@ -116,6 +121,8 @@ export default function Home() {
 
   const analyser = async () => {
     if (!file || analyserer) return;
+    const denneAnalysen = ++aktivAnalyse.current;
+    const stedForAnalysen = sted;
 
     setAnalyserer(true);
     setResult(null);
@@ -174,13 +181,18 @@ export default function Home() {
 
       const analysis = data as AnalysisResult;
       setFremdrift(100);
+      const thumb = await makeThumbnail(klar);
+      setHistorikk(addToHistory(analysis, thumb, stedForAnalysen));
+
+      // Brukeren har byttet til et annet funn mens analysen pågikk: ikke overta visningen.
+      if (denneAnalysen !== aktivAnalyse.current) {
+        vis("Analysen er ferdig og ligger i listen over tidligere bilder.", "info");
+        return;
+      }
       setResult(analysis);
       setVisning((v) => v + 1);
       setEldreArtsdata(false);
-      setRapport({ bilde: klar, analyseTid: new Date().toISOString(), sted });
-
-      const thumb = await makeThumbnail(klar);
-      setHistorikk(addToHistory(analysis, thumb, sted));
+      setRapport({ bilde: klar, analyseTid: new Date().toISOString(), sted: stedForAnalysen });
 
       if (!analysis.found && !analysis.annenArt && !analysis.ikkeSkadedyr) {
         vis("Ingen sikker match. Prøv et skarpere bilde nærmere dyret.", "info");
@@ -456,6 +468,7 @@ export default function Home() {
         <HistoryPanel
           entries={historikk}
           onOpen={(e) => {
+            aktivAnalyse.current++;
             setResult(e.resultat);
             setVisning((v) => v + 1);
             setEldreArtsdata(harEldreArtsdata(e));
