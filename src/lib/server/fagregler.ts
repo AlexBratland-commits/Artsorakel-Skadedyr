@@ -26,9 +26,11 @@ export const MAUR_FUKT_REGEL = `- Maur og fukt: ved mistanke om maurreir i en by
  * skadedyr i funn-chatten. Kilde: FHI felthåndbok 2023 s. 19 (markkakerlakk).
  * Markkakerlakk legges i artsbiblioteket separat etter faglig godkjenning.
  */
-export const ARTER_UTENFOR_BIBLIOTEKET: readonly { treff: readonly string[]; regel: string }[] = [
+export const ARTER_UTENFOR_BIBLIOTEKET: readonly { norsk: string; latin: string; regel: string }[] = [
   {
-    treff: ["markkakerlakk", "ectobius"],
+    // Presist treff på art – ikke slekten Ectobius, som har flere arter.
+    norsk: "markkakerlakk",
+    latin: "ectobius lapponicus",
     regel:
       "Gjelder det markkakerlakk (Ectobius lapponicus), er den etter FHI ikke et skadedyr og skal ikke bekjempes. Den er den eneste frilevende kakerlakkarten i Norge, vanlig utendørs over hele landet, og forviller seg ofte inn i hus, men kan ikke formere seg innendørs og gjør ingen skade. Forklar at den kan forveksles med tysk og brunbeltet kakerlakk, og at Ocab kan bekrefte arten ved tvil – særlig hvis det er mange, eller de sees innendørs over tid.",
   },

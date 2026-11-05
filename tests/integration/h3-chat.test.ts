@@ -139,6 +139,34 @@ describe("H3: art utenfor biblioteket – ingen automatiske bekjempelsesråd", (
     });
   }
 
+  // Presist treff: bare «markkakerlakk» eller «Ectobius lapponicus» – ikke slekten Ectobius generelt.
+  const andreEctobius = [
+    ["«Kakerlakk» + Ectobius sylvestris", { found: true, name: "Kakerlakk", latinName: "Ectobius sylvestris", confidence: 85 }],
+    ["«Kakerlakk» + Ectobius sp.", { found: true, name: "Kakerlakk", latinName: "Ectobius sp.", confidence: 85 }],
+    ["art utenfor listen «Skogkakerlakk» (Ectobius sylvestris)", { found: false, name: "Ukjent", latinName: "Ukjent", confidence: 0, annenArt: { name: "Skogkakerlakk", latinName: "Ectobius sylvestris", confidence: 80, hvorfor: "" } }],
+    ["art utenfor listen «Ectobius» uten artsnavn", { found: false, name: "Ukjent", latinName: "Ukjent", confidence: 0, annenArt: { name: "Ectobius", latinName: "Ectobius", confidence: 80, hvorfor: "" } }],
+    ["«Markkakerlakk» med latinsk navn for en annen Ectobius-art", { found: false, name: "Ukjent", latinName: "Ukjent", confidence: 0, annenArt: { name: "Markkakerlakk", latinName: "Ectobius pallidus", confidence: 80, hvorfor: "" } }],
+  ] as const;
+  for (const [hvordan, svar] of andreEctobius) {
+    it(`andre Ectobius-arter utløser ikke markkakerlakkregelen: ${hvordan}`, async () => {
+      const { system } = await systemFor("Kakerlakker", svar);
+      expect(system).toMatch(/utenfor Ocabs database/);
+      expect(system).toMatch(/Ikke anbefal bekjempelse, gift, limfeller eller profesjonell bekjempelse/);
+      expect(system).not.toMatch(/Gjelder det markkakerlakk/);
+    });
+  }
+
+  const presiseTreff = [
+    ["bare norsk navn «Markkakerlakk»", { found: false, name: "Ukjent", latinName: "Ukjent", confidence: 0, annenArt: { name: "Markkakerlakk", latinName: "", confidence: 80, hvorfor: "" } }],
+    ["bare latinsk navn, annen skrivemåte", { found: false, name: "Ukjent", latinName: "Ukjent", confidence: 0, annenArt: { name: "Kakerlakk", latinName: " ectobius  LAPPONICUS ", confidence: 80, hvorfor: "" } }],
+  ] as const;
+  for (const [hvordan, svar] of presiseTreff) {
+    it(`markkakerlakkregelen gjelder ved presist treff: ${hvordan}`, async () => {
+      const { system } = await systemFor("Kakerlakker", svar);
+      expect(system).toMatch(/Gjelder det markkakerlakk \(Ectobius lapponicus\)/);
+    });
+  }
+
   it("annen art utenfor listen (ikke markkakerlakk): samme forsiktighet, uten markkakerlakk-regelen", async () => {
     const { system } = await systemFor("Andre pattedyr", {
       found: false, name: "Ukjent", latinName: "Ukjent", confidence: 0,

@@ -34,10 +34,19 @@ ${pest.forveksles?.length ? `Forveksles med: ${pest.forveksles.join(" | ")}` : "
 ${pest.notat ? `Viktig: ${pest.notat}` : ""}`.trim();
 }
 
-/** Faste fagregler for kjente arter utenfor biblioteket (f.eks. markkakerlakk). */
+const normaliser = (x: string) => x.toLowerCase().replace(/\s+/g, " ").trim();
+
+/**
+ * Faste fagregler for kjente arter utenfor biblioteket (f.eks. markkakerlakk).
+ * Krever presist treff på artens norske eller vitenskapelige navn – aldri
+ * bare slekten. Peker det vitenskapelige navnet på en annen art, gjelder
+ * regelen ikke, selv om det norske navnet treffer.
+ */
 function utenforRegel(navn: string, latin: string): string | undefined {
-  const tekst = `${navn} ${latin}`.toLowerCase();
-  return ARTER_UTENFOR_BIBLIOTEKET.find((r) => r.treff.some((t) => tekst.includes(t)))?.regel;
+  const n = normaliser(navn);
+  const l = normaliser(latin);
+  const harLatin = l !== "" && l !== "ukjent";
+  return ARTER_UTENFOR_BIBLIOTEKET.find((r) => l === r.latin || (n === r.norsk && !harLatin))?.regel;
 }
 
 export interface FunnBeskrivelse {
