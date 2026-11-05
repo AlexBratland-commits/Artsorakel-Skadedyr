@@ -1,5 +1,10 @@
-# Foreslår sikkerhetsoppdateringer som pull requests. Ingenting oppdateres
+# Foreslår oppdateringer som pull requests. Ingenting oppdateres
 # automatisk – hver oppdatering må godkjennes og testes (CI) før merge.
+#
+# Sikkerhetsoppdateringer: reglene under bruker bare «update-types», og de
+# gjelder bare vanlige versjonsoppdateringer. Sikkerhetsoppdateringer lages
+# fortsatt, også for pakkene som har en ignore-regel.
+# https://docs.github.com/en/code-security/reference/supply-chain-security/dependabot-options-reference
 version: 2
 updates:
   - package-ecosystem: npm
@@ -8,8 +13,36 @@ updates:
       interval: weekly
     open-pull-requests-limit: 5
     groups:
+      # React og React DOM skal alltid ha nøyaktig samme versjon, og typene
+      # skal følge med. Står først, så disse aldri havner i gruppen under.
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
+      # Små oppdateringer av utviklingsverktøy samlet i én PR. Store
+      # versjonshopp kommer som egne PR-er, så de kan vurderes hver for seg.
       utviklingsverktoy:
         dependency-type: development
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      # Ingen store versjonshopp før verktøyene støtter dem:
+      # typescript-eslint (via eslint-config-next) støtter ikke TypeScript 7,
+      # og eslint-config-next sine tillegg støtter ikke ESLint 10 ennå.
+      # Fjern regelen når eslint-config-next støtter nye versjoner.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
+      # Typene skal følge Node-versjonen prosjektet kjører på (Node 22 i CI).
+      # Fjern regelen og oppdater samtidig node-version i ci.yml (og Node-
+      # versjonen i Vercel) når prosjektet går over til en ny Node-versjon.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+
   - package-ecosystem: github-actions
     directory: /
     schedule:
