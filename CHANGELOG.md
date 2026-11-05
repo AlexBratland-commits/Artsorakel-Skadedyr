@@ -1,5 +1,18 @@
 # Endringslogg
 
+## Uutgitt – H5: sikkerhetsnivå etter grunnlaget
+
+AI-modell, artsbibliotek, råd og visningen (Høy/Middels/Lav, ingen prosenter) er uendret.
+
+- Modellen oppgir bildegrunnlaget («tydelig», «delvis», «uklart»). «Uklart» vises høyst som
+  Lav og «delvis» høyst som Middels, med en forklaring på skjermen, i PDF-en og i chatten.
+- Ekskrementer uten oppgitt størrelse (valg eller mål i beskrivelsen) vises høyst som Middels.
+  Ekskrementprompten sier at confidence gjelder hvilket dyr, og at mål ikke skal oppgis som om
+  de var målt uten målestokk. Råd og faginnhold er uendret.
+- Takene bytter aldri art og hever aldri et nivå. Alternativenes rangering fra modellen beholdes.
+- Ingen nye prosentgrenser: takene er de eksisterende nivågrensene. Se
+  `docs/h5-kalibrering-sikkerhet.md` for flyt og manuell kalibreringstest med ekte bilder.
+
 ## Uutgitt – faglig gjennomgang: pelsbiller og markkakerlakk
 
 AI-modeller, sikkerhetsnivåer og ekskrementanalysen er uendret. Artslisten til modellen har

@@ -122,8 +122,12 @@ const ANNEN_ART = `ARTER SOM IKKE STÅR I LISTEN
 Står dyret ikke i listen, men du kjenner det sikkert igjen, svar "found":false og fyll ut "annenArt" med det norske og latinske navnet, hvorfor du mener det, og confidence. Bruk dette bare når ingen art i listen passer – aldri som erstatning for en art som står der.`;
 
 const SVARFORMAT = `SVARFORMAT – kun gyldig JSON, ingen forklaring rundt:
-{"found":true,"name":"Norsk navn fra listen","latinName":"Latinsk navn fra listen","description":"To setninger om det du ser","observasjon":"Bevisene forslaget bygger på","confidence":0-100,"alternativer":[{"name":"Norsk navn","latinName":"Latinsk navn","confidence":0-100,"hvorfor":"Hvorfor dette kan være riktig"}]}
+{"found":true,"name":"Norsk navn fra listen","latinName":"Latinsk navn fra listen","description":"To setninger om det du ser","observasjon":"Bevisene forslaget bygger på","confidence":0-100,"grunnlag":"tydelig|delvis|uklart","alternativer":[{"name":"Norsk navn","latinName":"Latinsk navn","confidence":0-100,"hvorfor":"Hvorfor dette kan være riktig"}]}
 
+"grunnlag" sier hva bildet faktisk viser (H5):
+- "tydelig": skarpt bilde, og kjennetegnene som skiller arten fra forvekslingsartene synes.
+- "delvis": dyret eller sporene synes, men noen av de avgjørende kjennetegnene er skjult, uskarpe eller utenfor bildet (for eksempel bare en larve, eller mønsteret på halsskjoldet synes ikke).
+- "uklart": uskarpt, mørkt, langt unna eller mesteparten skjult.
 "alternativer" er de 1–3 artene fra listen som ligner mest etter hovedforslaget, sortert fallende på confidence. Er du sikker, kan listen være tom.
 Ukjent art: {"found":false,"name":"Ukjent","latinName":"Ukjent","description":"...","observasjon":"...","confidence":0}
 Art som ikke står i listen: {"found":false,"name":"Ukjent","latinName":"Ukjent","description":"...","observasjon":"...","confidence":0,"annenArt":{"name":"Norsk navn","latinName":"Latinsk navn","confidence":0-100,"hvorfor":"..."}}`;
@@ -144,7 +148,7 @@ ${BEVISKRAV}
 REGLER
 1. Bruk kun norske navn fra listen under. Passer ingen av dem, svarer du "Ukjent".
 2. Mus skal ikke artsbestemmes: husmus, skogmus og andre mus heter bare "Mus". Det viktigste er å skille mus fra rotte. Rotteekskrementer er "Brunrotte" – foreslå aldri svartrotte.
-3. "confidence" er hvor sikker du faktisk er, 0–100. Under 50 vises forslaget som "Mulig [art]".
+3. "confidence" er hvor sikker du faktisk er, 0–100. Under 50 vises forslaget som "Mulig [art]". confidence gjelder hvilket dyr ekskrementene stammer fra – ikke om det er ekskrementer. Oppgi ikke mål i millimeter som om de var målt, med mindre brukeren har oppgitt størrelsen eller det ligger en målestokk (mynt, linjal) i bildet.
 4. Rotter (brunrotte) lager faste toaletter. Ekskrementer fra rotte finnes derfor ofte i klynger på ett eller få utvalgte steder, ikke spredt tilfeldig rundt.
 5. Flaggermus-ekskrementer smuldrer lett til pulver ved berøring og glinser av uknuste insektskall i bruddflaten. Museekskrementer er faste, smuldrer ikke, og inneholder ofte synlige frørester i stedet.
 6. Beskrivelsen skal peke på hva du faktisk ser på bildet: form, størrelse, farge og eventuelt innhold. To setninger, på norsk bokmål, uten "jeg" eller "AI".
@@ -421,7 +425,11 @@ async function analyser(request: NextRequest): Promise<NextResponse> {
         { status: 502 }
       );
     }
-    const result = markerIkkeSkadedyr(enrich(speciesOutcome.json, gruppe), stegEnGruppe);
+    // H5: for ekskrementer teller oppgitt størrelse (valg eller mål i beskrivelsen).
+    const kontekst = erEkskrementer
+      ? { storrelseOppgitt: Boolean(droppingSize) || /\d+([.,]\d+)?\s*(mm|cm|millimeter|centimeter)\b/i.test(beskrivelse) }
+      : {};
+    const result = markerIkkeSkadedyr(enrich(speciesOutcome.json, gruppe, kontekst), stegEnGruppe);
     if (!evalModus) setCached(hash, result);
 
     const sum = summerForbruk(forbruk);

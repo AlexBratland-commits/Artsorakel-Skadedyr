@@ -95,8 +95,9 @@ export function beskrivFunn(billett: ChatBillett): FunnBeskrivelse {
       : "";
     const innledning = `${nivaaRegel}${alternativRegel}`;
     const generelt = billett.generelt ? `\n${rens(billett.generelt, 300)}` : "";
+    const begrensning = billett.begrensning?.length ? `\n${billett.begrensning.map((t) => rens(t, 300)).join(" ")}` : "";
     return {
-      tekst: `${innledning}${generelt}\n${IKKE_BEKREFTET}${alternativer}\n\n${artsfakta(pest)}\n\n${ARTSAVHENGIGE_RAAD}`,
+      tekst: `${innledning}${generelt}${begrensning}\n${IKKE_BEKREFTET}${alternativer}\n\n${artsfakta(pest)}\n\n${ARTSAVHENGIGE_RAAD}`,
       pest,
       loggArt: pest.norsk,
     };
@@ -116,7 +117,7 @@ export function beskrivFunn(billett: ChatBillett): FunnBeskrivelse {
     const nivaa = billett.nivaa ? ` med ${billett.nivaa} sikkerhet` : "";
     const regel = utenforRegel(annen, latin);
     return {
-      tekst: `Bildeanalysen foreslo «${annen}»${latin ? ` (${latin})` : ""}${nivaa}, en art utenfor Ocabs database. Omtal den som «mulig ${annen}».\n${IKKE_BEKREFTET}\n${UTENFOR_RAAD}${regel ? `\n${regel}` : ""}${alternativer}`,
+      tekst: `Bildeanalysen foreslo «${annen}»${latin ? ` (${latin})` : ""}${nivaa}, en art utenfor Ocabs database. Omtal den som «mulig ${annen}».${billett.begrensning?.length ? `\n${billett.begrensning.map((t) => rens(t, 300)).join(" ")}` : ""}\n${IKKE_BEKREFTET}\n${UTENFOR_RAAD}${regel ? `\n${regel}` : ""}${alternativer}`,
       loggArt: "annen_art",
     };
   }

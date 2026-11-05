@@ -23,6 +23,7 @@ import {
   MOTSTRID_TITTEL,
   motstridTekst,
   generelltNavnTekst,
+  sikkerhetsbegrensninger,
   OCAB_SKADEDYR_URL,
   oppryddingFor,
   SIKKERHET_FORKLARING,
@@ -132,6 +133,7 @@ export function lagRapportInnhold(result: AnalysisResult, valg: RapportValg): Ra
   if (annen) merknader.push(annen);
   const generelt = generelltNavnTekst(result);
   if (generelt) merknader.push(generelt);
+  merknader.push(...sikkerhetsbegrensninger(result));
   const motstridForklaring = motstridTekst(result);
   if (!result.found && result.annenArt?.hvorfor) merknader.push(result.annenArt.hvorfor);
   if (result.usikkerKandidat) merknader.push(USIKKER_KANDIDAT_TEKST);
