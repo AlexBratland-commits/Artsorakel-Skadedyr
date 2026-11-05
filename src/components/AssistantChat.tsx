@@ -235,17 +235,25 @@ export default function AssistantChat() {
         if (r.width) fullStorrelse.current = { bredde: r.width, hoyde: r.height };
       }
       const { bredde, hoyde } = fullStorrelse.current;
-      const plass = velgPlass(
-        knapp,
-        { left: a.right - bredde, top: a.bottom - hoyde, right: a.right, bottom: a.bottom },
-        { left: a.right - KOMPAKT, top: a.bottom - KOMPAKT, right: a.right, bottom: a.bottom },
-        // Løft boblen høyst til litt over midten av skjermen.
-        Math.round(window.innerHeight * 0.45)
-      );
-      setModus(plass.modus);
-      if (plass.modus !== "skjult") {
-        setSynligModus(plass.modus);
-        setLoft(plass.loft);
+      const kompakt = { left: a.right - KOMPAKT, top: a.bottom - KOMPAKT, right: a.right, bottom: a.bottom };
+      // Mobil: alltid liten rund boble på fast plass nede til høyre – aldri tekst,
+      // aldri annen størrelse og aldri løftet. Dekker den en knapp når siden står
+      // stille, tones den ut til plassen er fri (siden har luft nederst, pb-28).
+      const mobil = window.matchMedia(MOBIL).matches;
+      const plass = mobil
+        ? velgPlass(knapp, kompakt, kompakt, 0)
+        : velgPlass(
+            knapp,
+            { left: a.right - bredde, top: a.bottom - hoyde, right: a.right, bottom: a.bottom },
+            kompakt,
+            // PC: løft boblen høyst til litt over midten av skjermen.
+            Math.round(window.innerHeight * 0.45)
+          );
+      const nyModus: BobleModus = mobil && plass.modus === "full" ? "kompakt" : plass.modus;
+      setModus(nyModus);
+      if (nyModus !== "skjult") {
+        setSynligModus(nyModus === "full" ? "full" : "kompakt");
+        setLoft(mobil ? 0 : plass.loft);
       }
     };
     const planlegg = () => {
@@ -355,9 +363,10 @@ export default function AssistantChat() {
           data-loft={loft}
           style={loft ? { transform: `translateY(-${loft}px)` } : undefined}
           data-flytende=""
-          title={synligModus === "kompakt" ? "Spør Artsorakel" : undefined}
+          title="Spør Artsorakel"
           className={`no-print fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-[max(1rem,env(safe-area-inset-right))] z-40 inline-flex will-change-transform items-center justify-center rounded-full bg-ocab-900 text-sm font-semibold text-white shadow-lifted ring-1 ring-white/10 transition-[opacity,transform,background-color] duration-200 hover:bg-ocab-950 active:scale-[0.98] motion-reduce:transition-none dark:bg-ocab-200 dark:text-ocab-950 dark:hover:bg-white ${
-            synligModus === "full" ? "gap-2 px-5 py-3.5" : "size-[52px]"
+            // Mobil (under sm): alltid liten rund boble. PC: knapp med tekst når det er plass.
+            synligModus === "full" ? "size-[52px] sm:size-auto sm:gap-2 sm:px-5 sm:py-3.5" : "size-[52px]"
           } ${
             modus === "skjult"
               ? "pointer-events-none translate-y-3 opacity-0 focus-visible:pointer-events-auto focus-visible:translate-y-0 focus-visible:opacity-100"
@@ -365,7 +374,7 @@ export default function AssistantChat() {
           }`}
         >
           <MessageCircle className="size-5 shrink-0" aria-hidden />
-          <span className={synligModus === "full" ? "" : "sr-only"}>Spør Artsorakel</span>
+          <span className={synligModus === "full" ? "sr-only sm:not-sr-only" : "sr-only"}>Spør Artsorakel</span>
         </button>
       )}
 

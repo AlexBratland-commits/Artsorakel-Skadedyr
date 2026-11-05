@@ -1,8 +1,8 @@
 /**
  * Chatboblen «Spør Artsorakel» under scrolling (iPhone SE og iPhone 13).
- * Boblen skal ikke bytte mellom stor og liten eller hoppe opp og ned mens
- * brukeren scroller – plassen vurderes når scrollingen har stoppet. Den
- * skal fortsatt aldri ligge over knapper når siden står stille.
+ * På mobil er boblen alltid en liten, rund knapp med chatikonet: ingen tekst,
+ * ingen annen størrelse og ingen vertikal flytting. Den vurderes når
+ * scrollingen har stoppet, og tones ut hvis den ellers ville dekket en knapp.
  * Chromium med iPhone-mål; dette er ikke det samme som Safari på iPhone.
  */
 import { expect, test, type Page } from "@playwright/test";
@@ -25,7 +25,7 @@ async function startTelling(page: Page) {
     const boble = document.querySelector<HTMLElement>('button[aria-controls="assistent-panel"]')!;
     new MutationObserver((m) => {
       for (const e of m) w.__endringer.push(`${e.attributeName}=${boble.getAttribute(e.attributeName!)}`);
-    }).observe(boble, { attributes: true, attributeFilter: ["data-modus", "data-loft", "style"] });
+    }).observe(boble, { attributes: true, attributeFilter: ["data-modus", "data-loft", "style", "class"] });
   });
 }
 const endringer = (page: Page) => page.evaluate(() => (window as unknown as { __endringer: string[] }).__endringer.splice(0));
@@ -111,4 +111,67 @@ test("boblen ligger fast i hjørnet nede til høyre, innenfor safe-area, og dekk
     expect(info.hoyreAvstand).toBeGreaterThanOrEqual(15);
     expect(info.dekket, `scroll ${y}`).toEqual([]);
   }
+});
+
+/** Boblens størrelse, form, tekst og plass akkurat nå. */
+async function boblen(page: Page) {
+  return page.evaluate(() => {
+    const b = document.querySelector<HTMLElement>('button[aria-controls="assistent-panel"]')!;
+    const r = b.getBoundingClientRect();
+    const tekst = b.querySelector("span")!;
+    const cs = getComputedStyle(b);
+    return {
+      bredde: Math.round(r.width),
+      hoyde: Math.round(r.height),
+      rund: cs.borderTopLeftRadius !== "0px",
+      tekstSynlig: tekst.getBoundingClientRect().width > 1 && getComputedStyle(tekst).position !== "absolute",
+      modus: b.dataset.modus,
+      loft: b.dataset.loft,
+      transform: b.style.transform,
+      bunn: Math.round(window.innerHeight - r.bottom),
+      hoyre: Math.round(window.innerWidth - r.right),
+      ikon: !!b.querySelector("svg"),
+      navn: b.getAttribute("title"),
+    };
+  });
+}
+
+test("mobil: alltid liten rund boble med ikon – samme størrelse og plass overalt, ingen tekst og ingen løft", async ({ page }) => {
+  const sett = new Set<string>();
+  let skjult = 0;
+  let synlig = 0;
+  const kontroller = async () => {
+    const b = await boblen(page);
+    expect(b.bredde).toBe(52);
+    expect(b.hoyde).toBe(52);
+    expect(b.rund).toBe(true);
+    expect(b.tekstSynlig).toBe(false);
+    expect(b.ikon).toBe(true);
+    expect(b.navn).toBe("Spør Artsorakel");
+    expect(b.modus).not.toBe("full");
+    expect(b.loft).toBe("0");
+    expect(b.transform).toBe("");
+    if (b.modus === "skjult") skjult++;
+    else {
+      synlig++;
+      sett.add(`${b.bunn}/${b.hoyre}`);
+    }
+  };
+
+  // Forsiden og resultatsiden, toppen til bunnen, med stopp underveis
+  await page.goto("/");
+  await page.waitForTimeout(400);
+  await kontroller();
+  await analyser(page, 154);
+  const bunn = await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight);
+  for (let y = 0; y <= bunn; y += 120) {
+    await scrollJevnt(page, await page.evaluate(() => window.scrollY), Math.min(y, bunn));
+    await page.waitForTimeout(350);
+    await kontroller();
+  }
+  // Én fast plass nede til høyre når boblen vises
+  expect([...sett]).toHaveLength(1);
+  expect(synlig).toBeGreaterThan(0);
+  // Til informasjon i rapporten: hvor ofte boblen tones ut i stedet for å flytte seg
+  test.info().annotations.push({ type: "boble", description: `synlig ${synlig}, tonet ut ${skjult}` });
 });

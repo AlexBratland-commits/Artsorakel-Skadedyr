@@ -6,8 +6,10 @@
   løft) vurderes først når scrollingen har stoppet (150 ms), i stedet for i hver
   animasjonsramme. Tidligere byttet den størrelse og hoppet opp og ned hver gang en knapp
   passerte hjørnet, og på iPhone Safari også når verktøylinjen ble skjult under scrolling.
-- Boblen dekker fortsatt aldri knapper når siden står stille. Den tar også hensyn til safe-area
-  på høyre side (iPhone på tvers). Utseende, tekst og chat er uendret.
+- Mobil: boblen er alltid en liten, rund knapp med chatikonet – ingen tekst, samme størrelse
+  og fast plass nede til høyre (med safe-area). Den flyttes ikke opp; dekker den en knapp når
+  siden står stille, tones den ut til plassen er fri.
+- PC: uendret – knappen med teksten «Spør Artsorakel», som viker for knapper som før.
 
 ## Uutgitt – H5: sikkerhetsnivå etter grunnlaget
 
