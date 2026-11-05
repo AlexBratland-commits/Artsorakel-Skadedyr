@@ -1,4 +1,5 @@
 import {
+  erGenereltNavn as erGenereltAlias,
   findPest,
   findPestInGroup,
   pestsInGroup,
@@ -152,6 +153,19 @@ function slaaOpp(name: string, latinName: string, gruppe: PestGroup | null): Opp
   return { pest: navnI ?? latinI ?? etterNavn ?? etterLatin, etterLatin };
 }
 
+/** H1: høyeste sikkerhet når bare et generelt navn peker på arten (alltid «Mulig …»). */
+const MAKS_VED_GENERELT_ALIAS = LOW_CONFIDENCE_LABEL - 1;
+
+/**
+ * H1: kom arten bare fra et generelt navn («mus», «veps» …), uten at det
+ * vitenskapelige navnet bekrefter den? Ekskrementer er unntatt – der er
+ * «mus» og «rotte» selve hovedsvarene (F4 gjelder rotte).
+ */
+function bareGenereltNavn(name: string, oppslag: Oppslag, pest: Pest, gruppe: PestGroup | null): boolean {
+  if (gruppe === "Ekskrementer" || pest.gruppe === "Ekskrementer") return false;
+  return erGenereltAlias(name) && oppslag.etterLatin?.latin !== pest.latin;
+}
+
 /**
  * F4: et generelt navn som «Rotte» finnes ikke blant ekskrementene, men som
  * kallenavn på en dyreart (Brunrotte). Finnes det en ekskrementoppføring med
@@ -181,10 +195,12 @@ export function parseAlternatives(raw: unknown, gruppe: PestGroup | null): Candi
     const name = typeof rec.name === "string" ? rec.name : "";
     const latinName = typeof rec.latinName === "string" ? rec.latinName : "";
     // H1: et alternativ med motstridende navn forkastes – vi velger ikke art for modellen.
-    const pest = slaaOpp(name, latinName, gruppe).pest;
+    const oppslag = slaaOpp(name, latinName, gruppe);
+    const pest = oppslag.pest;
     if (!pest) continue;
 
-    const confidence = tolkProsent(rec.confidence) ?? 0;
+    let confidence = tolkProsent(rec.confidence) ?? 0;
+    if (bareGenereltNavn(name, oppslag, pest, gruppe)) confidence = Math.min(confidence, MAKS_VED_GENERELT_ALIAS);
 
     const hvorfor = typeof rec.hvorfor === "string" ? rec.hvorfor.trim() : "";
     out.push({ name: pest.norsk, latinName: pest.latin, confidence, hvorfor });
@@ -237,7 +253,9 @@ export function enrich(raw: Record<string, unknown>, gruppe: PestGroup | null): 
       : undefined;
 
   let confidence = tolkSikkerhet(raw.confidence);
-  let motstrid = raw.found === false ? undefined : slaaOpp(name, latinName, gruppe).motstrid;
+  const hovedOppslag = slaaOpp(name, latinName, gruppe);
+  let motstrid = raw.found === false ? undefined : hovedOppslag.motstrid;
+  let generelltNavn = pest && bareGenereltNavn(name, hovedOppslag, pest, gruppe) ? name.trim() : undefined;
 
   // F2: står arten i biblioteket, men utenfor gruppen steg 1 valgte, kan
   // modellen ha meldt den som «annen art». Da godtas den fra biblioteket –
@@ -248,6 +266,7 @@ export function enrich(raw: Record<string, unknown>, gruppe: PestGroup | null): 
     if (korrigert?.pest) {
       pest = korrigert.pest;
       confidence = korrigert.confidence;
+      generelltNavn = korrigert.generelltNavn;
     } else if (korrigert?.motstrid) {
       motstrid = korrigert.motstrid;
       confidence = korrigert.confidence;
@@ -283,6 +302,8 @@ export function enrich(raw: Record<string, unknown>, gruppe: PestGroup | null): 
     return { ...UNKNOWN, description: description || UNKNOWN.description, observasjon };
   }
 
+  if (generelltNavn) confidence = Math.min(confidence, MAKS_VED_GENERELT_ALIAS);
+
   // F4: «rotte» alene gir ikke en sikker bestemmelse.
   if (erEkskrementer && pest.latin === "Rattus norvegicus" && erGenereltNavn(name, latinName, pest)) {
     confidence = Math.min(confidence, MAKS_VED_GENERELT_NAVN);
@@ -316,6 +337,7 @@ export function enrich(raw: Record<string, unknown>, gruppe: PestGroup | null): 
     sesong: pest.sesong,
     forveksles: pest.forveksles,
     usikkerKandidat: confidence < LOW_CONFIDENCE_LABEL,
+    ...(generelltNavn ? { generelltNavn: generelltNavn.slice(0, 80) } : {}),
     bekreftelse: pest.bekreftelse,
     notat: pest.notat,
     forbehold,
@@ -348,7 +370,9 @@ export function markerIkkeSkadedyr(result: AnalysisResult, stegEnGruppe: unknown
  * (f.eks. «Mus» + Apodemus agrarius blir ikke husmus). Motstridende navn
  * gir motstrid, aldri en valgt art.
  */
-function fraAnnenArt(raw: unknown): { pest?: Pest; motstrid?: [Pest, Pest]; confidence: number } | undefined {
+function fraAnnenArt(
+  raw: unknown
+): { pest?: Pest; motstrid?: [Pest, Pest]; confidence: number; generelltNavn?: string } | undefined {
   if (typeof raw !== "object" || raw === null) return undefined;
   const rec = raw as Record<string, unknown>;
   const name = typeof rec.name === "string" ? rec.name : "";
@@ -361,11 +385,10 @@ function fraAnnenArt(raw: unknown): { pest?: Pest; motstrid?: [Pest, Pest]; conf
   if (!pest || pest.gruppe === "Ekskrementer") return undefined;
   const ukjentLatin = latinName.trim() !== "" && !/^ukjent$/i.test(latinName.trim()) && !oppslag.etterLatin;
   if (ukjentLatin) return undefined;
-  return { pest, confidence };
+  return bareGenereltNavn(name, oppslag, pest, null)
+    ? { pest, confidence: Math.min(confidence, MAKS_VED_GENERELT_ALIAS), generelltNavn: name.trim() }
+    : { pest, confidence };
 }
-
-/** Høyeste sikkerhet en art i et motstridende svar kan vises med (alltid «Lav sikkerhet»). */
-const MAKS_VED_MOTSTRID = LOW_CONFIDENCE_LABEL - 1;
 
 const artMedLatin = (p: Pest) => `${p.norsk} (${p.latin})`;
 
@@ -383,22 +406,18 @@ function motstridResultat(
   const annen = typeof raw.annenArt === "object" && raw.annenArt !== null ? (raw.annenArt as Record<string, unknown>) : undefined;
   const navn = (annen && typeof annen.name === "string" ? annen.name : f.name).trim().slice(0, 80);
   const latin = (annen && typeof annen.latinName === "string" ? annen.latinName : f.latinName).trim().slice(0, 80);
-  const sikkerhet = Math.min(f.confidence, MAKS_VED_MOTSTRID);
-  const kandidater: Candidate[] = [
-    { name: etterNavn.norsk, latinName: etterNavn.latin, confidence: sikkerhet, hvorfor: `Det norske navnet AI-en oppga («${navn}») peker på denne arten.` },
-    { name: etterLatin.norsk, latinName: etterLatin.latin, confidence: sikkerhet, hvorfor: `Det vitenskapelige navnet AI-en oppga («${latin}») peker på denne arten.` },
-  ];
-  const andre = parseAlternatives(raw.alternativer, f.gruppe)
-    .filter((a) => !kandidater.some((k) => k.name === a.name))
-    .map((a) => ({ ...a, confidence: Math.min(a.confidence, MAKS_VED_MOTSTRID) }));
+  // Ingen sikkerhet per art: modellens tall gjelder et svar som motsier seg selv.
+  const kandidater = [etterNavn, etterLatin].map((p) => ({ name: p.norsk, latinName: p.latin }));
+  // Andre alternativer modellen selv ga, med modellens egne tall – men aldri de to over.
+  const andre = parseAlternatives(raw.alternativer, f.gruppe).filter((a) => !kandidater.some((k) => k.name === a.name));
   const grunnlag = erEkskrementer
     ? { ...UNKNOWN, gruppe: "Ekskrementer", tiltak: EKSKREMENT_UKJENT_TILTAK, description: EKSKREMENT_UKJENT_TEKST }
     : { ...UNKNOWN, description: f.description || UNKNOWN.description, ...(etterNavn.gruppe === etterLatin.gruppe ? { gruppe: etterNavn.gruppe } : {}) };
   return {
     ...grunnlag,
     observasjon: f.observasjon,
-    motstrid: { navn, latin, navnArt: artMedLatin(etterNavn), latinArt: artMedLatin(etterLatin) },
-    alternativer: [...kandidater, ...andre],
+    motstrid: { navn, latin, navnArt: artMedLatin(etterNavn), latinArt: artMedLatin(etterLatin), kandidater },
+    alternativer: andre,
   };
 }
 

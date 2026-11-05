@@ -12,9 +12,15 @@ nå har med de to nye artene.
 - Etter FHI: klatremus finnes nord til Salten, brun pelsbille har svart halsskjold, og
   katteloppe er en sjeldnere art.
 - Peker det norske og det vitenskapelige navnet fra AI-en på forskjellige arter, velger appen
-  ikke. Svaret blir «Kunne ikke identifisere funnet sikkert» med forklaring, og begge artene
-  vises som alternativer med lav sikkerhet. Det samme gjelder på skjermen, i historikken og i
-  PDF-en.
+  ikke. Svaret blir «Kunne ikke identifisere funnet sikkert» med boksen «Analysen inneholder
+  motstridende artsnavn». De to artene vises som «Mulige arter (ingen sikkerhet oppgitt)» –
+  uten egne sikkerhetsnivåer. Det samme gjelder på skjermen, i historikken og i PDF-en, og når
+  navnene kommer som «art utenfor listen».
+- Generelle navn som «mus», «veps», «møll», «flue» og «kakerlakk» gir ikke lenger en sikker
+  artsbestemmelse alene. Uten et vitenskapelig navn som bekrefter arten vises de som
+  «Mulig …» med lav sikkerhet og en forklaring. Med bekreftende vitenskapelig navn er alt som
+  før. Ekskrementanalysen er unntatt («Mus» og «Rotte» er hovedsvarene der).
+- Historikken viser «Mulig …» for usikre forslag, slik skjermen og PDF-en gjør.
 - En art utenfor listen blir ikke lenger gjort om til en art i biblioteket via et norsk alias.
 - Historikk lagret før denne endringen får varselet om eldre artsdata (versjon 3).
 

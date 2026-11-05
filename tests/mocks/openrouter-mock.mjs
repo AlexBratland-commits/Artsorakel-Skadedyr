@@ -35,15 +35,20 @@ if (process.env.ARTSORAKEL_TEST_MOCK_AI === "1") {
     }
     // H1: motstridende og riktige navnepar, styres av notatfeltet.
     const meldinger = JSON.stringify(body.messages);
-    const navnepar = meldinger.includes("MOTSTRID-TEST")
-      ? { gruppe: "Gnagere", name: "Klatremus", latinName: "Myodes rutilus" }
-      : meldinger.includes("PELSBILLE-TEST")
-        ? { gruppe: "Biller", name: "Pelsbille", latinName: "Attagenus pellio" }
-        : null;
+    const navnepar = meldinger.includes("ANNEN-MOTSTRID-TEST")
+      ? { gruppe: "Gnagere", found: false, name: "Ukjent", latinName: "Ukjent", annenArt: { name: "Klatremus", latinName: "Myodes rutilus", confidence: 80, hvorfor: "Rødbrun rygg." } }
+      : meldinger.includes("MOTSTRID-TEST")
+        ? { gruppe: "Gnagere", name: "Klatremus", latinName: "Myodes rutilus" }
+        : meldinger.includes("PELSBILLE-TEST")
+          ? { gruppe: "Biller", name: "Pelsbille", latinName: "Attagenus pellio" }
+          : meldinger.includes("GENERELL-TEST")
+            ? { gruppe: "Gnagere", name: "Mus", latinName: "" }
+            : null;
     if (navnepar) {
+      const { gruppe, ...art } = navnepar;
       const svar = system.includes("grovsorterer")
-        ? JSON.stringify({ gruppe: navnepar.gruppe })
-        : JSON.stringify({ found: true, name: navnepar.name, latinName: navnepar.latinName, description: "Testbeskrivelse.", observasjon: "Testobservasjon.", confidence: 92, alternativer: [] });
+        ? JSON.stringify({ gruppe })
+        : JSON.stringify({ found: true, description: "Testbeskrivelse.", observasjon: "Testobservasjon.", confidence: 92, alternativer: [], ...art });
       return new Response(JSON.stringify({ choices: [{ message: { content: svar }, finish_reason: "stop" }] }), {
         status: 200,
         headers: { "content-type": "application/json" },

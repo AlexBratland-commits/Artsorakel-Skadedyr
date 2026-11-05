@@ -63,7 +63,9 @@ export default function HistoryPanel({
                   {e.resultat.annenArt
                     ? `Mulig ${e.resultat.annenArt.name}`
                     : e.resultat.found
-                      ? e.resultat.name
+                      ? e.resultat.usikkerKandidat
+                        ? `Mulig ${e.resultat.name}`
+                        : e.resultat.name
                       : e.resultat.ikkeSkadedyr
                         ? "Ingen skadedyr på bildet"
                         : "Ikke identifisert sikkert"}

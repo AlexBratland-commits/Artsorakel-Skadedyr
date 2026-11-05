@@ -36,6 +36,8 @@ export interface Motstrid {
   navnArt: string;
   /** Arten det vitenskapelige navnet peker på. */
   latinArt: string;
+  /** De to mulige artene – uten sikkerhet, siden modellens tall gjelder et motstridende svar. */
+  kandidater: { name: string; latinName: string }[];
 }
 
 /** Det klienten faktisk får – AI-svar + berikelse fra vår egen artsdatabase. */
@@ -70,6 +72,11 @@ export interface AnalysisResult extends AiIdentification {
    * vises som alternativer med lav sikkerhet.
    */
   motstrid?: Motstrid;
+  /**
+   * H1: modellen brukte bare et generelt navn (f.eks. «mus») uten et
+   * vitenskapelig navn som bekrefter arten. Vises som «Mulig …».
+   */
+  generelltNavn?: string;
   /** Satt hvis svaret kom fra serverens cache (samme bilde analysert før). */
   cached?: boolean;
   /**

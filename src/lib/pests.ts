@@ -1457,6 +1457,27 @@ function normalize(s: string): string {
   return s.toLowerCase().replace(/[()]/g, "").replace(/\s+/g, " ").trim();
 }
 
+/**
+ * H1: generelle navn som dekker flere arter (f.eks. «mus», «veps», «møll»).
+ * De slår fortsatt opp arten, men gir aldri en sikker bestemmelse alene –
+ * bare et mulig forslag, med mindre det vitenskapelige navnet bekrefter
+ * arten. Gjelder ikke ekskrementer, der «mus» og «rotte» er hovedsvarene.
+ */
+export const GENERELLE_ALIASER: readonly string[] = [
+  "rotte", "mus", "skogmus", "rev", "due", "spurv", "måke", "måse",
+  "kakerlakk", "kakkerlakk", "jordmaur", "veps", "stor veps", "bie",
+  "borebille", "treorm", "lasioderma", "oryzaephilus", "møll", "flue",
+  "kjøttflue", "blåflue", "klyngeflue", "fruktflue", "midd", "blodmidd",
+  "edderkopp", "tegenaria", "flått",
+];
+
+/** Er navnet et generelt navn som kan gjelde flere arter? */
+export function erGenereltNavn(navn?: string | null): boolean {
+  if (!navn) return false;
+  const n = normalize(navn);
+  return GENERELLE_ALIASER.some((a) => normalize(a) === n);
+}
+
 /** Slår opp art på norsk navn, latinsk navn eller alias. */
 export function findPest(name?: string | null): Pest | undefined {
   if (!name) return undefined;

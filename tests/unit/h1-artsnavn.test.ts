@@ -13,7 +13,15 @@ import { describe, expect, it } from "vitest";
 import { enrich, markerIkkeSkadedyr, parseAlternatives } from "@/lib/identification";
 import { PESTS, findPest, findPestInGroup, type PestGroup } from "@/lib/pests";
 import { lagRapportInnhold } from "@/lib/rapport/innhold";
-import { IKKE_IDENTIFISERT, motstridTekst, oppryddingFor, visningsnavn } from "@/lib/resultat-tekst";
+import {
+  generelltNavnTekst,
+  IKKE_IDENTIFISERT,
+  MOTSTRID_TITTEL,
+  motstridKandidater,
+  motstridTekst,
+  oppryddingFor,
+  visningsnavn,
+} from "@/lib/resultat-tekst";
 
 const svar = (raw: Record<string, unknown>, gruppe: PestGroup | null) =>
   enrich({ description: "x", alternativer: [], found: true, confidence: 90, ...raw }, gruppe);
@@ -138,10 +146,15 @@ describe("H1: motstridende navn gir usikkert resultat – appen velger ikke art"
       const tekst = motstridTekst(r)!;
       expect(tekst).toContain(etterNavn);
       expect(tekst).toContain(etterLatin);
-      expect(tekst).toMatch(/velger ikke mellom dem/);
-      // Begge vises som alternativer med lav sikkerhet – aldri som sikker art
-      expect(r.alternativer.map((a) => a.name)).toEqual(expect.arrayContaining([etterNavn, etterLatin]));
-      for (const a of r.alternativer) expect(a.confidence).toBeLessThan(50);
+      expect(tekst).toMatch(/velger ikke mellom dem og oppgir ingen sikkerhet/);
+      // Begge vises som mulige arter uten egen sikkerhet – aldri som alternativ med et tall
+      const kandidater = motstridKandidater(r);
+      expect(kandidater).toHaveLength(2);
+      expect(kandidater[0]).toMatch(new RegExp(`^${etterNavn} \\(`));
+      expect(kandidater[1]).toMatch(new RegExp(`^${etterLatin} \\(`));
+      expect(r.alternativer.map((a) => a.name)).not.toContain(etterNavn);
+      expect(r.alternativer.map((a) => a.name)).not.toContain(etterLatin);
+      expect(JSON.stringify(r.motstrid)).not.toMatch(/confidence/);
     });
   }
 
@@ -166,8 +179,14 @@ describe("H1: motstridende navn gir usikkert resultat – appen velger ikke art"
     expect(i.latin).toBeUndefined();
     expect(i.sikkerhet).toBeUndefined();
     expect(i.risiko.etikett).toBeUndefined();
-    expect(i.merknader).toContain(motstridTekst(r));
-    expect(i.alternativer.map((a) => a.sikkerhet)).toEqual(["Lav sikkerhet", "Lav sikkerhet"]);
+    expect(i.motstrid).toEqual({
+      tittel: MOTSTRID_TITTEL,
+      tekst: motstridTekst(r),
+      kandidaterTittel: "Mulige arter (ingen sikkerhet oppgitt)",
+      kandidater: ["Klatremus (Myodes glareolus)", "Rødmus (Myodes rutilus)"],
+    });
+    expect(i.alternativer).toEqual([]);
+    expect(JSON.stringify(i)).not.toMatch(/Lav sikkerhet|Middels sikkerhet|Høy sikkerhet/);
   });
 
   it("motstridende alternativer forkastes i stedet for å bli gjort om til én art", () => {
@@ -181,9 +200,21 @@ describe("H1: motstridende navn gir usikkert resultat – appen velger ikke art"
     expect(alt.map((a) => a.name)).toEqual(["Pelsbille"]);
   });
 
+  it("andre alternativer modellen selv ga, beholdes med modellens egne tall", () => {
+    const r = svar(
+      { name: "Klatremus", latinName: "Myodes rutilus", alternativer: [{ name: "Markmus", latinName: "Microtus agrestis", confidence: 40, hvorfor: "Butt snute" }] },
+      "Gnagere"
+    );
+    expect(r.alternativer).toEqual([{ name: "Markmus", latinName: "Microtus agrestis", confidence: 40, hvorfor: "Butt snute" }]);
+  });
+
   it("ødelagt motstrid-felt fra historikken krasjer ikke", () => {
     const r = { ...svar({ name: "Ukjent", found: false }, "Gnagere"), motstrid: { navn: 3 } } as never;
     expect(motstridTekst(r)).toBeUndefined();
+    expect(motstridKandidater(r)).toEqual([]);
+    const utenKandidater = { ...svar({ name: "Klatremus", latinName: "Myodes rutilus" }, "Gnagere") };
+    utenKandidater.motstrid = { ...utenKandidater.motstrid!, kandidater: "x" as never };
+    expect(motstridKandidater(utenKandidater)).toEqual(["Klatremus (Myodes glareolus)", "Rødmus (Myodes rutilus)"]);
   });
 });
 
@@ -217,5 +248,120 @@ describe("H1: «art utenfor listen» blir ikke gjort om til en art i biblioteket
     expect(r.found).toBe(false);
     expect(r.annenArt).toBeUndefined();
     expect(r.motstrid).toBeDefined();
+  });
+});
+
+describe("H1: generelle navn gir aldri en sikker artsbestemmelse alene", () => {
+  const generelle: [string, PestGroup, string][] = [
+    ["Mus", "Gnagere", "Husmus"],
+    ["Rotte", "Gnagere", "Brunrotte"],
+    ["Skogmus", "Gnagere", "Liten skogmus"],
+    ["Veps", "Veps og bier", "Vanlig veps"],
+    ["Bie", "Veps og bier", "Honningbie"],
+    ["Møll", "Møll", "Klesmøll"],
+    ["Flue", "Fluer og mygg", "Husflue"],
+    ["Blåflue", "Fluer og mygg", "Spyflue"],
+    ["Kakerlakk", "Kakerlakker", "Tysk kakerlakk"],
+    ["Jordmaur", "Maur", "Svart jordmaur"],
+    ["Edderkopp", "Edderkoppdyr", "Husedderkopp"],
+    ["Flått", "Edderkoppdyr", "Skogflått"],
+    ["Midd", "Lus, lopper og midd", "Husstøvmidd"],
+    ["Måke", "Fugler", "Gråmåke"],
+    ["Treorm", "Biller", "Stripet borebille"],
+  ];
+  for (const [navn, gruppe, art] of generelle) {
+    it(`«${navn}» alene → «Mulig ${art}» med lav sikkerhet`, () => {
+      for (const latin of ["", "Ukjent"]) {
+        const r = svar({ name: navn, latinName: latin, confidence: 95 }, gruppe);
+        expect(r.found).toBe(true);
+        expect(r.name).toBe(art);
+        expect(r.confidence).toBeLessThan(50);
+        expect(r.usikkerKandidat).toBe(true);
+        expect(visningsnavn(r)).toBe(`Mulig ${art}`);
+        expect(generelltNavnTekst(r)).toContain(`«${navn}»`);
+      }
+    });
+  }
+
+  it("generelt navn med bekreftende vitenskapelig navn beholder modellens sikkerhet", () => {
+    const tilfeller: [string, string, PestGroup, string][] = [
+      ["Mus", "Mus musculus", "Gnagere", "Husmus"],
+      ["Rotte", "Rattus norvegicus", "Gnagere", "Brunrotte"],
+      ["Veps", "Vespula vulgaris", "Veps og bier", "Vanlig veps"],
+      ["Møll", "Tineola bisselliella", "Møll", "Klesmøll"],
+      ["Flue", "Musca domestica", "Fluer og mygg", "Husflue"],
+      ["Kakerlakk", "Blattella germanica", "Kakerlakker", "Tysk kakerlakk"],
+    ];
+    for (const [navn, latin, gruppe, art] of tilfeller) {
+      const r = svar({ name: navn, latinName: latin, confidence: 90 }, gruppe);
+      expect(r, navn).toMatchObject({ found: true, name: art, confidence: 90, usikkerKandidat: false });
+      expect(generelltNavnTekst(r)).toBeUndefined();
+    }
+  });
+
+  it("generelt navn med vitenskapelig navn for en annen art i listen er motstridende", () => {
+    const r = svar({ name: "Kakerlakk", latinName: "Periplaneta americana" }, "Kakerlakker");
+    expect(r.found).toBe(false);
+    expect(motstridKandidater(r)).toEqual(["Tysk kakerlakk (Blattella germanica)", "Amerikansk kakerlakk (Periplaneta americana)"]);
+  });
+
+  it("generelt navn med ukjent vitenskapelig navn gir bare et mulig forslag", () => {
+    const r = svar({ name: "Veps", latinName: "Vespula rufa", confidence: 90 }, "Veps og bier");
+    expect(r).toMatchObject({ name: "Vanlig veps", usikkerKandidat: true });
+    expect(r.confidence).toBeLessThan(50);
+  });
+
+  it("artsnavn og faglig riktige synonymer gir fortsatt sikker bestemmelse", () => {
+    const tilfeller: [string, PestGroup, string][] = [
+      ["Husmus", "Gnagere", "Husmus"],
+      ["Tysk kakerlakk", "Kakerlakker", "Tysk kakerlakk"],
+      ["Klesmøll", "Møll", "Klesmøll"],
+      ["Sølvfisk", "Kre", "Sølvkre"],
+      ["Sengelus", "Andre småkryp", "Veggedyr"],
+      ["Majorstubille", "Biller", "Brun pelsbille"],
+      ["Brun rotte", "Gnagere", "Brunrotte"],
+      ["Hermelin", "Andre pattedyr", "Røyskatt"],
+      ["Stokkemaur", "Maur", "Stokkmaur"],
+    ];
+    for (const [navn, gruppe, art] of tilfeller) {
+      const r = svar({ name: navn, latinName: "", confidence: 90 }, gruppe);
+      expect(r, navn).toMatchObject({ found: true, name: art, confidence: 90, usikkerKandidat: false });
+    }
+  });
+
+  it("alternativer med bare et generelt navn får lav sikkerhet", () => {
+    const alt = parseAlternatives(
+      [
+        { name: "Mus", latinName: "", confidence: 70, hvorfor: "" },
+        { name: "Brunrotte", latinName: "Rattus norvegicus", confidence: 60, hvorfor: "" },
+      ],
+      "Gnagere"
+    );
+    expect(alt).toMatchObject([{ name: "Brunrotte", confidence: 60 }, { name: "Husmus", confidence: 49 }]);
+  });
+
+  it("art utenfor listen med bare et generelt navn blir et mulig forslag, ikke en sikker art", () => {
+    const r = enrich(
+      { found: false, name: "Ukjent", latinName: "Ukjent", description: "x", confidence: 0, annenArt: { name: "Mus", latinName: "", confidence: 85, hvorfor: "" } },
+      "Andre pattedyr"
+    );
+    expect(r).toMatchObject({ found: true, name: "Husmus", usikkerKandidat: true, generelltNavn: "Mus" });
+    expect(r.confidence).toBeLessThan(50);
+  });
+
+  it("PDF-innholdet forklarer det generelle navnet og viser «Mulig» og lav sikkerhet", () => {
+    const r = svar({ name: "Møll", latinName: "", confidence: 95 }, "Møll");
+    const i = lagRapportInnhold(r, { analyseTid: new Date() });
+    expect(i.navn).toBe("Mulig Klesmøll");
+    expect(i.sikkerhet?.etikett).toBe("Lav sikkerhet");
+    expect(i.merknader).toContain(generelltNavnTekst(r));
+  });
+
+  it("ekskrementer er unntatt: «Mus» er hovedsvaret, og «Rotte» følger F4 som før", () => {
+    const mus = svar({ name: "Mus", latinName: "", confidence: 85 }, "Ekskrementer");
+    expect(mus).toMatchObject({ found: true, name: "Mus", confidence: 85 });
+    expect(mus.generelltNavn).toBeUndefined();
+    const rotte = svar({ name: "Rotte", latinName: "", confidence: 95 }, "Ekskrementer");
+    expect(rotte).toMatchObject({ found: true, name: "Brunrotte", confidence: 79 });
   });
 });
