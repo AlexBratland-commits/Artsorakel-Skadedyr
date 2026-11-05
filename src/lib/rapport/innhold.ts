@@ -122,7 +122,8 @@ export function filnavnDel(tekst: string): string {
 export function lagRapportInnhold(result: AnalysisResult, valg: RapportValg): RapportInnhold {
   const rapportTid = valg.rapportTid ?? new Date();
   const nivaa = sikkerhetsnivaa(result.confidence);
-  const usikker = nivaa !== "høy";
+  // M3: et alternativ som er minst like sannsynlig, gjør bestemmelsen usikker – nivået vises som før.
+  const usikker = nivaa !== "høy" || harSterkereAlternativ(result);
   const grad = result.found ? ALVORLIGHET[result.severity] ?? ALVORLIGHET.middels : undefined;
   const navn = visningsnavn(result);
 

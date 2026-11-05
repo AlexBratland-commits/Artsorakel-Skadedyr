@@ -13,6 +13,16 @@ import { ARTER_UTENFOR_BIBLIOTEKET } from "./fagregler";
 /** Kort og uten linjeskift eller anførselstegn, siden teksten havner i systemprompten. */
 const rens = (x: string | undefined, maks = 120) => (x ?? "").replace(/\s+/g, " ").replace(/["\\]/g, "").trim().slice(0, maks);
 
+/**
+ * M1: navn på en art utenfor listen kommer fra modellens svar og kan være
+ * påvirket av brukerens tekst. Bare noe som ser ut som et artsnavn slippes
+ * inn i systemprompten – ellers omtales den generelt.
+ */
+function artsnavn(x: string | undefined): string {
+  const t = rens(x, 60);
+  return /^[\p{L}][\p{L}\p{M} .'-]*$/u.test(t) && t.split(" ").length <= 5 ? t : "";
+}
+
 export const IKKE_BEKREFTET =
   "Bildeanalysen er en AI-vurdering av et bilde, ikke en bekreftet artsbestemmelse. Si aldri at arten er bekreftet, sikkert bestemt eller fastslått, selv om brukeren ber om det – en sikker bestemmelse krever en fagperson.";
 
@@ -70,11 +80,14 @@ export function beskrivFunn(billett: ChatBillett): FunnBeskrivelse {
     const navn = `${pest.norsk} (${pest.latin})`;
     const ekskrement = pest.gruppe === "Ekskrementer" ? ", ut fra ekskrementer" : "";
     const usikker = billett.usikker || billett.nivaa === "lav";
+    const sterkere = billett.sterkereAlternativ?.map((a) => rens(a)).join(", ");
     const innledning = usikker
       ? `Bildeanalysen foreslår at det kan være ${navn}${ekskrement}, men sikkerheten er lav. Omtal den alltid som «mulig ${pest.norsk}», aldri som sikker. Gi ikke råd som forutsetter at det er ${pest.norsk} uten å si at arten først bør bekreftes.`
       : billett.nivaa === "middels"
         ? `Bildeanalysen foreslår ${navn}${ekskrement} med middels sikkerhet. Omtal arten som sannsynlig, ikke sikker. Bestemmelsen bør bekreftes av en fagperson.`
-        : billett.nivaa === "høy"
+        : sterkere
+          ? `Bildeanalysen foreslår ${navn}${ekskrement}${billett.nivaa ? ` med ${billett.nivaa} sikkerhet` : ""}. Et alternativ ble vurdert som minst like sannsynlig: ${sterkere}. Omtal arten som usikker, og ikke velg mellom dem på egen hånd. Bestemmelsen bør bekreftes av en fagperson.`
+          : billett.nivaa === "høy"
           ? `Bildeanalysen foreslår ${navn}${ekskrement} med høy sikkerhet. Du kan bruke artsnavnet naturlig.`
           : `Bildeanalysen foreslår ${navn}${ekskrement}.`;
     const generelt = billett.generelt ? `\n${rens(billett.generelt, 300)}` : "";
@@ -93,9 +106,9 @@ export function beskrivFunn(billett: ChatBillett): FunnBeskrivelse {
     };
   }
 
-  const annen = rens(billett.annenArt, 80);
+  const annen = billett.annenArt ? artsnavn(billett.annenArt) || "en art utenfor listen" : "";
   if (annen) {
-    const latin = rens(billett.annenArtLatin, 80);
+    const latin = artsnavn(billett.annenArtLatin);
     const nivaa = billett.nivaa ? ` med ${billett.nivaa} sikkerhet` : "";
     const regel = utenforRegel(annen, latin);
     return {

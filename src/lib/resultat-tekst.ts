@@ -149,6 +149,17 @@ export function harSterkereAlternativ(result: AnalysisResult): boolean {
   return result.found && result.alternativer.some((a) => a.confidence >= result.confidence);
 }
 
+/** M3: alternativene som er vurdert som minst like sannsynlige som hovedforslaget. */
+export function sterkereAlternativer(result: AnalysisResult): AnalysisResult["alternativer"] {
+  if (!result.found || !Array.isArray(result.alternativer)) return [];
+  return result.alternativer.filter((a) => typeof a?.confidence === "number" && a.confidence >= result.confidence);
+}
+
+/** M3: kort merknad i historikklisten når et alternativ er minst like sannsynlig. */
+export function historikkMerknad(result: AnalysisResult): string | undefined {
+  return sterkereAlternativer(result).length ? "Alternativ like sannsynlig" : undefined;
+}
+
 /**
  * Sikkerhetsnivået som skal vises for et alternativ. Som før vises det når
  * det er lavere enn hovedforslagets (F7), men nå også når alternativet er

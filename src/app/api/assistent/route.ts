@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { chatModel, openRouterApiKey } from "@/lib/server/config";
 import { kallOpenRouter } from "@/lib/server/openrouter";
-import { forStorForesporsel, ipNokkel, klientIp, sjekkOpprinnelse } from "@/lib/server/request-guards";
+import { forStorForesporsel, ipNokkel, klientIp, lesBegrensetJson, sjekkOpprinnelse } from "@/lib/server/request-guards";
 import { lesTilgang, tilgangNektet } from "@/lib/server/access";
 import { chatDognRegel, chatRegler, sjekkGrenser, type GrenseResultat } from "@/lib/server/limits";
 import { rensTekst } from "@/lib/server/validation";
@@ -88,12 +88,10 @@ async function svar(request: NextRequest): Promise<NextResponse> {
   if (!grense.ok) return grenseSvar(grense);
 
   if (forStorForesporsel(request, MAX_BODY_BYTES)) return ugyldig();
-  let body: { samtaleToken?: unknown; messages?: unknown };
-  try {
-    body = await request.json();
-  } catch {
-    return ugyldig();
-  }
+  // M2: grensen gjelder faktisk innhold, også uten eller med feil Content-Length.
+  const lest = await lesBegrensetJson(request, MAX_BODY_BYTES);
+  if (!lest.ok) return ugyldig();
+  const body = lest.data as { samtaleToken?: unknown; messages?: unknown };
   if (typeof body !== "object" || body === null || !Array.isArray(body.messages)) return ugyldig("Mangler spørsmål.");
 
   // Første spørsmål: ny samtale. Senere: samtalen må være signert av oss.

@@ -95,3 +95,66 @@ export function forStorForesporsel(request: NextRequest, maksBytes: number): boo
   const lengde = Number(request.headers.get("content-length"));
   return Number.isFinite(lengde) && lengde > maksBytes;
 }
+
+/**
+ * M2 (revisjon): leser kroppen, men aldri mer enn `maksBytes`. Bytene telles
+ * mens de kommer inn, så grensen gjelder også når Content-Length mangler
+ * (chunked) eller er feil. Går den over, avbrytes lesingen og resten av
+ * opplastingen leses ikke. Gir null ved for stor kropp.
+ */
+export async function lesBegrensetKropp(request: Request, maksBytes: number): Promise<Uint8Array<ArrayBuffer> | null> {
+  if (!request.body) return new Uint8Array(0);
+  const leser = request.body.getReader();
+  const deler: Uint8Array[] = [];
+  let totalt = 0;
+  for (;;) {
+    const { done, value } = await leser.read();
+    if (done) break;
+    totalt += value.byteLength;
+    if (totalt > maksBytes) {
+      await leser.cancel().catch(() => {});
+      return null;
+    }
+    deler.push(value);
+  }
+  const ut = new Uint8Array(totalt);
+  let pos = 0;
+  for (const d of deler) {
+    ut.set(d, pos);
+    pos += d.byteLength;
+  }
+  return ut;
+}
+
+/** Feil ved begrenset lesing: for stor kropp eller ugyldig innhold. */
+export type BegrensetFeil = "for_stor" | "ugyldig";
+
+/** JSON-kropp med størrelsesgrense (M2). */
+export async function lesBegrensetJson(
+  request: Request,
+  maksBytes: number
+): Promise<{ ok: true; data: unknown } | { ok: false; feil: BegrensetFeil }> {
+  const kropp = await lesBegrensetKropp(request, maksBytes);
+  if (!kropp) return { ok: false, feil: "for_stor" };
+  try {
+    return { ok: true, data: JSON.parse(new TextDecoder().decode(kropp)) };
+  } catch {
+    return { ok: false, feil: "ugyldig" };
+  }
+}
+
+/** Skjemadata (multipart) med størrelsesgrense (M2). */
+export async function lesBegrensetSkjema(
+  request: Request,
+  maksBytes: number
+): Promise<{ ok: true; data: FormData } | { ok: false; feil: BegrensetFeil }> {
+  const kropp = await lesBegrensetKropp(request, maksBytes);
+  if (!kropp) return { ok: false, feil: "for_stor" };
+  try {
+    const type = request.headers.get("content-type") ?? "";
+    const data = await new Response(kropp, { headers: { "content-type": type } }).formData();
+    return { ok: true, data };
+  } catch {
+    return { ok: false, feil: "ugyldig" };
+  }
+}

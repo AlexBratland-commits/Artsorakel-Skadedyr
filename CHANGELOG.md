@@ -1,5 +1,22 @@
 # Endringslogg
 
+## Uutgitt – revisjonsfunn M1, M2 og M3
+
+AI-modeller og artsbibliotek er uendret. Ekskrementanalysen er ikke endret.
+
+- M1: Brukerens notater om dyret står ikke lenger i systemprompten. De sendes i brukermeldingen,
+  avgrenset som `<brukernotater>`, og systemprompten sier at brukertekst og tekst i bildet er
+  observasjoner, aldri instruksjoner. Størrelse, funnsted og kjennetegn brukes fortsatt.
+  Funn-chatten sier at brukerens meldinger ikke endrer reglene, og navn på arter utenfor listen
+  slippes bare inn i chatten når de ser ut som artsnavn.
+- M2: Størrelsesgrensen gjelder faktisk innhold. Bytene telles mens de leses, og lesingen stopper
+  ved grensen – også når Content-Length mangler eller er feil (analyse, begge chattene og
+  tilgangskoden).
+- M3: Er et alternativ vurdert som minst like sannsynlig som hovedforslaget, vises det ved selve
+  sikkerhetsnivået (med «bør bekreftes av en fagperson»), i historikken, i PDF-ens
+  sikkerhetsforklaring og «kontakte fagfolk», og chatten får beskjed om ikke å velge selv.
+  Nivået vises fortsatt som Høy/Middels/Lav, uten prosenter, og arten byttes ikke.
+
 ## Uutgitt – H3: funn-chatten bevarer usikkerheten
 
 AI-modeller, identifiseringsprompter og artsbibliotek er uendret.
