@@ -54,7 +54,7 @@ describe("chat krever en analyse", () => {
     expect(body.svar).toBe("Testsvar fra falsk AI.");
     expect(typeof body.signatur).toBe("string");
     const chatKall = ai.calls.find((c) => c.kind === "chat")!;
-    expect(chatKall.system).toContain("Funnet er Husmus (Mus musculus)");
+    expect(chatKall.system).toContain("Bildeanalysen foreslår Husmus (Mus musculus) med høy sikkerhet");
     expect(chatKall.system).not.toContain("Veggedyr");
   });
 });
