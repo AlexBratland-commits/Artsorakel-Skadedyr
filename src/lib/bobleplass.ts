@@ -1,7 +1,7 @@
 /**
  * Plassering av den flytende chatboblen: den skal aldri ligge over knapper,
- * lenker eller skjemafelt. Virker på alle sider, fordi den sjekker hva som
- * faktisk ligger under boblen i stedet for å kjenne til bestemte knapper.
+ * lenker eller skjemafelt. Virker på alle sider, fordi den sammenligner med
+ * alle synlige knapper og felt i stedet for å kjenne til bestemte knapper.
  *
  * Rekkefølge: full boble → kompakt (bare ikon) → skjult til plassen er fri.
  * Mens tastaturet er åpent (et skrivefelt har fokus) skjules boblen også,
@@ -26,28 +26,31 @@ export interface Ramme {
   bottom: number;
 }
 
-/** Dekker en ramme (med litt luft) noe viktig? Selve boblen og andre flytende lag hoppes over. */
-export function dekkerViktig(ramme: Ramme, boble: Element | null, luft = 6): boolean {
-  const r = { left: ramme.left - luft, top: ramme.top - luft, right: ramme.right + luft, bottom: ramme.bottom + luft };
-  // Tett rutenett (høyst ca. 12 px mellom punktene), så også små overlapp i hjørnene fanges opp.
-  const punkter = (fra: number, til: number) => {
-    const n = Math.max(2, Math.ceil((til - fra) / 12));
-    return Array.from({ length: n + 1 }, (_, i) => fra + ((til - fra) * i) / n);
-  };
-  const xs = punkter(r.left, r.right);
-  const ys = punkter(r.top, r.bottom);
-  for (const x of xs) {
-    for (const y of ys) {
-      if (x < 0 || y < 0 || x >= window.innerWidth || y >= window.innerHeight) continue;
-      for (const el of document.elementsFromPoint(x, y)) {
-        if (boble?.contains(el) || el.closest(FLYTENDE)) continue;
-        // Det øverste innholdet i dette punktet: er det (inne i) noe viktig?
-        if (el.closest(VIKTIG)) return true;
-        break;
-      }
-    }
+/**
+ * Rammene til synlige viktige elementer i skjermbildet (L2, revisjon).
+ * Hentes én gang per sjekk, så alle kandidatplasser kan prøves billig.
+ * Tidligere ble det gjort tusenvis av punktsøk per sjekk, som ga hakking
+ * på enkle mobiler. Elementer under et annet lag regnes med – det gjør at
+ * boblen heller viker for ofte enn for sjelden.
+ */
+export function viktigeRammer(boble: Element | null): Ramme[] {
+  const bredde = window.innerWidth;
+  const hoyde = window.innerHeight;
+  const rammer: Ramme[] = [];
+  for (const el of document.querySelectorAll<HTMLElement>(VIKTIG)) {
+    if (boble?.contains(el) || el.closest(FLYTENDE)) continue;
+    const r = el.getBoundingClientRect();
+    if (r.width === 0 || r.height === 0 || r.bottom < 0 || r.top > hoyde || r.right < 0 || r.left > bredde) continue;
+    if (getComputedStyle(el).visibility === "hidden") continue;
+    rammer.push({ left: r.left, top: r.top, right: r.right, bottom: r.bottom });
   }
-  return false;
+  return rammer;
+}
+
+/** Overlapper rammen (med litt luft) noen av de viktige elementene? */
+export function dekkerViktig(ramme: Ramme, viktige: Ramme[], luft = 6): boolean {
+  const r = { left: ramme.left - luft, top: ramme.top - luft, right: ramme.right + luft, bottom: ramme.bottom + luft };
+  return viktige.some((v) => v.left < r.right && v.right > r.left && v.top < r.bottom && v.bottom > r.top);
 }
 
 export function tastaturApent(boble: Element | null): boolean {
@@ -71,10 +74,11 @@ const flytt = (r: Ramme, dy: number): Ramme => ({ ...r, top: r.top - dy, bottom:
  */
 export function velgPlass(boble: Element | null, full: Ramme, kompakt: Ramme, maksLoft: number): BoblePlass {
   if (tastaturApent(boble)) return { modus: "skjult", loft: 0 };
-  if (!dekkerViktig(full, boble)) return { modus: "full", loft: 0 };
-  if (!dekkerViktig(kompakt, boble)) return { modus: "kompakt", loft: 0 };
+  const viktige = viktigeRammer(boble);
+  if (!dekkerViktig(full, viktige)) return { modus: "full", loft: 0 };
+  if (!dekkerViktig(kompakt, viktige)) return { modus: "kompakt", loft: 0 };
   for (let loft = 8; loft <= maksLoft; loft += 8) {
-    if (!dekkerViktig(flytt(kompakt, loft), boble)) return { modus: "kompakt", loft };
+    if (!dekkerViktig(flytt(kompakt, loft), viktige)) return { modus: "kompakt", loft };
   }
   return { modus: "skjult", loft: 0 };
 }

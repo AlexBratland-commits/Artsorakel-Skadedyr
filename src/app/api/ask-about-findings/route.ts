@@ -116,7 +116,9 @@ async function svarPaaSporsmal(request: NextRequest): Promise<NextResponse> {
         loggHendelse("chat_avvist", { grunn: "usignert_svar" });
         return ugyldig("Samtalen kunne ikke bekreftes. Start en ny samtale.", "chat_historikk_ugyldig");
       }
-      messages.push({ role: "assistant", content: content.slice(0, MAX_MESSAGE_CHARS) });
+      // M5 (revisjon): hele svaret – det er signert av oss og høyst MAX_ASSISTANT_CHARS
+      // lang. Å kutte det til 500 tegn fjernet forbehold på slutten av svaret.
+      messages.push({ role: "assistant", content });
     } else {
       return ugyldig();
     }

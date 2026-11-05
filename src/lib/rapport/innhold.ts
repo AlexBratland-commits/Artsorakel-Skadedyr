@@ -9,7 +9,10 @@
 import { SIKKERHET_ETIKETT, sikkerhetsnivaa, type AnalysisResult } from "../types";
 import { LOCATIONS } from "../types";
 import {
+  ALTERNATIV_MOTSTRID_TEKST,
   ALVORLIGHET,
+  alternativNivaa,
+  harSterkereAlternativ,
   annenArtTekst,
   EKSKREMENT_FORBEHOLD,
   ELDRE_ARTSDATA_TEKST,
@@ -91,9 +94,6 @@ const kortDato = new Intl.DateTimeFormat("nb-NO", {
 });
 const filDato = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Oslo" }); // ÅÅÅÅ-MM-DD
 
-function nivaaTrinn(confidence: number): number {
-  return { lav: 1, middels: 2, høy: 3 }[sikkerhetsnivaa(confidence)];
-}
 
 /** Filnavnvennlig: æ → ae, ø → o, å → a, alt annet bindestrek. */
 export function filnavnDel(tekst: string): string {
@@ -122,15 +122,13 @@ export function lagRapportInnhold(result: AnalysisResult, valg: RapportValg): Ra
   if (!result.found && result.annenArt?.hvorfor) merknader.push(result.annenArt.hvorfor);
   if (result.usikkerKandidat) merknader.push(USIKKER_KANDIDAT_TEKST);
   if (valg.eldreArtsdata) merknader.push(ELDRE_ARTSDATA_TEKST);
+  if (harSterkereAlternativ(result)) merknader.push(ALTERNATIV_MOTSTRID_TEKST);
 
   // Som på skjermen: vis nivået for et alternativ bare når det er lavere enn hovedforslagets.
   const alternativer: RapportAlternativ[] = result.alternativer.map((alt) => ({
     navn: alt.name,
     latin: alt.latinName && alt.latinName !== "Ukjent" ? alt.latinName : undefined,
-    sikkerhet:
-      !result.found || nivaaTrinn(alt.confidence) < nivaaTrinn(result.confidence)
-        ? SIKKERHET_ETIKETT[sikkerhetsnivaa(alt.confidence)]
-        : undefined,
+    sikkerhet: alternativNivaa(result, alt),
     hvorfor: alt.hvorfor || undefined,
   }));
 

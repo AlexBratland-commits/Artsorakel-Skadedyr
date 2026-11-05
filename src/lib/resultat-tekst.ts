@@ -55,3 +55,28 @@ export function latinskNavn(result: AnalysisResult): string | undefined {
   const navn = annen ? annen.latinName : result.found ? result.latinName : undefined;
   return navn && navn !== "Ukjent" ? navn : undefined;
 }
+
+// ── Alternativer (M3, revisjon) ─────────────────────────────────────────
+
+/** Vises når modellen gir et alternativ minst like høy sikkerhet som hovedforslaget. */
+export const ALTERNATIV_MOTSTRID_TEKST =
+  "Et alternativ ble vurdert som minst like sannsynlig som hovedforslaget. Bestemmelsen bør bekreftes av en fagperson.";
+
+const trinn = (confidence: number) => ({ lav: 1, middels: 2, høy: 3 })[sikkerhetsnivaa(confidence)];
+
+/** Har modellen gitt et alternativ minst like høy sikkerhet som hovedforslaget? */
+export function harSterkereAlternativ(result: AnalysisResult): boolean {
+  return result.found && result.alternativer.some((a) => a.confidence >= result.confidence);
+}
+
+/**
+ * Sikkerhetsnivået som skal vises for et alternativ. Som før vises det når
+ * det er lavere enn hovedforslagets (F7), men nå også når alternativet er
+ * minst like sannsynlig – da skjules aldri motstriden.
+ */
+export function alternativNivaa(result: AnalysisResult, alt: { confidence: number }): string | undefined {
+  if (!result.found || trinn(alt.confidence) < trinn(result.confidence) || alt.confidence >= result.confidence) {
+    return SIKKERHET_ETIKETT[sikkerhetsnivaa(alt.confidence)];
+  }
+  return undefined;
+}

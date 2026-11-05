@@ -127,7 +127,9 @@ async function svar(request: NextRequest): Promise<NextResponse> {
         loggHendelse("chat_avvist", { rute: "assistent", grunn: "usignert_svar" });
         return ugyldig("Samtalen kunne ikke bekreftes. Start en ny samtale.", "samtale_ugyldig");
       }
-      meldinger.push({ role: "assistant", content: content.slice(0, MAX_MESSAGE_CHARS) });
+      // M5 (revisjon): hele svaret – det er signert av oss og høyst MAX_ASSISTANT_CHARS
+      // lang. Å kutte det til 500 tegn fjernet forbehold på slutten av svaret.
+      meldinger.push({ role: "assistant", content });
       vist.push(flagg);
     } else {
       return ugyldig();

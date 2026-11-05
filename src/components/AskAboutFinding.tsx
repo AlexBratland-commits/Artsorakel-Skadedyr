@@ -192,7 +192,7 @@ export default function AskAboutFinding({
           disabled={venter}
           placeholder={`Spør om ${emne} …`}
           aria-label="Skriv spørsmålet ditt"
-          className="min-w-0 flex-1 rounded-full bg-[color:var(--surface-sunken)] px-4 py-2.5 text-sm outline-none disabled:opacity-50"
+          className="min-w-0 flex-1 rounded-full bg-[color:var(--surface-sunken)] px-4 py-2.5 text-base outline-none disabled:opacity-50 sm:text-sm"
         />
         <button
           type="button"
