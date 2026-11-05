@@ -10,8 +10,8 @@ import { findPest, findPestInGroup, GROUPS, PESTS } from "@/lib/pests";
 const norm = (s: string) => s.toLowerCase().replace(/[()]/g, "").replace(/\s+/g, " ").trim();
 
 describe("artsbiblioteket", () => {
-  it("har de forventede 81 oppføringene (endring krever godkjenning)", () => {
-    expect(PESTS).toHaveLength(81);
+  it("har de forventede 83 oppføringene (endring krever godkjenning; H1: + Pelsbille og Rødmus)", () => {
+    expect(PESTS).toHaveLength(83);
   });
 
   it("alle oppføringer har påkrevde felter og gyldig gruppe", () => {

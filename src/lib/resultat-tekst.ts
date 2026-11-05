@@ -56,6 +56,42 @@ export function annenArtTekst(result: AnalysisResult): string | undefined {
   return `Ikke i Ocabs database – forslaget kommer fra AI-en alene (${SIKKERHET_ETIKETT[sikkerhetsnivaa(annen.confidence)].toLowerCase()}).`;
 }
 
+/** H1: overskrift når norsk og vitenskapelig navn peker på forskjellige arter. */
+export const MOTSTRID_TITTEL = "Analysen inneholder motstridende artsnavn";
+export const MOTSTRID_KANDIDATER_TITTEL = "Mulige arter (ingen sikkerhet oppgitt)";
+
+const tekstFelt = (x: unknown): x is string => typeof x === "string" && x.trim() !== "";
+
+/**
+ * H1: modellen oppga et norsk og et vitenskapelig navn som peker på
+ * forskjellige arter. Samme tekst på skjermen, i historikken og i PDF-en.
+ * Tåler ødelagte felt fra eldre lagret historikk.
+ */
+export function motstridTekst(result: AnalysisResult): string | undefined {
+  const m = result.motstrid as Partial<Record<string, unknown>> | undefined;
+  if (result.found || !m) return undefined;
+  const { navn, latin, navnArt, latinArt } = m;
+  if (![navn, latin, navnArt, latinArt].every(tekstFelt)) return undefined;
+  return `AI-en oppga navn som peker på forskjellige arter: «${navn}» er ${navnArt}, mens «${latin}» er ${latinArt}. Artsorakel velger ikke mellom dem og oppgir ingen sikkerhet for hver av dem. Bestemmelsen er usikker og bør bekreftes av en fagperson.`;
+}
+
+/** De mulige artene ved motstridende navn, som «Klatremus (Myodes glareolus)» – uten sikkerhet. */
+export function motstridKandidater(result: AnalysisResult): string[] {
+  if (!motstridTekst(result)) return [];
+  const m = result.motstrid!;
+  const liste = Array.isArray(m.kandidater) ? m.kandidater : [];
+  const fra = liste
+    .filter((k) => typeof k === "object" && k !== null && tekstFelt(k.name))
+    .map((k) => (tekstFelt(k.latinName) ? `${k.name} (${k.latinName})` : k.name));
+  return fra.length ? fra : [m.navnArt, m.latinArt];
+}
+
+/** H1: forklaring når bare et generelt navn («mus», «veps» …) pekte på arten. */
+export function generelltNavnTekst(result: AnalysisResult): string | undefined {
+  if (!result.found || !tekstFelt(result.generelltNavn)) return undefined;
+  return `AI-en brukte bare det generelle navnet «${result.generelltNavn}», som kan gjelde flere arter. ${result.name} vises derfor bare som et mulig forslag.`;
+}
+
 /** Navnet som vises som overskrift for resultatet. */
 export function visningsnavn(result: AnalysisResult): string {
   const annen = !result.found ? result.annenArt : undefined;

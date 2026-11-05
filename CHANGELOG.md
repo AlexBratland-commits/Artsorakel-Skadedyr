@@ -1,5 +1,34 @@
 # Endringslogg
 
+## Uutgitt – H1: artsaliaser og motstridende artsnavn
+
+AI-modeller og analyseprompter er uendret, bortsett fra at artslisten som sendes til modellen
+nå har med de to nye artene.
+
+- Pelsbille (*Attagenus pellio*) og rødmus (*Myodes rutilus*) er egne arter med fagdata fra FHIs
+  felthåndbok 2023 (s. 27 og 120). De var før aliaser for brun pelsbille og klatremus.
+- Fjernet aliaser som pekte på feil art: «anthrenus» (to arter i slekten), «hundelopp» og «loppe»
+  (katteloppe er etter FHI en sjeldnere art i Norge).
+- Etter FHI: klatremus finnes nord til Salten, brun pelsbille har svart halsskjold, og
+  katteloppe er en sjeldnere art.
+- Peker det norske og det vitenskapelige navnet fra AI-en på forskjellige arter, velger appen
+  ikke. Svaret blir «Kunne ikke identifisere funnet sikkert» med boksen «Analysen inneholder
+  motstridende artsnavn». De to artene vises som «Mulige arter (ingen sikkerhet oppgitt)» –
+  uten egne sikkerhetsnivåer. Det samme gjelder på skjermen, i historikken og i PDF-en, og når
+  navnene kommer som «art utenfor listen».
+- Generelle navn som «mus», «veps», «møll», «flue» og «kakerlakk» har et faglig omfang (artene
+  navnet kan gjelde). Norsk navn går foran, og det vitenskapelige navnet avgjør hvilken art:
+  - innenfor navnet → den spesifikke arten («Kakerlakk» + *Periplaneta americana* → Amerikansk
+    kakerlakk, «Mus» + *Apodemus sylvaticus* → Liten skogmus)
+  - en annen art i listen → motstridende («Mus» + *Rattus norvegicus*)
+  - ukjent → art utenfor listen; ingen art velges fra biblioteket (f.eks. markkakerlakk,
+    *Ectobius lapponicus*, blir ikke tysk kakerlakk)
+  - mangler → bare «Mulig …» med lav sikkerhet og forklaring
+  Ekskrementanalysen er unntatt («Mus» og «Rotte» er hovedsvarene der).
+- Historikken viser «Mulig …» for usikre forslag, slik skjermen og PDF-en gjør.
+- En art utenfor listen blir ikke lenger gjort om til en art i biblioteket via et norsk alias.
+- Historikk lagret før denne endringen får varselet om eldre artsdata (versjon 3).
+
 ## Uutgitt – M9: trygg veiledning for ekskrementer
 
 Ingen tekst ber lenger brukeren knuse, trykke på eller ta på ekskrementer, heller ikke med hansker.

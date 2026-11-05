@@ -18,6 +18,11 @@ import {
   ELDRE_ARTSDATA_TEKST,
   GENERELT_FORBEHOLD,
   latinskNavn,
+  motstridKandidater,
+  MOTSTRID_KANDIDATER_TITTEL,
+  MOTSTRID_TITTEL,
+  motstridTekst,
+  generelltNavnTekst,
   OCAB_SKADEDYR_URL,
   oppryddingFor,
   SIKKERHET_FORKLARING,
@@ -65,6 +70,8 @@ export interface RapportInnhold {
   fagfolk: string[];
   forveksles: string[];
   forbehold: string[];
+  /** H1: motstridende artsnavn – mulige arter uten sikkerhet. */
+  motstrid?: { tittel: string; tekst: string; kandidaterTittel: string; kandidater: string[] };
   /** Trygg opprydding for ekskrementer av gnagere og flaggermus (M9). */
   opprydding?: string;
   aiForbehold: string;
@@ -122,6 +129,9 @@ export function lagRapportInnhold(result: AnalysisResult, valg: RapportValg): Ra
   const merknader: string[] = [];
   const annen = annenArtTekst(result);
   if (annen) merknader.push(annen);
+  const generelt = generelltNavnTekst(result);
+  if (generelt) merknader.push(generelt);
+  const motstridForklaring = motstridTekst(result);
   if (!result.found && result.annenArt?.hvorfor) merknader.push(result.annenArt.hvorfor);
   if (result.usikkerKandidat) merknader.push(USIKKER_KANDIDAT_TEKST);
   if (valg.eldreArtsdata) merknader.push(ELDRE_ARTSDATA_TEKST);
@@ -178,6 +188,9 @@ export function lagRapportInnhold(result: AnalysisResult, valg: RapportValg): Ra
     forveksles: result.forveksles ?? [],
     forbehold,
     opprydding: oppryddingFor(result),
+    motstrid: motstridForklaring
+      ? { tittel: MOTSTRID_TITTEL, tekst: motstridForklaring, kandidaterTittel: MOTSTRID_KANDIDATER_TITTEL, kandidater: motstridKandidater(result) }
+      : undefined,
     aiForbehold: AI_FORBEHOLD,
     kilde: result.fhiUrl || undefined,
     filnavn: `artsorakel-rapport-${filDato.format(valg.analyseTid)}${filnavnDel(navn) ? `-${filnavnDel(navn)}` : ""}.pdf`,

@@ -1,4 +1,5 @@
 import {
+  generelltNavnOmfang,
   findPest,
   findPestInGroup,
   pestsInGroup,
@@ -122,13 +123,57 @@ export function parseJson(content: string): Record<string, unknown> | null {
  * utelatt der (svartrotte) slippe inn via dyre-oppføringen.
  */
 export function lookupPest(name: string, latinName: string, gruppe: PestGroup | null): Pest | undefined {
-  const iGruppe = gruppe
-    ? findPestInGroup(name, gruppe) ?? findPestInGroup(latinName, gruppe)
-    : undefined;
-  if (iGruppe) return iGruppe;
-  if (gruppe === "Ekskrementer") return viaDyreart(name, latinName);
-  return findPest(name) ?? findPest(latinName);
+  return slaaOpp(name, latinName, gruppe).pest;
 }
+
+/** Resultatet av å slå opp norsk og vitenskapelig navn hver for seg (H1). */
+interface Oppslag {
+  pest?: Pest;
+  /** Navnene peker på to forskjellige arter: [etter norsk navn, etter latinsk navn]. */
+  motstrid?: [Pest, Pest];
+  /** Arten som det vitenskapelige navnet alene peker på (undefined hvis ukjent). */
+  etterLatin?: Pest;
+  /** Arten kom bare fra et generelt navn («mus»), uten vitenskapelig navn som bekrefter den. */
+  generelt?: boolean;
+  /** Generelt navn + ukjent vitenskapelig navn: en art utenfor listen, ingen art velges. */
+  utenforListen?: boolean;
+}
+
+const harLatin = (x: string) => x.trim() !== "" && !/^ukjent$/i.test(x.trim());
+
+/**
+ * H1: slår opp norsk og vitenskapelig navn hver for seg. Peker de på
+ * forskjellige arter, velger vi ikke – da er svaret motstridende. Mangler
+ * eller er det ene navnet ukjent, brukes det andre som før.
+ */
+function slaaOpp(name: string, latinName: string, gruppe: PestGroup | null): Oppslag {
+  const iGruppe = (x: string) => (gruppe ? findPestInGroup(x, gruppe) : undefined);
+  const utenfor = (x: string) => (gruppe === "Ekskrementer" ? viaDyreart(x) : findPest(x));
+  const navnI = iGruppe(name);
+  const latinI = iGruppe(latinName);
+  const etterNavn = navnI ?? utenfor(name);
+  const etterLatin = latinI ?? utenfor(latinName);
+
+  // Generelt norsk navn (ikke ekskrementer): det vitenskapelige navnet avgjør hvilken art innenfor navnet.
+  const omfang = gruppe === "Ekskrementer" || etterNavn?.gruppe === "Ekskrementer" ? undefined : generelltNavnOmfang(name);
+  if (etterNavn && omfang) {
+    if (etterLatin) {
+      return omfang.includes(etterLatin.norsk) || etterLatin.latin === etterNavn.latin
+        ? { pest: etterLatin, etterLatin }
+        : { motstrid: [etterNavn, etterLatin], etterLatin };
+    }
+    return harLatin(latinName) ? { utenforListen: true } : { pest: etterNavn, generelt: true };
+  }
+
+  if (etterNavn && etterLatin && etterNavn.latin !== etterLatin.latin) {
+    return { motstrid: [etterNavn, etterLatin], etterLatin };
+  }
+  return { pest: navnI ?? latinI ?? etterNavn ?? etterLatin, etterLatin };
+}
+
+/** H1: høyeste sikkerhet når bare et generelt navn peker på arten (alltid «Mulig …»). */
+const MAKS_VED_GENERELT_ALIAS = LOW_CONFIDENCE_LABEL - 1;
+
 
 /**
  * F4: et generelt navn som «Rotte» finnes ikke blant ekskrementene, men som
@@ -136,8 +181,8 @@ export function lookupPest(name: string, latinName: string, gruppe: PestGroup | 
  * samme latinske navn, brukes den. Svartrotte har ingen ekskrementoppføring og
  * slipper derfor ikke inn denne veien. Artsbiblioteket er uendret.
  */
-function viaDyreart(name: string, latinName: string): Pest | undefined {
-  const dyr = findPest(name) ?? findPest(latinName);
+function viaDyreart(navn: string): Pest | undefined {
+  const dyr = findPest(navn);
   if (!dyr || dyr.gruppe === "Ekskrementer") return undefined;
   return pestsInGroup("Ekskrementer").find((p) => p.latin === dyr.latin);
 }
@@ -158,10 +203,13 @@ export function parseAlternatives(raw: unknown, gruppe: PestGroup | null): Candi
     const rec = item as Record<string, unknown>;
     const name = typeof rec.name === "string" ? rec.name : "";
     const latinName = typeof rec.latinName === "string" ? rec.latinName : "";
-    const pest = lookupPest(name, latinName, gruppe);
+    // H1: et alternativ med motstridende navn forkastes – vi velger ikke art for modellen.
+    const oppslag = slaaOpp(name, latinName, gruppe);
+    const pest = oppslag.pest;
     if (!pest) continue;
 
-    const confidence = tolkProsent(rec.confidence) ?? 0;
+    let confidence = tolkProsent(rec.confidence) ?? 0;
+    if (oppslag.generelt) confidence = Math.min(confidence, MAKS_VED_GENERELT_ALIAS);
 
     const hvorfor = typeof rec.hvorfor === "string" ? rec.hvorfor.trim() : "";
     out.push({ name: pest.norsk, latinName: pest.latin, confidence, hvorfor });
@@ -183,7 +231,8 @@ export function parseAnnenArt(raw: unknown): AnnenArt | undefined {
   const name = typeof rec.name === "string" ? rec.name.trim().slice(0, 80) : "";
   const latinName = typeof rec.latinName === "string" ? rec.latinName.trim().slice(0, 80) : "";
   if (!name || /^ukjent$/i.test(name)) return undefined;
-  if (findPest(name) || findPest(latinName)) return undefined;
+  // Står den i biblioteket (eller er navnene motstridende), håndteres den av fraAnnenArt().
+  if (fraAnnenArt(rec)) return undefined;
 
   const confidence = tolkProsent(rec.confidence);
   if (confidence === undefined || confidence < MIN_CONFIDENCE) return undefined;
@@ -213,17 +262,33 @@ export function enrich(raw: Record<string, unknown>, gruppe: PestGroup | null): 
       : undefined;
 
   let confidence = tolkSikkerhet(raw.confidence);
+  const hovedOppslag = slaaOpp(name, latinName, gruppe);
+  let motstrid = raw.found === false ? undefined : hovedOppslag.motstrid;
+  let generelltNavn = pest && hovedOppslag.generelt ? name.trim() : undefined;
+  // H1: generelt navn + ukjent vitenskapelig navn er en art utenfor listen – ingen art velges fra biblioteket.
+  const utenforListen =
+    raw.found !== false && hovedOppslag.utenforListen
+      ? parseAnnenArt({ name: name.trim(), latinName: latinName.trim(), confidence: raw.confidence, hvorfor: "" })
+      : undefined;
 
   // F2: står arten i biblioteket, men utenfor gruppen steg 1 valgte, kan
   // modellen ha meldt den som «annen art». Da godtas den fra biblioteket –
   // bare dyrearter, aldri ekskrementoppføringer, og bare med nok sikkerhet.
   if (raw.found === false) pest = undefined;
-  if (!pest && !erEkskrementer) {
-    const korrigert = artFraAnnenArt(raw.annenArt);
-    if (korrigert) {
+  if (!pest && !motstrid && !erEkskrementer) {
+    const korrigert = fraAnnenArt(raw.annenArt);
+    if (korrigert?.pest) {
       pest = korrigert.pest;
       confidence = korrigert.confidence;
+      generelltNavn = korrigert.generelltNavn;
+    } else if (korrigert?.motstrid) {
+      motstrid = korrigert.motstrid;
+      confidence = korrigert.confidence;
     }
+  }
+
+  if (motstrid) {
+    return motstridResultat(motstrid, raw, { name, latinName, confidence, description, observasjon, gruppe });
   }
 
   if (!pest || confidence < MIN_CONFIDENCE) {
@@ -233,7 +298,7 @@ export function enrich(raw: Record<string, unknown>, gruppe: PestGroup | null): 
       // M4 (revisjon): typen beholdes, så forbehold og råd passer til ekskrementer.
       return { ...UNKNOWN, gruppe: "Ekskrementer", tiltak: EKSKREMENT_UKJENT_TILTAK, description: EKSKREMENT_UKJENT_TEKST, observasjon };
     }
-    const annenArt = parseAnnenArt(raw.annenArt);
+    const annenArt = utenforListen ?? parseAnnenArt(raw.annenArt);
     if (annenArt) {
       return {
         ...UNKNOWN,
@@ -250,6 +315,8 @@ export function enrich(raw: Record<string, unknown>, gruppe: PestGroup | null): 
     }
     return { ...UNKNOWN, description: description || UNKNOWN.description, observasjon };
   }
+
+  if (generelltNavn) confidence = Math.min(confidence, MAKS_VED_GENERELT_ALIAS);
 
   // F4: «rotte» alene gir ikke en sikker bestemmelse.
   if (erEkskrementer && pest.latin === "Rattus norvegicus" && erGenereltNavn(name, latinName, pest)) {
@@ -284,6 +351,7 @@ export function enrich(raw: Record<string, unknown>, gruppe: PestGroup | null): 
     sesong: pest.sesong,
     forveksles: pest.forveksles,
     usikkerKandidat: confidence < LOW_CONFIDENCE_LABEL,
+    ...(generelltNavn ? { generelltNavn: generelltNavn.slice(0, 80) } : {}),
     bekreftelse: pest.bekreftelse,
     notat: pest.notat,
     forbehold,
@@ -299,7 +367,7 @@ export function enrich(raw: Record<string, unknown>, gruppe: PestGroup | null): 
  */
 export function markerIkkeSkadedyr(result: AnalysisResult, stegEnGruppe: unknown): AnalysisResult {
   const ingenDyr = typeof stegEnGruppe === "string" && stegEnGruppe.trim().toLowerCase() === "ukjent";
-  if (!ingenDyr || result.found || result.annenArt) return result;
+  if (!ingenDyr || result.found || result.annenArt || result.motstrid) return result;
   const beskrivelse = result.description && result.description !== UNKNOWN.description ? result.description : IKKE_SKADEDYR_TEKST;
   return {
     ...result,
@@ -309,15 +377,61 @@ export function markerIkkeSkadedyr(result: AnalysisResult, stegEnGruppe: unknown
   };
 }
 
-/** F2: «annen art» som likevel står i biblioteket (som dyr). */
-function artFraAnnenArt(raw: unknown): { pest: Pest; confidence: number } | undefined {
+/**
+ * F2: «annen art» som likevel står i biblioteket (som dyr). H1: oppgir
+ * modellen et vitenskapelig navn som ikke står i biblioteket, er det en art
+ * utenfor listen – da gjøres den ikke om til en art via et norsk alias
+ * (f.eks. «Mus» + Apodemus agrarius blir ikke husmus). Motstridende navn
+ * gir motstrid, aldri en valgt art.
+ */
+function fraAnnenArt(
+  raw: unknown
+): { pest?: Pest; motstrid?: [Pest, Pest]; confidence: number; generelltNavn?: string } | undefined {
   if (typeof raw !== "object" || raw === null) return undefined;
   const rec = raw as Record<string, unknown>;
   const name = typeof rec.name === "string" ? rec.name : "";
   const latinName = typeof rec.latinName === "string" ? rec.latinName : "";
-  const pest = findPest(name) ?? findPest(latinName);
-  if (!pest || pest.gruppe === "Ekskrementer") return undefined;
+  const oppslag = slaaOpp(name, latinName, null);
   const confidence = tolkSikkerhet(rec.confidence);
-  return confidence >= MIN_CONFIDENCE && rec.confidence !== undefined ? { pest, confidence } : undefined;
+  if (confidence < MIN_CONFIDENCE || rec.confidence === undefined) return undefined;
+  if (oppslag.motstrid) return { motstrid: oppslag.motstrid, confidence };
+  const pest = oppslag.pest;
+  if (!pest || pest.gruppe === "Ekskrementer") return undefined;
+  const ukjentLatin = latinName.trim() !== "" && !/^ukjent$/i.test(latinName.trim()) && !oppslag.etterLatin;
+  if (ukjentLatin) return undefined;
+  return oppslag.generelt
+    ? { pest, confidence: Math.min(confidence, MAKS_VED_GENERELT_ALIAS), generelltNavn: name.trim() }
+    : { pest, confidence };
+}
+
+const artMedLatin = (p: Pest) => `${p.norsk} (${p.latin})`;
+
+/**
+ * H1: norsk og vitenskapelig navn peker på forskjellige arter. Ingen art
+ * velges: svaret er «ikke identifisert sikkert», og begge artene vises som
+ * alternativer med lav sikkerhet. Ekskrementer beholder typen (M4).
+ */
+function motstridResultat(
+  [etterNavn, etterLatin]: [Pest, Pest],
+  raw: Record<string, unknown>,
+  f: { name: string; latinName: string; confidence: number; description: string; observasjon?: string; gruppe: PestGroup | null }
+): AnalysisResult {
+  const erEkskrementer = f.gruppe === "Ekskrementer";
+  const annen = typeof raw.annenArt === "object" && raw.annenArt !== null ? (raw.annenArt as Record<string, unknown>) : undefined;
+  const navn = (annen && typeof annen.name === "string" ? annen.name : f.name).trim().slice(0, 80);
+  const latin = (annen && typeof annen.latinName === "string" ? annen.latinName : f.latinName).trim().slice(0, 80);
+  // Ingen sikkerhet per art: modellens tall gjelder et svar som motsier seg selv.
+  const kandidater = [etterNavn, etterLatin].map((p) => ({ name: p.norsk, latinName: p.latin }));
+  // Andre alternativer modellen selv ga, med modellens egne tall – men aldri de to over.
+  const andre = parseAlternatives(raw.alternativer, f.gruppe).filter((a) => !kandidater.some((k) => k.name === a.name));
+  const grunnlag = erEkskrementer
+    ? { ...UNKNOWN, gruppe: "Ekskrementer", tiltak: EKSKREMENT_UKJENT_TILTAK, description: EKSKREMENT_UKJENT_TEKST }
+    : { ...UNKNOWN, description: f.description || UNKNOWN.description, ...(etterNavn.gruppe === etterLatin.gruppe ? { gruppe: etterNavn.gruppe } : {}) };
+  return {
+    ...grunnlag,
+    observasjon: f.observasjon,
+    motstrid: { navn, latin, navnArt: artMedLatin(etterNavn), latinArt: artMedLatin(etterLatin), kandidater },
+    alternativer: andre,
+  };
 }
 

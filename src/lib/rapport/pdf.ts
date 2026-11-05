@@ -478,6 +478,12 @@ export async function lagPdfRapport(
     o.avsnitt(innhold.sikkerhet.forklaring, { storrelse: 9.5, farge: FARGE.dempet });
   }
 
+  if (innhold.motstrid) {
+    o.boks(innhold.motstrid.tekst, { bakgrunn: FARGE.flate, kant: FARGE.middels, tittel: innhold.motstrid.tittel });
+    o.overskrift(innhold.motstrid.kandidaterTittel, o.punktStart(innhold.motstrid.kandidater));
+    o.punktliste(innhold.motstrid.kandidater);
+  }
+
   if (innhold.alternativer.length) {
     const forste = innhold.alternativer[0];
     o.overskrift("Kan også være", 10.5 * 1.45 + (forste.hvorfor ? o.avsnittStart(forste.hvorfor, 9.5) : 0));

@@ -28,6 +28,11 @@ import {
   harSterkereAlternativ,
   ELDRE_ARTSDATA_TEKST,
   GENERELT_FORBEHOLD,
+  generelltNavnTekst,
+  motstridKandidater,
+  MOTSTRID_KANDIDATER_TITTEL,
+  MOTSTRID_TITTEL,
+  motstridTekst,
   OCAB_SKADEDYR_URL,
   oppryddingFor,
   SIKKERHET_FORKLARING,
@@ -83,6 +88,8 @@ export default function ResultDisplay({
   const annen = !result.found ? result.annenArt : undefined;
   const visningsnavn = lagVisningsnavn(result);
   const opprydding = oppryddingFor(result);
+  const motstrid = motstridTekst(result);
+  const generelt = generelltNavnTekst(result);
   const latinNavn = annen ? annen.latinName : result.latinName;
 
   const delingstekst = result.found
@@ -157,6 +164,19 @@ export default function ResultDisplay({
                 {annen.hvorfor && <span className="mt-1 block">{annen.hvorfor}</span>}
               </p>
             )}
+            {motstrid && (
+              <div className="mt-3 max-w-prose rounded-lg border-l-2 border-grad-middels bg-[color:var(--surface-sunken)] px-4 py-3 text-sm">
+                <h3 className="font-semibold">{MOTSTRID_TITTEL}</h3>
+                <p className="mt-1">{motstrid}</p>
+                <p className="mt-2 font-semibold">{MOTSTRID_KANDIDATER_TITTEL}</p>
+                <ul className="mt-1 list-disc pl-5">
+                  {motstridKandidater(result).map((k) => (
+                    <li key={k}>{k}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {generelt && <p className="mt-2 max-w-prose text-sm text-muted">{generelt}</p>}
             {result.usikkerKandidat && (
               <p className="mt-2 max-w-prose text-sm text-muted">
                 {USIKKER_KANDIDAT_TEKST}

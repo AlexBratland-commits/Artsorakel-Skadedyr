@@ -12,14 +12,14 @@ exports[`/api/analyze – kontrakt og uendrede prompter > dyr: to AI-kall, kjent
     "system": "Du er en grovsorterer for Ocab, et norsk skadedyrfirma. Du får ett bilde og skal bare velge hvilken hovedgruppe dyret tilhører.
 
 GRUPPER
-- Gnagere: Brunrotte, Svartrotte, Husmus, Liten skogmus, Stor skogmus, Klatremus, Markmus, Vånd, Ekorn
+- Gnagere: Brunrotte, Svartrotte, Husmus, Liten skogmus, Stor skogmus, Klatremus, Rødmus, Markmus, Vånd, Ekorn
 - Andre pattedyr: Mink, Mår, Røyskatt, Snømus, Grevling, Rødrev, Pinnsvin, Flaggermus
 - Fugler: Bydue, Gråspurv, Gråmåke, Skjære, Stær
 - Kakerlakker: Tysk kakerlakk, Amerikansk kakerlakk, Orientalsk kakerlakk, Brunbåndet kakerlakk
 - Kre: Skjeggkre, Sølvkre
 - Maur: Stokkmaur, Brun tremaur, Svart tremaur, Svart jordmaur, Faraomaur, Rødmaur, Rød skogsmaur
 - Veps og bier: Vanlig veps, Jordveps, Treveps, Geithams, Honningbie, Humle
-- Biller: Husbukk, Stripet borebille, Brun pelsbille, Museumsbille, Tepperbille, Fleskeklanner, Melbille, Brødbille, Tobakksbille, Rødbrun rismelbille, Sagtannet kornbille, Kornsnutebille (også larver: hårete pelsbille- og tepperbillelarver, melorm)
+- Biller: Husbukk, Stripet borebille, Brun pelsbille, Pelsbille, Museumsbille, Tepperbille, Fleskeklanner, Melbille, Brødbille, Tobakksbille, Rødbrun rismelbille, Sagtannet kornbille, Kornsnutebille (også larver: hårete pelsbille- og tepperbillelarver, melorm)
 - Møll: Klesmøll, Pelsmøll, Matmøll, Melmøll (også larver: hvite larver med spinn i ull eller tørrvarer, larve i sekk)
 - Fluer og mygg: Husflue, Spyflue, Vindusflue, Bananflue, Soppmygg, Avløpsflue (også larver: hvite, beinløse makk)
 - Lus, lopper og midd: Kattelopp, Hodelus, Husstøvmidd, Fuglemidd
@@ -111,7 +111,10 @@ ARTER
 - Stor skogmus (Apodemus flavicollis) – Som liten skogmus, men større og med gult halsbånd over brystet
     Forveksles med: Liten skogmus – mindre, og har høyst en liten gul flekk på brystet, ikke et sammenhengende bånd
 - Klatremus (Myodes glareolus) – Rødbrun rygg, butt snute, korte ører, kort hale
-    Forveksles med: Markmus – gråbrun i stedet for rødbrun, og ørene er nesten skjult i pelsen; Skogmus – spiss snute, store øyne og ører og lang hale
+    Forveksles med: Rødmus – gulbrune sider og kortere, tett behåret hale; finnes fra Salten og nordover; Markmus – gråbrun i stedet for rødbrun, og ørene er nesten skjult i pelsen; Skogmus – spiss snute, store øyne og ører og lang hale
+- Rødmus (Myodes rutilus) – 8–12 cm kropp, rødbrun rygg, gulbrune sider, gråhvit buk, små ører, kort og tett behåret hale (2,5–4 cm)
+    Slik kjenner du den igjen: Ligner klatremus: rødbrun rygg, litt butt snute og små ører. Rødmus har gulbrune sider og en kort, tett behåret hale på 2,5–4 cm. Klatremus har grå sider og en lengre, tydelig tofarget hale på 3–7 cm. Utbredelsen hjelper: rødmus finnes fra Salten og nordover, klatremus nord til Salten. Er funnsted eller hale usikker, legg den andre i "alternativer".
+    Forveksles med: Klatremus – grå sider og lengre, tydelig tofarget hale; finnes nord til Salten
 - Markmus (Microtus agrestis) – Kompakt og gråbrun, butt snute, ører nesten skjult i pelsen, kort hale
     Forveksles med: Klatremus – tydelig rødbrun rygg og litt lengre hale; Vånd – mye større og mørkere
 - Vånd (Arvicola amphibius) – 12–20 cm, tett mørkebrun pels, butt snute, svært små ører, kort behåret hale
@@ -223,4 +226,4 @@ Art som ikke står i listen: {"found":false,"name":"Ukjent","latinName":"Ukjent"
 ]
 `;
 
-exports[`/api/analyze – kontrakt og uendrede prompter > ukjent gruppe i steg 1 gir steg 2 med full artsliste (dagens oppførsel, F5) 1`] = `25802`;
+exports[`/api/analyze – kontrakt og uendrede prompter > ukjent gruppe i steg 1 gir steg 2 med full artsliste (dagens oppførsel, F5) 1`] = `26533`;

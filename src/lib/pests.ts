@@ -145,11 +145,11 @@ export const PESTS: Pest[] = [
   {
     norsk: "Klatremus", latin: "Myodes glareolus", slug: "mus", gruppe: "Gnagere",
     kjennetegn: "Rødbrun rygg, butt snute, korte ører, kort hale",
-    utbredelse: "Hele landet i skogsnære områder",
+    utbredelse: "Nord til Salten i Nordland, i skogsområder",
     sesong: "Topper seg i smågnagerår, ofte innendørs om høsten",
     alvorlighet: "middels",
-    aliaser: ["rødmus"],
     forveksles: [
+      "Rødmus – gulbrune sider og kortere, tett behåret hale; finnes fra Salten og nordover",
       "Markmus – gråbrun i stedet for rødbrun, og ørene er nesten skjult i pelsen",
       "Skogmus – spiss snute, store øyne og ører og lang hale",
     ],
@@ -157,6 +157,23 @@ export const PESTS: Pest[] = [
       "Tett bygget – arten kan bære smitte som gir musepest (nephropathia epidemica)",
       "Bruk støvmaske og fukt flatene ved rengjøring av avføring – ikke tørrfeiing",
       "Luft godt i hytter som har stått tomme",
+    ],
+  },
+  {
+    // H1: egen art, ikke alias for klatremus (FHI felthåndbok 2023 s. 120)
+    norsk: "Rødmus", latin: "Myodes rutilus", slug: "mus", gruppe: "Gnagere",
+    kjennetegn: "8–12 cm kropp, rødbrun rygg, gulbrune sider, gråhvit buk, små ører, kort og tett behåret hale (2,5–4 cm)",
+    forklaring: "Ligner klatremus: rødbrun rygg, litt butt snute og små ører. Rødmus har gulbrune sider og en kort, tett behåret hale på 2,5–4 cm. Klatremus har grå sider og en lengre, tydelig tofarget hale på 3–7 cm. Utbredelsen hjelper: rødmus finnes fra Salten og nordover, klatremus nord til Salten. Er funnsted eller hale usikker, legg den andre i \"alternativer\".",
+    utbredelse: "Fra Salten og nordover, i skog og i mose- og lyngmark",
+    sesong: "Yngler ikke inne i bygninger, men trekker ofte inn om høsten",
+    alvorlighet: "middels",
+    forveksles: [
+      "Klatremus – grå sider og lengre, tydelig tofarget hale; finnes nord til Salten",
+    ],
+    tiltak: [
+      "Steng sprekker og hull større enn 6 mm med metallnetting eller metallplater som dyrene ikke kan gnage gjennom",
+      "Fjern tilgang på mat og vann, og rydd søppel, busker og kratt rundt bygningen",
+      "Rødmus er antatt reservoarvert for musepest i Nord-Norge – fjern ekskrementer med såpevann og klut (ikke kost eller støvsuger), og bruk hansker og eventuelt munnbind",
     ],
   },
   {
@@ -752,12 +769,13 @@ export const PESTS: Pest[] = [
   },
   {
     norsk: "Brun pelsbille", latin: "Attagenus smirnovi", slug: "pelsbille", gruppe: "Biller",
-    kjennetegn: "2,5–5 mm, ensfarget brun og avlang med mørkere hode. Larven er gyllenbrun, gulrotformet, opptil 8 mm, med en lang hårdusk bakerst",
+    kjennetegn: "2–5 mm, avlang, brune dekkvinger og svart halsskjold, uten hvite flekker. Larven er gyllenbrun, gulrotformet, opptil 8 mm, med en lang hårdusk bakerst",
     utbredelse: "Vanlig i byer, særlig Oslo-området",
     sesong: "Voksne biller mest synlige mai–juli",
     alvorlighet: "lav",
-    aliaser: ["pelsbille", "attagenus pellio", "majorstubille"],
+    aliaser: ["majorstubille"],
     forveksles: [
+      "Pelsbille – svart med to hvite flekker på dekkvingene; larvene til de to er svært like",
       "Museumsbille og tepperbille – runde og spraglete, ikke ensfarget brune",
       "Fleskeklanner – mye større, svart med lyst bånd",
     ],
@@ -768,12 +786,29 @@ export const PESTS: Pest[] = [
     ],
   },
   {
+    // H1: egen art, ikke alias for brun pelsbille (FHI felthåndbok 2023 s. 27)
+    norsk: "Pelsbille", latin: "Attagenus pellio", slug: "pelsbille", gruppe: "Biller",
+    kjennetegn: "3,5–6 mm, svart med to hvite flekker på dekkvingene og tre hvite flekker bakerst på halsskjoldet. Larven er brun og hårete, opptil 8 mm, med lang haledusk",
+    forklaring: "Den voksne billen er svart med én tydelig hvit flekk på hver dekkvinge og tre små hvite flekker ved bakkanten av halsskjoldet. Brun pelsbille er omtrent like stor, men har brune dekkvinger og ingen hvite flekker. Larvene forveksles lett med larvene til brun pelsbille, som er mer vanlig – en larve alene gir derfor ikke en sikker bestemmelse.",
+    utbredelse: "Utendørs opp til Troms, innendørs i hele landet",
+    sesong: "Voksne biller svermer i blomsterenger i slutten av mai",
+    alvorlighet: "lav",
+    forveksles: [
+      "Brun pelsbille – brune dekkvinger og svart halsskjold, uten hvite flekker; mer vanlig innendørs",
+    ],
+    tiltak: [
+      "Pakk utsatte gjenstander, som ull- og skinnklær, i plast eller tette beholdere",
+      "Støvsug grundig – det fjerner dyr og reduserer mattilgangen",
+      "Fjern fuglereder og tørre rotte- eller musekadavre i og ved huset",
+      "Behandle angrepne gjenstander med varme, for eksempel 60 °C – dyrene tåler kulde godt",
+    ],
+  },
+  {
     norsk: "Museumsbille", latin: "Anthrenus museorum", slug: "museumsbille", gruppe: "Biller",
     kjennetegn: "2–3 mm, rund, spraglet i brunt, gult og hvitt uten tydelige bånd. Larven er kort, bred og bust-hårete",
     utbredelse: "Hele landet",
     sesong: "Voksne biller mai–juli, ofte i vinduskarmer",
     alvorlighet: "lav",
-    aliaser: ["anthrenus"],
     forveksles: [
       "Tepperbille – tre tydelige lyse bølgebånd over dekkvingene, og de to er svært vanskelige å skille på foto",
       "Brun pelsbille – ensfarget brun og mer avlang",
@@ -1077,10 +1112,9 @@ export const PESTS: Pest[] = [
   {
     norsk: "Kattelopp", latin: "Ctenocephalides felis", slug: "loppe", gruppe: "Lus, lopper og midd",
     kjennetegn: "2–3 mm, mørk rødbrun, uten vinger, sammentrykt fra siden (smal sett ovenfra), kraftige hoppebein",
-    utbredelse: "Hele landet der det er katt eller hund",
+    utbredelse: "En sjeldnere art i Norge – de voksne lever i pelsen på katt og hund",
     sesong: "Hele året innendørs, flest om sommeren",
     alvorlighet: "middels",
-    aliaser: ["loppe", "hundelopp"],
     forveksles: ["Veggedyr – flat ovenfra og hopper ikke"],
     tiltak: [
       "Behandle dyret hos veterinær samtidig som boligen behandles – ellers kommer de tilbake",
@@ -1421,6 +1455,64 @@ export const PESTS: Pest[] = [
 
 function normalize(s: string): string {
   return s.toLowerCase().replace(/[()]/g, "").replace(/\s+/g, " ").trim();
+}
+
+/**
+ * H1: generelle navn som dekker flere arter (f.eks. «mus», «veps», «møll»),
+ * med artene i biblioteket hvert navn kan gjelde. Norsk navn går foran:
+ * - Bekrefter det vitenskapelige navnet en art innenfor navnet, velges den
+ *   spesifikke arten («Kakerlakk» + Periplaneta americana → Amerikansk kakerlakk).
+ * - Peker det på en art i biblioteket utenfor navnet, er svaret motstridende
+ *   («Mus» + Rattus norvegicus).
+ * - Er det vitenskapelige navnet ukjent, er det en art utenfor listen – appen
+ *   velger ikke en art fra biblioteket.
+ * - Uten vitenskapelig navn blir det bare et mulig forslag («Mulig …»).
+ * Gjelder ikke ekskrementer, der «mus» og «rotte» er hovedsvarene.
+ */
+const MUS = ["Husmus", "Liten skogmus", "Stor skogmus", "Klatremus", "Rødmus", "Markmus"];
+export const GENERELLE_ALIASER: Readonly<Record<string, readonly string[]>> = {
+  rotte: ["Brunrotte", "Svartrotte"],
+  mus: MUS,
+  skogmus: ["Liten skogmus", "Stor skogmus"],
+  rev: ["Rødrev"],
+  due: ["Bydue"],
+  spurv: ["Gråspurv"],
+  måke: ["Gråmåke"],
+  måse: ["Gråmåke"],
+  kakerlakk: ["Tysk kakerlakk", "Amerikansk kakerlakk", "Orientalsk kakerlakk", "Brunbåndet kakerlakk"],
+  kakkerlakk: ["Tysk kakerlakk", "Amerikansk kakerlakk", "Orientalsk kakerlakk", "Brunbåndet kakerlakk"],
+  jordmaur: ["Svart jordmaur", "Brun tremaur", "Svart tremaur"],
+  veps: ["Vanlig veps", "Jordveps", "Treveps", "Geithams"],
+  "stor veps": ["Geithams", "Treveps"],
+  bie: ["Honningbie", "Humle"],
+  borebille: ["Stripet borebille", "Brødbille", "Tobakksbille"],
+  treorm: ["Stripet borebille", "Husbukk"],
+  lasioderma: ["Tobakksbille"],
+  oryzaephilus: ["Sagtannet kornbille"],
+  møll: ["Klesmøll", "Pelsmøll", "Matmøll", "Melmøll"],
+  flue: ["Husflue", "Spyflue", "Vindusflue", "Bananflue", "Avløpsflue"],
+  kjøttflue: ["Spyflue"],
+  blåflue: ["Spyflue"],
+  klyngeflue: ["Vindusflue"],
+  fruktflue: ["Bananflue"],
+  midd: ["Husstøvmidd", "Fuglemidd"],
+  blodmidd: ["Fuglemidd"],
+  edderkopp: ["Husedderkopp"],
+  tegenaria: ["Husedderkopp"],
+  flått: ["Skogflått"],
+};
+
+/** Artene i biblioteket et generelt navn kan gjelde, eller undefined for et spesifikt navn. */
+export function generelltNavnOmfang(navn?: string | null): readonly string[] | undefined {
+  if (!navn) return undefined;
+  const n = normalize(navn);
+  const treff = Object.keys(GENERELLE_ALIASER).find((a) => normalize(a) === n);
+  return treff ? GENERELLE_ALIASER[treff] : undefined;
+}
+
+/** Er navnet et generelt navn som kan gjelde flere arter? */
+export function erGenereltNavn(navn?: string | null): boolean {
+  return generelltNavnOmfang(navn) !== undefined;
 }
 
 /** Slår opp art på norsk navn, latinsk navn eller alias. */

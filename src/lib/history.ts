@@ -7,8 +7,9 @@ const MAX_ENTRIES = 20;
  * Øk når artsbiblioteket får faglige rettelser. Eldre lagrede funn får da et
  * diskret varsel, men selve funnet og artsnavnet endres ikke.
  * 2: brun tremaur / stokkmaur rettet etter FHI.
+ * 3: pelsbille og rødmus egne arter, aliaser rettet (H1).
  */
-export const ARTSDATA_VERSJON = 2;
+export const ARTSDATA_VERSJON = 3;
 
 /** Lagret med eldre artsdata enn dagens? */
 export function harEldreArtsdata(entry: Pick<HistoryEntry, "artsdata">): boolean {
