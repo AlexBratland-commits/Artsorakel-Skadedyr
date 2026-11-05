@@ -16,7 +16,8 @@ test("art utenfor listen: samme sikkerhet på skjermen, i e-posten, i historikke
   await page.reload();
   const bilde = await testbilde(121);
   await page.locator('input[type="file"]').setInputFiles(bilde);
-  await page.locator("#notesAnimal").fill("MARKKAKERLAKK-TEST");
+  // Markkakerlakk er nå i biblioteket – en annen Ectobius-art er fortsatt utenfor listen.
+  await page.locator("#notesAnimal").fill("SKOGKAKERLAKK-TEST");
   await page.getByRole("button", { name: "Artsbestem bildet" }).click();
   await expect(page.getByRole("button", { name: "Last ned PDF-rapport" })).toBeVisible();
   slettFil(bilde);
@@ -27,7 +28,7 @@ test("art utenfor listen: samme sikkerhet på skjermen, i e-posten, i historikke
 
   const href = (await page.getByRole("link", { name: "Meld fra om feil bestemmelse" }).getAttribute("href"))!;
   const epost = decodeURIComponent(href.split("body=")[1]);
-  expect(epost).toContain("Appen foreslo Mulig Kakerlakk (Ectobius lapponicus) – ikke i databasen, sikkerhet: høy sikkerhet (tall i analysen: 92).");
+  expect(epost).toContain("Appen foreslo Mulig Kakerlakk (Ectobius sylvestris) – ikke i databasen, sikkerhet: høy sikkerhet (tall i analysen: 92).");
   expect(epost).not.toMatch(/lav sikkerhet|modellens tall: 0/);
 
   await page.getByRole("button", { name: "Last ned PDF-rapport" }).click();

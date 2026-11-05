@@ -29,7 +29,7 @@ test("historikk: tre siste på forsiden, «Se alle» viser resten, og sletting v
 
 test("eldre lagrede funn får et diskret varsel – funnet og artsnavnet endres ikke", async ({ page }) => {
   const gammelt = { ...oppforing(1), resultat: { ...oppforing(1).resultat, name: "Brun tremaur", latinName: "Camponotus ligniperda" } };
-  const nytt = { ...oppforing(2), artsdata: 3 };
+  const nytt = { ...oppforing(2), artsdata: 4 };
   await page.goto("/");
   await page.evaluate((liste) => localStorage.setItem("ocab-skadedyr-historikk", JSON.stringify(liste)), [nytt, gammelt]);
   await page.reload();

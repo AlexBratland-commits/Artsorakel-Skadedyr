@@ -6,8 +6,8 @@ describe("artsdataversjon i historikken", () => {
   afterEach(() => vi.unstubAllGlobals());
 
   it("funn uten versjon regnes som eldre artsdata, nye funn får dagens versjon", () => {
-    expect(ARTSDATA_VERSJON).toBe(3);
-    expect(harEldreArtsdata({ artsdata: 2 })).toBe(true);
+    expect(ARTSDATA_VERSJON).toBe(4);
+    expect(harEldreArtsdata({ artsdata: 3 })).toBe(true);
     expect(harEldreArtsdata({})).toBe(true);
     expect(harEldreArtsdata({ artsdata: 1 })).toBe(true);
     expect(harEldreArtsdata({ artsdata: ARTSDATA_VERSJON })).toBe(false);

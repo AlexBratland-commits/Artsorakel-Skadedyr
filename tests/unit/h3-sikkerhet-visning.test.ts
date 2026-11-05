@@ -3,6 +3,8 @@
  * «høy sikkerhet» på resultatsiden, mens «Meld fra om feil bestemmelse» sa
  * «lav» og «modellens tall: 0» (result.confidence er 0 for ukjente funn).
  * Nå bruker skjerm, e-post, historikk og PDF samme tall – ingen nye tall.
+ * Markkakerlakk er senere lagt i biblioteket; testen bruker nå en annen
+ * Ectobius-art som fortsatt er utenfor listen.
  * Feilet på main 6541875 og består etter rettelsen.
  */
 import { describe, expect, it } from "vitest";
@@ -12,7 +14,7 @@ import { annenArtTekst, feilmeldingTekst, visningsSikkerhet } from "@/lib/result
 
 const markkakerlakk = () =>
   enrich(
-    { found: false, name: "Ukjent", latinName: "Ukjent", description: "x", confidence: 0, annenArt: { name: "Markkakerlakk", latinName: "Ectobius lapponicus", confidence: 85, hvorfor: "" } },
+    { found: false, name: "Ukjent", latinName: "Ukjent", description: "x", confidence: 0, annenArt: { name: "Skogkakerlakk", latinName: "Ectobius sylvestris", confidence: 85, hvorfor: "" } },
     "Kakerlakker"
   );
 
@@ -23,7 +25,7 @@ describe("H3: samme sikkerhet overalt", () => {
     expect(visningsSikkerhet(r)).toEqual({ confidence: 85, etikett: "Høy sikkerhet" });
     expect(annenArtTekst(r)).toContain("(høy sikkerhet)");
     const tekst = feilmeldingTekst(r);
-    expect(tekst).toContain("Appen foreslo Mulig Markkakerlakk (Ectobius lapponicus) – ikke i databasen, sikkerhet: høy sikkerhet (tall i analysen: 85).");
+    expect(tekst).toContain("Appen foreslo Mulig Skogkakerlakk (Ectobius sylvestris) – ikke i databasen, sikkerhet: høy sikkerhet (tall i analysen: 85).");
     expect(tekst).not.toMatch(/lav sikkerhet|: 0\)/);
     expect(lagRapportInnhold(r, { analyseTid: new Date() }).merknader.join(" ")).toContain("(høy sikkerhet)");
   });

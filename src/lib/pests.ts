@@ -396,12 +396,37 @@ export const PESTS: Pest[] = [
     sesong: "Hele året innendørs",
     alvorlighet: "høy",
     aliaser: ["kakerlakk", "kakkerlakk"],
-    forveksles: ["Brunbåndet kakerlakk – tverrbånd i stedet for lengdestriper"],
+    forveksles: [
+      "Brunbåndet kakerlakk – tverrbånd i stedet for lengdestriper",
+      "Markkakerlakk – mørkt felt på halsskjoldet i stedet for to svarte striper, dagaktiv og lever utendørs; normalt ufarlig",
+    ],
     tiltak: [
       "Ikke sprøyt selv – det sprer bestanden til nabolokaler",
       "Sett ut limfeller for å kartlegge omfanget før behandling",
       "Vask bort matsøl, tørk opp vann og tett sprekker ved kjøkkeninnredning",
       "Meld fra til huseier eller styret – kakerlakk sprer seg mellom boenheter",
+    ],
+  },
+  {
+    // Faglig gjennomgang etter FHI felthåndbok 2023 s. 19. Normalt ufarlig –
+    // skal ikke få bekjempelsesråd for tropiske kakerlakker.
+    norsk: "Markkakerlakk", latin: "Ectobius lapponicus", slug: "markkakerlakk", gruppe: "Kakerlakker",
+    kjennetegn: "8–13 mm, flattrykt, mørke flekker på vingene og et mørkt felt på halsskjoldet. Dagaktiv",
+    forklaring: "Skilles fra tysk kakerlakk på halsskjoldet: tysk kakerlakk har to tydelige svarte lengdestriper, markkakerlakk har et mørkt felt. Brunbåndet kakerlakk har to lyse tverrbånd over kroppen. Markkakerlakk er dagaktiv og lever utendørs; de tropiske artene er nattaktive og lever bare innendørs. Synes ikke mønsteret på halsskjoldet tydelig, er bildet ikke nok til sikker bestemmelse – hold confidence lav og legg tysk kakerlakk i \"alternativer\".",
+    utbredelse: "Vanlig utendørs over hele landet, helt opp til tregrensen. Den eneste frilevende kakerlakkarten i Norge",
+    sesong: "Dagaktiv. Forviller seg ofte inn i hus, men kan ikke formere seg innendørs",
+    alvorlighet: "lav",
+    notat: "Markkakerlakk er ikke et skadedyr og skal ikke bekjempes. Den gjør ingen skade og kan ikke formere seg innendørs.",
+    forveksles: [
+      "Tysk kakerlakk – to svarte lengdestriper på halsskjoldet, nattaktiv og lever bare innendørs",
+      "Brunbåndet kakerlakk – to lyse tverrbånd over kroppen, lever bare innendørs",
+    ],
+    tiltak: [
+      "Markkakerlakk er ikke et skadedyr og skal ikke bekjempes – den gjør ingen skade og kan ikke formere seg innendørs",
+      "Enkeltdyr kan fjernes for hånd eller med støvsuger",
+      "Kommer det stadig nye inn, kan tetting rundt dører, vinduer og ventiler begrense innvandringen",
+      "Ikke bruk kakerlakkåte eller insektmidler, og ikke behandle bygningen – det er ikke nødvendig for denne arten",
+      "Er du usikker på arten – særlig hvis du ser kakerlakker innendørs om natten eller over lang tid – få arten bestemt før du gjør tiltak. Tysk kakerlakk ligner og krever helt andre tiltak",
     ],
   },
   {
@@ -768,27 +793,31 @@ export const PESTS: Pest[] = [
     ],
   },
   {
-    norsk: "Brun pelsbille", latin: "Attagenus smirnovi", slug: "pelsbille", gruppe: "Biller",
-    kjennetegn: "2–5 mm, avlang, brune dekkvinger og svart halsskjold, uten hvite flekker. Larven er gyllenbrun, gulrotformet, opptil 8 mm, med en lang hårdusk bakerst",
-    utbredelse: "Vanlig i byer, særlig Oslo-området",
-    sesong: "Voksne biller mest synlige mai–juli",
+    // Faglig gjennomgang etter FHI felthåndbok 2023 s. 26
+    norsk: "Brun pelsbille", latin: "Attagenus smirnovi", slug: "brun-pelsbille", gruppe: "Biller",
+    kjennetegn: "Voksen: 2–5 mm, oval, brune dekkvinger og svart halsskjold, uten hvite flekker. Larve: brun og hårete, opptil 8 mm, med lang haledusk",
+    forklaring: "Den voksne billen kjennes på kontrasten mellom brune dekkvinger og svart halsskjold. Pelsbille er like stor, men helt svart med hvite flekker. Larvene til de to artene er nesten like – brune, hårete og med lang haledusk – så en larve alene gir ikke en sikker bestemmelse. Det gjør heller ikke et bilde der fargen på halsskjold og dekkvinger ikke synes tydelig; hold da confidence lav og legg den andre arten i \"alternativer\".",
+    utbredelse: "Først funnet i Norge i 1983, på Majorstua i Oslo. Svært vanlig i Oslo og på spredning til tettbygde strøk over hele landet. Formerer seg bare innendørs i Norge",
+    sesong: "Voksne og larver kan påtreffes hele året innendørs; voksne biller flyr til nye boliger om sommeren",
     alvorlighet: "lav",
     aliaser: ["majorstubille"],
     forveksles: [
-      "Pelsbille – svart med to hvite flekker på dekkvingene; larvene til de to er svært like",
-      "Museumsbille og tepperbille – runde og spraglete, ikke ensfarget brune",
-      "Fleskeklanner – mye større, svart med lyst bånd",
+      "Pelsbille – helt svart med hvite flekker på dekkvingene; larvene til de to er nesten like",
+      "Museumsbille og tepperbille – runde og spraglete med mønster av små skjell",
+      "Fleskeklanner – mye større (7–9 mm), svart med lyst tverrbånd",
     ],
     tiltak: [
-      "Støvsug grundig under senger, sofaer og bak lister der støv og hår samles",
-      "Larvene lever av hår, tekstilfibre og matrester i støv",
-      "Sjelden behov for kjemisk behandling – renhold er hovedtiltaket",
+      "Én bille i vinduskarmen eller på gulvet er vanlig der arten finnes – støvsug den opp. Arten gjør liten skade i vanlige hjem",
+      "Ved gjentatte funn eller larver: finn utviklingsstedet. Larvene lever av støv i sprekker i gulvplanker, langs listverk og under komfyr og kjøleskap – støvsug grundig der",
+      "Pakk utsatte gjenstander, som ull- og skinnklær, i plast eller tette beholdere",
+      "Ved skade: larvene kan spise pels, skinn, fjær og ull. Angrepne gjenstander kan fryses eller varmebehandles",
+      "Er det mange dyr, kan sprekker i gulvplanker tettes. Kjemisk behandling er sjelden nødvendig – renhold er hovedtiltaket",
     ],
   },
   {
     // H1: egen art, ikke alias for brun pelsbille (FHI felthåndbok 2023 s. 27)
     norsk: "Pelsbille", latin: "Attagenus pellio", slug: "pelsbille", gruppe: "Biller",
-    kjennetegn: "3,5–6 mm, svart med to hvite flekker på dekkvingene og tre hvite flekker bakerst på halsskjoldet. Larven er brun og hårete, opptil 8 mm, med lang haledusk",
+    kjennetegn: "Voksen: 3,5–6 mm, svart med to hvite flekker på dekkvingene og tre hvite flekker bakerst på halsskjoldet. Larve: brun og hårete, opptil 8 mm, med lang haledusk",
     forklaring: "Den voksne billen er svart med én tydelig hvit flekk på hver dekkvinge og tre små hvite flekker ved bakkanten av halsskjoldet. Brun pelsbille er omtrent like stor, men har brune dekkvinger og ingen hvite flekker. Larvene forveksles lett med larvene til brun pelsbille, som er mer vanlig – en larve alene gir derfor ikke en sikker bestemmelse.",
     utbredelse: "Utendørs opp til Troms, innendørs i hele landet",
     sesong: "Voksne biller svermer i blomsterenger i slutten av mai",
@@ -797,6 +826,8 @@ export const PESTS: Pest[] = [
       "Brun pelsbille – brune dekkvinger og svart halsskjold, uten hvite flekker; mer vanlig innendørs",
     ],
     tiltak: [
+      "Én voksen bille kan ha fløyet inn utenfra og er ikke i seg selv tegn på angrep – se etter larver og gnag før du gjør mer",
+      "Ved larver eller skade: larvene lever av pels, ull, fjær, skinn, tørre kjøttrester og døde insekter, og kan også ta tekstiler som lin, bomull og silke. Let etter dem i slike materialer, i fuglereder og ved døde dyr",
       "Pakk utsatte gjenstander, som ull- og skinnklær, i plast eller tette beholdere",
       "Støvsug grundig – det fjerner dyr og reduserer mattilgangen",
       "Fjern fuglereder og tørre rotte- eller musekadavre i og ved huset",
@@ -804,18 +835,21 @@ export const PESTS: Pest[] = [
     ],
   },
   {
+    // Faglig gjennomgang etter FHI felthåndbok 2023 s. 30
     norsk: "Museumsbille", latin: "Anthrenus museorum", slug: "museumsbille", gruppe: "Biller",
-    kjennetegn: "2–3 mm, rund, spraglet i brunt, gult og hvitt uten tydelige bånd. Larven er kort, bred og bust-hårete",
-    utbredelse: "Hele landet",
-    sesong: "Voksne biller mai–juli, ofte i vinduskarmer",
+    kjennetegn: "Voksen: 2–4 mm, rund, svart med små skjell i svart, hvitt og oker som danner et mønster. Larve: pæreformet, brun og hårete med hårtuster bakerst, opptil 5 mm",
+    utbredelse: "Innendørs og utendørs nord til Nordland",
+    sesong: "Larvene er aktive innendørs gjennom vinteren; voksne biller kommer fram tidlig på sommeren og søker ut i blomster",
     alvorlighet: "lav",
     forveksles: [
       "Tepperbille – tre tydelige lyse bølgebånd over dekkvingene, og de to er svært vanskelige å skille på foto",
-      "Brun pelsbille – ensfarget brun og mer avlang",
+      "Brun pelsbille – oval, brune dekkvinger og svart halsskjold, uten skjellmønster",
     ],
     tiltak: [
-      "Sjekk ull, pels, utstoppede dyr og gamle insektsamlinger",
-      "Støvsug og frys angrepne gjenstander i minst 72 timer",
+      "De fleste hus og hytter har besøk av museumsbille, og de gjør som regel ingen skade – ett funn krever ikke bekjempelse",
+      "Fjern larvenes næring: støvsug døde insekter og edderkopper, og fjern gamle reir og bol",
+      "Pakk utsatte gjenstander, som ulltøy og skinnklær, i plast eller tette beholdere",
+      "Ved skade på ull eller silke: vask angrepne klær ved 60 °C eller varmebehandle dem – billene tåler kulde",
     ],
   },
   {
@@ -827,7 +861,7 @@ export const PESTS: Pest[] = [
     aliaser: ["teppebille", "vanlig tepperbille"],
     forveksles: [
       "Museumsbille – mer jevnt spraglete uten tydelige bånd, og de to er svært vanskelige å skille på foto",
-      "Brun pelsbille – ensfarget brun og mer avlang",
+      "Brun pelsbille – oval, brune dekkvinger og svart halsskjold, uten skjellmønster",
     ],
     tiltak: [
       "Det er larvene som gjør skade – let etter dem i ull, pels, tepper og under møbler og lister",
@@ -838,14 +872,15 @@ export const PESTS: Pest[] = [
   },
   {
     norsk: "Fleskeklanner", latin: "Dermestes lardarius", slug: "fleskeklanner", gruppe: "Biller",
-    kjennetegn: "7–9 mm, svart med et bredt lyst bånd med mørke prikker over fremre del av dekkvingene. Larven er brun og hårete, opptil 15 mm, med to små bakoverbøyde torner bakerst",
+    kjennetegn: "Voksen: 7–9 mm, svart med et gulgrått tverrbånd med seks svarte prikker over fremre del av dekkvingene. Larve: mørkebrun, leddelt og hårete, opptil 13 mm, med to bakoverbøyde kroker bakerst",
     utbredelse: "Hele landet",
     sesong: "Voksne biller vår og forsommer",
     alvorlighet: "lav",
     forveksles: [
-      "Brun pelsbille – mye mindre og ensfarget brun",
+      "Brun pelsbille – mye mindre (2–5 mm), brune dekkvinger og svart halsskjold",
     ],
     tiltak: [
+      "Enkeltindivider må tolereres – fjern dem for hånd eller med støvsuger",
       "Let etter kilden: død fugl, mus eller gammel mat i hulrom, pipeløp eller ventiler",
       "Fjern kilden – da forsvinner billene av seg selv",
       "Støvsug og vask der du finner larvehud og avføring",
@@ -1479,8 +1514,8 @@ export const GENERELLE_ALIASER: Readonly<Record<string, readonly string[]>> = {
   spurv: ["Gråspurv"],
   måke: ["Gråmåke"],
   måse: ["Gråmåke"],
-  kakerlakk: ["Tysk kakerlakk", "Amerikansk kakerlakk", "Orientalsk kakerlakk", "Brunbåndet kakerlakk"],
-  kakkerlakk: ["Tysk kakerlakk", "Amerikansk kakerlakk", "Orientalsk kakerlakk", "Brunbåndet kakerlakk"],
+  kakerlakk: ["Tysk kakerlakk", "Markkakerlakk", "Amerikansk kakerlakk", "Orientalsk kakerlakk", "Brunbåndet kakerlakk"],
+  kakkerlakk: ["Tysk kakerlakk", "Markkakerlakk", "Amerikansk kakerlakk", "Orientalsk kakerlakk", "Brunbåndet kakerlakk"],
   jordmaur: ["Svart jordmaur", "Brun tremaur", "Svart tremaur"],
   veps: ["Vanlig veps", "Jordveps", "Treveps", "Geithams"],
   "stor veps": ["Geithams", "Treveps"],
@@ -1567,6 +1602,12 @@ const FHI_PATHS: Record<string, string> = {
   stokkmaur: "https://www.fhi.no/sk/skadedyrhandboka/maur/stokkmaur/",
   "brun-tremaur": "https://www.fhi.no/sk/skadedyrhandboka/maur/brun-tremaur/",
   "svart-tremaur": "https://www.fhi.no/sk/skadedyrhandboka/maur/svart-tremaur/",
+  // Faglig gjennomgang av pelsbiller og kakerlakker (sidene finnes i FHIs skadedyrhåndbok)
+  "brun-pelsbille": "https://www.fhi.no/sk/skadedyrhandboka/biller/brun-pelsbille/",
+  pelsbille: "https://www.fhi.no/sk/skadedyrhandboka/biller/pelsbille/",
+  museumsbille: "https://www.fhi.no/sk/skadedyrhandboka/biller/museumsbille/",
+  "tysk-kakerlakk": "https://www.fhi.no/sk/skadedyrhandboka/kakerlakker/tysk-kakerlakk/",
+  markkakerlakk: "https://www.fhi.no/sk/skadedyrhandboka/kakerlakker/markkakerlakk/",
 };
 
 const FHI_FALLBACK = "https://www.fhi.no/sk/skadedyrhandboka/";

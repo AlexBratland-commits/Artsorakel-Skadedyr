@@ -126,14 +126,14 @@ describe("H3: art utenfor biblioteket – ingen automatiske bekjempelsesråd", (
   ] as const;
 
   for (const [hvordan, svar] of markkakerlakk) {
+    // Markkakerlakk er nå egen art i biblioteket: chatten får artens egne råd (ikke bekjempelse).
     it(`markkakerlakk ${hvordan}: normalt ufarlig, ingen gift, limfeller eller profesjonell bekjempelse`, async () => {
       const { system } = await systemFor("Kakerlakker", svar);
-      expect(system).toMatch(/utenfor Ocabs database/);
-      expect(system).toContain("Ectobius lapponicus");
-      expect(system).toMatch(/høy sikkerhet/);
-      expect(system).toMatch(/Ikke anbefal bekjempelse, gift, limfeller eller profesjonell bekjempelse/);
-      expect(system).toMatch(/Gjelder det markkakerlakk \(Ectobius lapponicus\), er den etter FHI ikke et skadedyr og skal ikke bekjempes/);
+      expect(system).toContain("Bildeanalysen foreslår Markkakerlakk (Ectobius lapponicus) med høy sikkerhet");
+      expect(system).toMatch(/ikke et skadedyr og skal ikke bekjempes/);
+      expect(system).toMatch(/Ikke bruk kakerlakkåte eller insektmidler/);
       expect(system).toMatch(/kan ikke formere seg innendørs/);
+      expect(system).not.toMatch(/Sett ut limfeller|Bruk godkjent skadedyrbekjemper/);
       for (const t of tiltak("Tysk kakerlakk")) expect(system).not.toContain(t);
       expect(system).not.toMatch(/Bildeanalysen foreslår (Tysk|Amerikansk)/);
     });
@@ -161,9 +161,11 @@ describe("H3: art utenfor biblioteket – ingen automatiske bekjempelsesråd", (
     ["bare latinsk navn, annen skrivemåte", { found: false, name: "Ukjent", latinName: "Ukjent", confidence: 0, annenArt: { name: "Kakerlakk", latinName: " ectobius  LAPPONICUS ", confidence: 80, hvorfor: "" } }],
   ] as const;
   for (const [hvordan, svar] of presiseTreff) {
-    it(`markkakerlakkregelen gjelder ved presist treff: ${hvordan}`, async () => {
+    it(`markkakerlakkens råd gjelder ved presist treff: ${hvordan}`, async () => {
       const { system } = await systemFor("Kakerlakker", svar);
-      expect(system).toMatch(/Gjelder det markkakerlakk \(Ectobius lapponicus\)/);
+      // Via artsbiblioteket (eller H3-regelen som reserve): ikke et skadedyr, skal ikke bekjempes.
+      expect(system).toMatch(/ikke et skadedyr og skal ikke bekjempes/);
+      for (const t of tiltak("Tysk kakerlakk")) expect(system).not.toContain(t);
     });
   }
 

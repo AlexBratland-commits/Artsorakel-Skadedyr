@@ -119,12 +119,23 @@ test("«Kakerlakk» + Periplaneta americana: amerikansk kakerlakk, ingen motstri
   expect(tekst).not.toContain("Tysk kakerlakk –");
 });
 
-test("«Kakerlakk» + Ectobius lapponicus (markkakerlakk): art utenfor listen, ikke tysk kakerlakk", async ({ page }) => {
+test("«Kakerlakk» + Ectobius lapponicus: markkakerlakk med egne råd, ikke tysk kakerlakks", async ({ page }) => {
   await analyser(page, 116, "MARKKAKERLAKK-TEST");
-  await expect(page.getByRole("heading", { level: 2, name: "Mulig Kakerlakk" })).toBeVisible();
-  await expect(page.getByText(/Ikke i Ocabs database/)).toBeVisible();
-  await expect(page.getByText(/Tysk kakerlakk|Ikke sprøyt selv|Meld fra til huseier/)).toHaveCount(0);
+  const resultat = page.locator("section[aria-live]");
+  await expect(resultat.getByRole("heading", { level: 2, name: "Markkakerlakk" })).toBeVisible();
+  await expect(resultat.getByText("Lite alvorlig")).toBeVisible();
+  await expect(resultat.getByText(/ikke et skadedyr og skal ikke bekjempes/).first()).toBeVisible();
+  await expect(resultat.getByText(/Ikke sprøyt selv|Meld fra til huseier|Sett ut limfeller/)).toHaveCount(0);
   const tekst = await pdf(page);
   expect(tekst).toContain("Ectobius lapponicus");
-  expect(tekst).not.toMatch(/Tysk kakerlakk|Ikke sprøyt selv|Bør håndteres raskt/);
+  expect(tekst).toContain("ikke et skadedyr og skal ikke bekjempes");
+  expect(tekst).not.toMatch(/Ikke sprøyt selv|Bør håndteres raskt|Meld fra til huseier/);
+});
+
+test("«Kakerlakk» + Ectobius sylvestris: annen Ectobius-art er utenfor listen og blir ikke markkakerlakk", async ({ page }) => {
+  await analyser(page, 117, "SKOGKAKERLAKK-TEST");
+  const resultat = page.locator("section[aria-live]");
+  await expect(resultat.getByRole("heading", { level: 2, name: "Mulig Kakerlakk" })).toBeVisible();
+  await expect(resultat.getByText(/Ikke i Ocabs database/)).toBeVisible();
+  await expect(resultat.getByText(/Markkakerlakk|Ikke sprøyt selv/)).toHaveCount(0);
 });

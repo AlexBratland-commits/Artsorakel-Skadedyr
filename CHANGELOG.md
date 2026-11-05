@@ -1,5 +1,26 @@
 # Endringslogg
 
+## Uutgitt – faglig gjennomgang: pelsbiller og markkakerlakk
+
+AI-modeller, sikkerhetsnivåer og ekskrementanalysen er uendret. Artslisten til modellen har
+fått markkakerlakk.
+
+- Ny art: markkakerlakk (*Ectobius lapponicus*) etter FHIs felthåndbok s. 19. Lite alvorlig;
+  ikke et skadedyr og skal ikke bekjempes. Råd om å fjerne enkeltdyr, begrense innvandring og
+  få arten bestemt ved tvil – ingen åte, insektmidler eller behandling av bygningen.
+  «Kakerlakk» + *Ectobius lapponicus* gir markkakerlakk; andre *Ectobius*-arter gjør det ikke.
+- Tysk kakerlakk: kan forveksles med markkakerlakk (FHI s. 20). Rådene er uendret.
+- Brun pelsbille (FHI s. 26): voksen og larve beskrevet hver for seg, utbredelse og sesong
+  rettet (formerer seg bare innendørs, hele året), råd etter situasjon (én bille, gjentatte
+  funn/larver, skade).
+- Pelsbille (FHI s. 27): én bille er ikke tegn på angrep; hva larvene skader.
+- Museumsbille (FHI s. 30): kjennetegn og utbredelse rettet; varmebehandling i stedet for
+  frysing (billene tåler kulde); de fleste hus har museumsbille uten skade.
+- Fleskeklanner (FHI s. 24): larve opptil 13 mm; enkeltindivider må tolereres.
+- «Ensfarget brun» om brun pelsbille er rettet i forvekslingene.
+- FHI-lenker for brun pelsbille, pelsbille, museumsbille, tysk kakerlakk og markkakerlakk.
+- Artsdataversjon 4. Manuell testplan for ekte AI: `docs/testplan-pelsbiller-kakerlakker.md`.
+
 ## Uutgitt – revisjonsfunn M1, M2 og M3
 
 AI-modeller og artsbibliotek er uendret. Ekskrementanalysen er ikke endret.
