@@ -8,8 +8,9 @@ const MAX_ENTRIES = 20;
  * diskret varsel, men selve funnet og artsnavnet endres ikke.
  * 2: brun tremaur / stokkmaur rettet etter FHI.
  * 3: pelsbille og rødmus egne arter, aliaser rettet (H1).
+ * 4: pelsbiller, museumsbille og fleskeklanner rettet etter FHI; markkakerlakk lagt til.
  */
-export const ARTSDATA_VERSJON = 3;
+export const ARTSDATA_VERSJON = 4;
 
 /** Lagret med eldre artsdata enn dagens? */
 export function harEldreArtsdata(entry: Pick<HistoryEntry, "artsdata">): boolean {

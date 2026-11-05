@@ -24,7 +24,8 @@ export const MAUR_FUKT_REGEL = `- Maur og fukt: ved mistanke om maurreir i en by
 /**
  * H3: kjente arter utenfor artsbiblioteket som ikke skal behandles som
  * skadedyr i funn-chatten. Kilde: FHI felthåndbok 2023 s. 19 (markkakerlakk).
- * Markkakerlakk legges i artsbiblioteket separat etter faglig godkjenning.
+ * Markkakerlakk står nå også i artsbiblioteket; regelen er beholdt som
+ * reserve for svar der arten likevel kommer som «art utenfor listen».
  */
 export const ARTER_UTENFOR_BIBLIOTEKET: readonly { norsk: string; latin: string; regel: string }[] = [
   {

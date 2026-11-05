@@ -67,9 +67,9 @@ describe("H1: aliaser", () => {
 });
 
 describe("H1: fagdata for nye arter (FHI felthåndbok 2023)", () => {
-  it("pelsbille: 3,5–6 mm, svart med hvite flekker, utendørs opp til Troms", () => {
+  it("pelsbille: 3,5–5,5 mm (FHIs nettside), svart med hvite flekker, utendørs opp til Troms", () => {
     const p = findPest("Pelsbille")!;
-    expect(p.kjennetegn).toMatch(/3,5–6 mm/);
+    expect(p.kjennetegn).toMatch(/3,5–5,5 mm/);
     expect(p.kjennetegn).toMatch(/svart/i);
     expect(p.kjennetegn).toMatch(/hvite flekker/);
     expect(p.utbredelse).toMatch(/Troms/);
@@ -329,7 +329,7 @@ describe("H1: generelle navn gir aldri en sikker artsbestemmelse alene", () => {
     const tilfeller: [string, string, PestGroup][] = [
       ["Veps", "Vespula rufa", "Veps og bier"],
       ["Mus", "Apodemus agrarius", "Gnagere"],
-      ["Kakerlakk", "Ectobius lapponicus", "Kakerlakker"],
+      ["Kakerlakk", "Ectobius sylvestris", "Kakerlakker"],
       ["Møll", "Hofmannophila pseudospretella", "Møll"],
     ];
     for (const [navn, latin, gruppe] of tilfeller) {
@@ -411,9 +411,9 @@ describe("H1: kakerlakker skilles fra hverandre – og markkakerlakk blir aldri 
     }
   });
 
-  it("markkakerlakk finnes ikke i biblioteket (forslag til ny oppføring er rapportert)", () => {
-    expect(findPest("Markkakerlakk")).toBeUndefined();
-    expect(findPest("Ectobius lapponicus")).toBeUndefined();
+  it("markkakerlakk er egen art i biblioteket (Ectobius lapponicus) – lagt inn etter faglig godkjenning", () => {
+    expect(findPest("Markkakerlakk")).toMatchObject({ latin: "Ectobius lapponicus", alvorlighet: "lav" });
+    expect(findPest("Ectobius lapponicus")?.norsk).toBe("Markkakerlakk");
   });
 
   it("markkakerlakk – på norsk, latin eller som «kakerlakk» – får aldri tysk kakerlakks bekjempelsesråd", () => {
@@ -427,8 +427,8 @@ describe("H1: kakerlakker skilles fra hverandre – og markkakerlakk blir aldri 
     const tyskeRaad = findPest("Tysk kakerlakk")!.tiltak;
     for (const raw of tilfeller) {
       const r = enrich({ description: "x", alternativer: [], ...raw }, "Kakerlakker");
-      expect(r.found, JSON.stringify(raw)).toBe(false);
-      expect(r.name).not.toMatch(/Tysk/);
+      // Markkakerlakk (egen art) eller art utenfor listen (Ectobius sp.) – aldri tysk kakerlakk
+      expect(r.name, JSON.stringify(raw)).not.toMatch(/Tysk/);
       expect(r.severity).toBe("lav");
       for (const t of tyskeRaad) expect(r.tiltak).not.toContain(t);
     }
@@ -436,7 +436,7 @@ describe("H1: kakerlakker skilles fra hverandre – og markkakerlakk blir aldri 
 
   it("markkakerlakk som alternativ gjøres ikke om til tysk kakerlakk", () => {
     const alt = parseAlternatives([{ name: "Kakerlakk", latinName: "Ectobius lapponicus", confidence: 40, hvorfor: "" }], "Kakerlakker");
-    expect(alt).toEqual([]);
+    expect(alt.map((a) => a.name)).toEqual(["Markkakerlakk"]);
   });
 });
 

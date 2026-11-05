@@ -15,7 +15,7 @@ GRUPPER
 - Gnagere: Brunrotte, Svartrotte, Husmus, Liten skogmus, Stor skogmus, Klatremus, Rødmus, Markmus, Vånd, Ekorn
 - Andre pattedyr: Mink, Mår, Røyskatt, Snømus, Grevling, Rødrev, Pinnsvin, Flaggermus
 - Fugler: Bydue, Gråspurv, Gråmåke, Skjære, Stær
-- Kakerlakker: Tysk kakerlakk, Amerikansk kakerlakk, Orientalsk kakerlakk, Brunbåndet kakerlakk
+- Kakerlakker: Tysk kakerlakk, Markkakerlakk, Amerikansk kakerlakk, Orientalsk kakerlakk, Brunbåndet kakerlakk
 - Kre: Skjeggkre, Sølvkre
 - Maur: Stokkmaur, Brun tremaur, Svart tremaur, Svart jordmaur, Faraomaur, Rødmaur, Rød skogsmaur
 - Veps og bier: Vanlig veps, Jordveps, Treveps, Geithams, Honningbie, Humle
@@ -238,4 +238,4 @@ Art som ikke står i listen: {"found":false,"name":"Ukjent","latinName":"Ukjent"
 ]
 `;
 
-exports[`/api/analyze – kontrakt og uendrede prompter > ukjent gruppe i steg 1 gir steg 2 med full artsliste (dagens oppførsel, F5) 1`] = `27007`;
+exports[`/api/analyze – kontrakt og uendrede prompter > ukjent gruppe i steg 1 gir steg 2 med full artsliste (dagens oppførsel, F5) 1`] = `27633`;
