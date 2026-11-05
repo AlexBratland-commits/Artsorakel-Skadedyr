@@ -1,5 +1,13 @@
 # Endringslogg
 
+## Uutgitt – opprydding i avhengigheter
+
+- Fjernet ubrukte pakker: `dotenv`, `clsx` og `tailwind-merge` (ingen kode, konfigurasjon,
+  skript eller andre pakker bruker dem).
+- Dependabot: React, React DOM og typene oppdateres samlet. Ingen store versjonshopp for
+  TypeScript, ESLint og `@types/node` (Node 22) før verktøyene støtter dem. Sikkerhets-
+  oppdateringer lages fortsatt. Ingen andre versjoner er endret.
+
 ## Uutgitt – PDF-rapport og chatboble
 
 Detaljer: [docs/pdf-rapport.md](docs/pdf-rapport.md). AI-logikken, promptene, modellene og
