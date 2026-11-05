@@ -5,6 +5,7 @@ import { MessageCircleQuestion, Send } from "lucide-react";
 import type { AnalysisResult } from "@/lib/types";
 import { nettverksfeil } from "@/lib/client-errors";
 import { useToast } from "./Toast";
+import type { FunnMelding } from "@/lib/rapport/samtale";
 
 const CHAT_TIMEOUT_MS = 35_000;
 
@@ -13,6 +14,8 @@ interface Melding {
   content: string;
   /** Serverens signatur på chatsvaret – sendes med tilbake i historikken. */
   sig?: string;
+  /** Når meldingen ble skrevet (bare i nettleseren, til PDF-vedlegget). Sendes ikke til serveren. */
+  tid?: string;
 }
 
 const FORSLAG = [
@@ -31,9 +34,15 @@ const FORSLAG_UKJENT = [
 export default function AskAboutFinding({
   result,
   onTilgangKreves,
+  onSamtale,
 }: {
   result: AnalysisResult;
   onTilgangKreves?: () => void;
+  /**
+   * Fullførte meldinger i samtalen om DETTE funnet. Siden kobler dem til
+   * visningen og analysens chat-billett (se src/lib/rapport/samtale.ts).
+   */
+  onSamtale?: (meldinger: FunnMelding[]) => void;
 }) {
   const [meldinger, setMeldinger] = useState<Melding[]>([]);
   const [utkast, setUtkast] = useState("");
@@ -41,7 +50,13 @@ export default function AskAboutFinding({
   const listeRef = useRef<HTMLDivElement>(null);
   const { vis } = useToast();
 
-  // Samtalen nullstilles ved å remonte komponenten via key={result.name} i page.tsx.
+  // Samtalen nullstilles ved å remonte komponenten via key i page.tsx (én per visning av et funn).
+
+  // Meld fra om samtalen når et svar er ferdig – ikke mens et spørsmål venter på svar.
+  useEffect(() => {
+    if (venter) return;
+    onSamtale?.(meldinger.map((m) => ({ rolle: m.role, tekst: m.content, tid: m.tid })));
+  }, [meldinger, venter, onSamtale]);
 
   useEffect(() => {
     listeRef.current?.scrollTo({ top: listeRef.current.scrollHeight, behavior: "smooth" });
@@ -59,7 +74,7 @@ export default function AskAboutFinding({
     const sporsmal = tekst.trim();
     if (!sporsmal || venter) return;
 
-    const neste: Melding[] = [...meldinger, { role: "user", content: sporsmal }];
+    const neste: Melding[] = [...meldinger, { role: "user", content: sporsmal, tid: new Date().toISOString() }];
     setMeldinger(neste);
     setUtkast("");
     setVenter(true);
@@ -74,7 +89,8 @@ export default function AskAboutFinding({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         signal: controller.signal,
-        body: JSON.stringify({ chatToken: result.chatToken, messages: neste }),
+        // Bare feltene serveren kjenner – tidspunktet blir i nettleseren.
+        body: JSON.stringify({ chatToken: result.chatToken, messages: neste.map(({ role, content, sig }) => ({ role, content, sig })) }),
       });
       const data = await response.json().catch(() => null);
 
@@ -89,7 +105,7 @@ export default function AskAboutFinding({
       }
 
       const sig = typeof data?.signatur === "string" ? data.signatur : undefined;
-      setMeldinger([...neste, { role: "assistant", content: svar, sig }]);
+      setMeldinger([...neste, { role: "assistant", content: svar, sig, tid: new Date().toISOString() }]);
     } catch (error) {
       setMeldinger(meldinger); // rull tilbake, så brukeren kan prøve på nytt
       setUtkast(sporsmal);

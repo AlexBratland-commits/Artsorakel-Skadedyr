@@ -181,3 +181,43 @@ export function lagRapportInnhold(result: AnalysisResult, valg: RapportValg): Ra
     filnavn: `artsorakel-rapport-${filDato.format(valg.analyseTid)}${filnavnDel(navn) ? `-${filnavnDel(navn)}` : ""}.pdf`,
   };
 }
+
+// ── Samtalevedlegg ───────────────────────────────────────────────────────
+
+export interface SamtaleVedlegg {
+  meldinger: { fra: "kunde" | "ai"; tekst: string; tid?: string }[];
+}
+
+const klokke = new Intl.DateTimeFormat("nb-NO", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Oslo" });
+const dagOgKlokke = new Intl.DateTimeFormat("nb-NO", {
+  day: "numeric",
+  month: "short",
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZone: "Europe/Oslo",
+});
+const dag = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Oslo" });
+
+/**
+ * Gjør funnets meldinger om til vedlegg, i den rekkefølgen de ble skrevet.
+ * Tidspunktet vises bare når meldingen har et; det brukes aldri til å avgjøre
+ * hvilken analyse meldingen hører til (se samtale.ts).
+ */
+export function lagSamtaleVedlegg(
+  meldinger: { rolle: "user" | "assistant"; tekst: string; tid?: string }[],
+  analyseTid: Date
+): SamtaleVedlegg {
+  return {
+    meldinger: meldinger
+      .filter((m) => m.tekst.trim())
+      .map((m) => {
+        const t = m.tid ? new Date(m.tid) : undefined;
+        const gyldig = t && !Number.isNaN(t.getTime());
+        return {
+          fra: m.rolle === "user" ? ("kunde" as const) : ("ai" as const),
+          tekst: m.tekst,
+          tid: gyldig ? (dag.format(t) === dag.format(analyseTid) ? `kl. ${klokke.format(t)}` : dagOgKlokke.format(t)) : undefined,
+        };
+      }),
+  };
+}

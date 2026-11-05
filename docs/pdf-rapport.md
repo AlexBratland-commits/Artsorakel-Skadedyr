@@ -23,6 +23,35 @@ Etter en analyse (og når et funn åpnes fra historikken) finnes knappen **«Las
 Filer: `src/lib/rapport/innhold.ts` (innhold), `src/lib/rapport/pdf.ts` (oppsett),
 `src/components/PdfRapportKnapp.tsx` (knapp og nedlasting).
 
+### Valgfri samtale som vedlegg
+
+«Last ned PDF-rapport» åpner en liten dialog med valget **«Inkluder samtale med Artsorakel»**
+(alltid av som standard). Uten avkrysning er rapporten nøyaktig som før.
+
+- **Hvilke meldinger:** bare meldingene i «Spør om dette funnet» for funnet som vises.
+  Den generelle chatten («Spør Artsorakel») er en egen komponent og kommer aldri med.
+- **Kobling (`src/lib/rapport/samtale.ts`):** Hver gang et funn vises – ny analyse eller åpnet
+  fra historikken – får visningen et nytt løpenummer, og funn-chatten startes på nytt. Chatten
+  melder fra om meldingene sammen med løpenummeret og analysens chat-billett (unik per analyse).
+  Rapporten tar bare med meldinger der begge stemmer med funnet som vises. Tidspunkt brukes ikke
+  til koblingen.
+- **Ingen lagring:** meldingene finnes bare i minnet, som før. Lukkes siden, eller åpnes et annet
+  funn, er samtalen borte, og valget er da deaktivert med en forklaring. Tidspunktet på hver
+  melding settes i nettleseren og sendes ikke til serveren.
+- **Vedlegget:** egne sider etter rapporten med «Vedlegg – Samtale med Artsorakel», undertekst,
+  påkrevd forbehold, meldingene i rekkefølge med avsender (Kunde / Artsorakel (AI)) og
+  tidspunkt. Toppfelt, bunntekst og sidetall fortsetter gjennom hele dokumentet.
+
+**Forslag (ikke bygget):** Skal samtalen kunne legges ved også etter at siden er lukket, må den
+lagres sammen med funnet i historikken på enheten. Det er en endring i hva som lagres lokalt og i
+personvernteksten, og bør godkjennes først.
+
+### Sideskift
+
+Korte avsnitt (høyst 6 linjer) holdes samlet. Lange avsnitt deles aldri slik at én linje står
+alene nederst eller øverst. Overskrifter tar alltid med seg starten av teksten under, og en
+avsender i vedlegget står aldri alene nederst på en side.
+
 ## Chatboblen
 
 Boblen «Spør Artsorakel» dekker aldri knapper, lenker eller skjemafelt – på alle sider. Den sjekker

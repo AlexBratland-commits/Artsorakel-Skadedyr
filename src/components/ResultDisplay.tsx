@@ -19,6 +19,7 @@ import {
 } from "@/lib/types";
 import { useToast } from "./Toast";
 import PdfRapportKnapp, { type RapportKontekst } from "./PdfRapportKnapp";
+import type { FunnMelding } from "@/lib/rapport/samtale";
 import {
   ALVORLIGHET,
   EKSKREMENT_FORBEHOLD,
@@ -54,6 +55,7 @@ export default function ResultDisplay({
   onReset,
   eldreArtsdata = false,
   rapport,
+  samtale = [],
 }: {
   result: AnalysisResult | null;
   onReset: () => void;
@@ -61,6 +63,8 @@ export default function ResultDisplay({
   eldreArtsdata?: boolean;
   /** Bilde, tidspunkt og funnsted til PDF-rapporten. */
   rapport?: RapportKontekst;
+  /** Samtalen om akkurat dette funnet (allerede kontrollert mot visningen). */
+  samtale?: FunnMelding[];
 }) {
   const { vis } = useToast();
   const ref = useRef<HTMLElement>(null);
@@ -341,7 +345,7 @@ export default function ResultDisplay({
 
             {/* PDF-rapport: tydelig, men i samme stil som de andre knappene */}
             <div className="no-print border-t hairline pt-5">
-              <PdfRapportKnapp result={result} eldreArtsdata={eldreArtsdata} kontekst={rapport} />
+              <PdfRapportKnapp result={result} eldreArtsdata={eldreArtsdata} kontekst={rapport} samtale={samtale} />
             </div>
 
             {/* Handlinger */}

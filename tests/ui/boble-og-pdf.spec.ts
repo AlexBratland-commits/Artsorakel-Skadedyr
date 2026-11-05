@@ -85,7 +85,11 @@ test("PDF-rapport etter analyse: knappen er synlig og ikke dekket, og PDF-en har
   await sjekkHeleSiden(page);
 
   await knapp.scrollIntoViewIfNeeded();
-  const [nedlasting] = await Promise.all([page.waitForEvent("download"), knapp.click()]);
+  await knapp.click();
+  const [nedlasting] = await Promise.all([
+    page.waitForEvent("download"),
+    page.getByRole("dialog", { name: "Last ned PDF-rapport" }).getByRole("button", { name: "Last ned rapport" }).click(),
+  ]);
   expect(nedlasting.suggestedFilename()).toMatch(/^artsorakel-rapport-\d{4}-\d{2}-\d{2}-husmus\.pdf$/);
   const sti = await nedlasting.path();
   const bytes = new Uint8Array(fs.readFileSync(sti!));
@@ -112,9 +116,10 @@ test("PDF fra historikken bruker miniatyrbildet og merker det", async ({ page })
   await expect(page.getByRole("heading", { name: "Husmus", level: 2 })).toBeVisible();
   await page.reload();
   await page.getByRole("region", { name: "Tidligere bilder på denne enheten" }).getByRole("button", { name: /Husmus/ }).first().click();
+  await page.getByRole("button", { name: "Last ned PDF-rapport" }).click();
   const [nedlasting] = await Promise.all([
     page.waitForEvent("download"),
-    page.getByRole("button", { name: "Last ned PDF-rapport" }).click(),
+    page.getByRole("dialog", { name: "Last ned PDF-rapport" }).getByRole("button", { name: "Last ned rapport" }).click(),
   ]);
   const tekst = (await pdfTekst(new Uint8Array(fs.readFileSync((await nedlasting.path())!)))).join(" ").replace(/\n/g, " ");
   expect(tekst).toContain("Miniatyrbilde fra historikken");

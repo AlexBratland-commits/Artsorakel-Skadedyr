@@ -7,7 +7,7 @@
  * nærmeste lesbare tegn, så ingen tekst forsvinner eller gir feil.
  */
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFImage, type PDFPage, type RGB } from "pdf-lib";
-import type { RapportInnhold } from "./innhold";
+import type { RapportInnhold, SamtaleVedlegg } from "./innhold";
 
 export interface RapportBilde {
   /** JPEG-data. */
@@ -21,6 +21,8 @@ export interface PdfResultat {
   sider: number;
   /** Størrelsen bildet ble tegnet med (pt), for testene. */
   bildeRamme?: { bredde: number; hoyde: number; kildeBredde: number; kildeHoyde: number };
+  /** Sidenummeret (fra 1) der samtalevedlegget starter, hvis det er med. */
+  vedleggStart?: number;
 }
 
 // ── Side og farger ───────────────────────────────────────────────────────
@@ -28,6 +30,10 @@ const SIDE = { bredde: 595.28, hoyde: 841.89 }; // A4
 const MARG = { venstre: 50, hoyre: 50, topp: 46, bunn: 70 };
 const INNHOLD_BREDDE = SIDE.bredde - MARG.venstre - MARG.hoyre;
 const BILDE_MAKS_HOYDE = 290;
+/** Avsnitt med så mange linjer eller færre holdes samlet på én side. */
+const KORT_AVSNITT = 6;
+/** Linjer som får plass på en ny fortsettelsesside (toppfelt ca. 44 pt). */
+const LINJER_PER_NY_SIDE = (linjeHoyde: number) => Math.floor((SIDE.hoyde - MARG.topp - 44 - MARG.bunn) / linjeHoyde);
 
 const hex = (h: string): RGB => rgb(parseInt(h.slice(1, 3), 16) / 255, parseInt(h.slice(3, 5), 16) / 255, parseInt(h.slice(5, 7), 16) / 255);
 const FARGE = {
@@ -77,6 +83,8 @@ export function tilWinAnsi(tekst: string): string {
     if (tegn === "\n" || tegn === "\t") ut += tegn === "\t" ? " " : "\n";
     else if ((kode >= 0x20 && kode <= 0x7e) || (kode >= 0xa0 && kode <= 0xff) || WINANSI_EKSTRA.has(tegn)) ut += tegn;
     else if (tegn in ERSTATNING) ut += ERSTATNING[tegn];
+    // Emoji og usynlige sammenføyningstegn kan ikke vises i Helvetica – fjernes.
+    else if (/\p{Extended_Pictographic}|[\u200d\ufe0e\ufe0f]|\p{Emoji_Modifier}/u.test(tegn)) continue;
     else {
       // Fjern aksenter (f.eks. ő → o); ellers et nøytralt tegn.
       const base = tegn.normalize("NFD").replace(/[̀-ͯ]/g, "");
@@ -156,6 +164,45 @@ class Oppsett {
     if (this.y - hoyde < this.bunn) this.nySide();
   }
 
+  /** Hvor mange linjer som får plass på resten av siden. */
+  private ledigeLinjer(linjeHoyde: number): number {
+    return Math.floor((this.y - this.bunn) / linjeHoyde + 1e-6);
+  }
+
+  /**
+   * Plasserer linjer med kontroll av sideskift:
+   * - korte avsnitt (høyst KORT_AVSNITT linjer) holdes samlet på én side,
+   * - aldri én linje alene nederst på en side,
+   * - aldri én linje alene øverst på neste side.
+   */
+  plasserLinjer(antall: number, linjeHoyde: number, tegn: (i: number) => void) {
+    if (antall <= KORT_AVSNITT && antall > this.ledigeLinjer(linjeHoyde) && antall <= LINJER_PER_NY_SIDE(linjeHoyde)) {
+      this.nySide();
+    }
+    let i = 0;
+    while (i < antall) {
+      const igjen = antall - i;
+      let her = Math.min(this.ledigeLinjer(linjeHoyde), igjen);
+      if (her < igjen) {
+        if (igjen - her === 1) her -= 1; // la minst to linjer følge med til neste side
+        if (her < 2) {
+          this.nySide();
+          continue;
+        }
+      }
+      for (let n = 0; n < her; n++, i++) {
+        tegn(i);
+        this.y -= linjeHoyde;
+      }
+      if (i < antall) this.nySide();
+    }
+  }
+
+  /** Høyden en blokk trenger for å kunne starte her (hele, eller to linjer hvis den er lang). */
+  startHoyde(linjer: number, linjeHoyde: number): number {
+    return (linjer <= KORT_AVSNITT ? linjer : 2) * linjeHoyde;
+  }
+
   private toppfelt() {
     const logoHoyde = 30;
     const logoBredde = (this.logo.width / this.logo.height) * logoHoyde;
@@ -211,17 +258,21 @@ class Oppsett {
     const font = valg.font ?? this.f.normal;
     const innrykk = valg.innrykk ?? 0;
     const linjeHoyde = storrelse * 1.45;
-    for (const l of brytTekst(tekst, font, storrelse, INNHOLD_BREDDE - innrykk)) {
-      this.plass(linjeHoyde);
-      this.side.drawText(l, { x: MARG.venstre + innrykk, y: this.y - storrelse, size: storrelse, font, color: valg.farge ?? FARGE.tekst });
-      this.y -= linjeHoyde;
-    }
+    const linjer = brytTekst(tekst, font, storrelse, INNHOLD_BREDDE - innrykk);
+    this.plasserLinjer(linjer.length, linjeHoyde, (i) => {
+      this.side.drawText(linjer[i], { x: MARG.venstre + innrykk, y: this.y - storrelse, size: storrelse, font, color: valg.farge ?? FARGE.tekst });
+    });
     this.y -= valg.luftEtter ?? 6;
   }
 
-  overskrift(tekst: string) {
-    // Hold overskriften sammen med minst to linjer tekst.
-    this.plass(18 + 10.5 * 1.45 * 2);
+  /** Høyden avsnittet trenger for å starte (brukes for å holde overskrifter sammen med teksten). */
+  avsnittStart(tekst: string, storrelse = 10.5, innrykk = 0): number {
+    return this.startHoyde(brytTekst(tekst, this.f.normal, storrelse, INNHOLD_BREDDE - innrykk).length, storrelse * 1.45);
+  }
+
+  /** Overskrift som aldri blir stående alene nederst: den tar med seg starten av neste blokk. */
+  overskrift(tekst: string, nesteStart = 10.5 * 1.45 * 2) {
+    this.plass(28 + nesteStart);
     this.y -= 6;
     this.side.drawText(tilWinAnsi(tekst), { x: MARG.venstre, y: this.y - 12, size: 12, font: this.f.fet, color: FARGE.ocab900 });
     this.y -= 22;
@@ -232,15 +283,44 @@ class Oppsett {
     const linjeHoyde = storrelse * 1.45;
     for (const p of punkter) {
       const linjer = brytTekst(p, this.f.normal, storrelse, INNHOLD_BREDDE - 16);
-      linjer.forEach((l, i) => {
-        this.plass(linjeHoyde);
+      this.plasserLinjer(linjer.length, linjeHoyde, (i) => {
         if (i === 0) this.side.drawCircle({ x: MARG.venstre + 4, y: this.y - storrelse * 0.62, size: 2, color: punktFarge });
-        this.side.drawText(l, { x: MARG.venstre + 16, y: this.y - storrelse, size: storrelse, font: this.f.normal, color: FARGE.tekst });
-        this.y -= linjeHoyde;
+        this.side.drawText(linjer[i], { x: MARG.venstre + 16, y: this.y - storrelse, size: storrelse, font: this.f.normal, color: FARGE.tekst });
       });
       this.y -= 3;
     }
     this.y -= 4;
+  }
+
+  /** Høyden første punkt trenger for å starte. */
+  punktStart(punkter: string[]): number {
+    return punkter.length ? this.avsnittStart(punkter[0], 10.5, 16) : 0;
+  }
+
+  /** Høyden en boks trenger (bokser deles aldri). */
+  boksHoyde(tekst: string, tittel?: string, storrelse = 10): number {
+    return brytTekst(tekst, this.f.normal, storrelse, INNHOLD_BREDDE - 28).length * storrelse * 1.45 + (tittel ? 16 : 0) + 18;
+  }
+
+  /** Én melding i samtalevedlegget: avsender, tidspunkt og teksten med farget kant. */
+  melding(fra: string, tid: string | undefined, tekst: string, farge: RGB) {
+    const storrelse = 10;
+    const linjeHoyde = storrelse * 1.45;
+    const innrykk = 14;
+    const linjer = brytTekst(tekst || " ", this.f.normal, storrelse, INNHOLD_BREDDE - innrykk);
+    // Avsenderen står aldri alene: den tar med seg hele meldingen (kort) eller to linjer.
+    this.plass(18 + this.startHoyde(linjer.length, linjeHoyde));
+    this.side.drawText(tilWinAnsi(fra), { x: MARG.venstre, y: this.y - 10, size: 10, font: this.f.fet, color: farge });
+    if (tid) {
+      const t = tilWinAnsi(tid);
+      this.side.drawText(t, { x: SIDE.bredde - MARG.hoyre - this.f.normal.widthOfTextAtSize(t, 8.5), y: this.y - 10, size: 8.5, font: this.f.normal, color: FARGE.dempet });
+    }
+    this.y -= 18;
+    this.plasserLinjer(linjer.length, linjeHoyde, (i) => {
+      this.side.drawRectangle({ x: MARG.venstre, y: this.y - linjeHoyde + 2, width: 2.5, height: linjeHoyde, color: farge });
+      this.side.drawText(linjer[i], { x: MARG.venstre + innrykk, y: this.y - storrelse, size: storrelse, font: this.f.normal, color: FARGE.tekst });
+    });
+    this.y -= 14;
   }
 
   /** Tekstboks med farget kant. Blir den for lang for en side, flyter teksten uten boks. */
@@ -253,7 +333,7 @@ class Oppsett {
     const tittelHoyde = valg.tittel ? 16 : 0;
     const hoyde = linjer.length * linjeHoyde + tittelHoyde + 18;
     if (hoyde > SIDE.hoyde - MARG.topp - MARG.bunn - 60) {
-      if (valg.tittel) this.overskrift(valg.tittel);
+      if (valg.tittel) this.overskrift(valg.tittel, this.avsnittStart(tekst, storrelse));
       this.avsnitt(tekst, { storrelse, font });
       return;
     }
@@ -331,8 +411,21 @@ const ALVORLIGHET_FARGE: Record<string, RGB> = {
   "Bør håndteres raskt": FARGE.hoy,
 };
 
-/** Lager PDF-rapporten. `logoPng` er Ocabs offisielle logo fra public/icons. */
-export async function lagPdfRapport(innhold: RapportInnhold, logoPng: Uint8Array, bilde?: RapportBilde): Promise<PdfResultat> {
+/** Påkrevd forbehold på første side av samtalevedlegget (godkjent tekst). */
+export const SAMTALE_FORBEHOLD =
+  "Dette vedlegget inneholder en AI-generert samtale. Svarene er veiledende og kan inneholde feil eller usikkerheter. Samtalen er ikke en bekreftet faglig vurdering fra Ocab.";
+
+/**
+ * Lager PDF-rapporten. `logoPng` er Ocabs offisielle logo fra public/icons.
+ * `vedlegg` (valgfritt) legges til som egne sider etter rapporten. Uten
+ * vedlegg er rapporten nøyaktig som før.
+ */
+export async function lagPdfRapport(
+  innhold: RapportInnhold,
+  logoPng: Uint8Array,
+  bilde?: RapportBilde,
+  vedlegg?: SamtaleVedlegg
+): Promise<PdfResultat> {
   const doc = await PDFDocument.create();
   doc.setTitle(tilWinAnsi(`${innhold.tittel}: ${innhold.navn}`));
   doc.setAuthor("Ocab Artsorakel");
@@ -375,7 +468,7 @@ export async function lagPdfRapport(innhold: RapportInnhold, logoPng: Uint8Array
   o.boks(innhold.aiForbehold, { bakgrunn: FARGE.signal100, kant: FARGE.signal500, tittel: "Viktig: veiledende AI-vurdering" });
 
   // 4. Vurdering og sikkerhet
-  o.overskrift("Vurdering");
+  o.overskrift("Vurdering", o.avsnittStart(innhold.beskrivelse));
   o.avsnitt(innhold.beskrivelse);
   if (innhold.grunnlag) o.avsnitt(`Forslaget bygger på: ${innhold.grunnlag}`, { farge: FARGE.dempet });
   if (innhold.sikkerhet) {
@@ -386,7 +479,8 @@ export async function lagPdfRapport(innhold: RapportInnhold, logoPng: Uint8Array
   }
 
   if (innhold.alternativer.length) {
-    o.overskrift("Kan også være");
+    const forste = innhold.alternativer[0];
+    o.overskrift("Kan også være", 10.5 * 1.45 + (forste.hvorfor ? o.avsnittStart(forste.hvorfor, 9.5) : 0));
     for (const a of innhold.alternativer) {
       o.plass(10.5 * 1.45 + (a.hvorfor ? brytTekst(a.hvorfor, f.normal, 9.5, INNHOLD_BREDDE).length * 9.5 * 1.45 : 0) + 6);
       const linje = [a.navn, a.latin ? `(${a.latin})` : "", a.sikkerhet ? `– ${a.sikkerhet.toLowerCase()}` : ""].filter(Boolean).join(" ");
@@ -396,7 +490,10 @@ export async function lagPdfRapport(innhold: RapportInnhold, logoPng: Uint8Array
   }
 
   // 5. Risikovurdering
-  o.overskrift("Risikovurdering");
+  o.overskrift(
+    "Risikovurdering",
+    o.avsnittStart(innhold.risiko.etikett ? `Alvorlighet: ${innhold.risiko.etikett}. ${innhold.risiko.tekst ?? ""}` : "Ingen alvorlighetsvurdering: funnet er ikke bestemt til en art i Ocabs database.")
+  );
   if (innhold.risiko.etikett) o.avsnitt(`Alvorlighet: ${innhold.risiko.etikett}. ${innhold.risiko.tekst ?? ""}`.trim());
   else o.avsnitt("Ingen alvorlighetsvurdering: funnet er ikke bestemt til en art i Ocabs database.", { farge: FARGE.dempet });
   if (innhold.risiko.forbehold) o.boks(innhold.risiko.forbehold, { bakgrunn: FARGE.flate, kant: FARGE.middels });
@@ -406,29 +503,42 @@ export async function lagPdfRapport(innhold: RapportInnhold, logoPng: Uint8Array
 
   // 6. Tiltak
   if (innhold.tiltak.length) {
-    o.overskrift("Anbefalte tiltak");
+    o.overskrift("Anbefalte tiltak", o.punktStart(innhold.tiltak));
     o.punktliste(innhold.tiltak);
   }
   if (innhold.bekreftelse.length) {
-    o.overskrift("Slik bekrefter du funnet");
+    o.overskrift("Slik bekrefter du funnet", o.punktStart(innhold.bekreftelse));
     o.punktliste(innhold.bekreftelse, FARGE.ocab500);
   }
-  o.overskrift("Når bør du kontakte fagfolk?");
+  o.overskrift("Når bør du kontakte fagfolk?", o.punktStart(innhold.fagfolk));
   o.punktliste(innhold.fagfolk, FARGE.ocab500);
 
   if (innhold.forveksles.length) {
-    o.overskrift("Slik skiller du den fra liknende arter");
+    o.overskrift("Slik skiller du den fra liknende arter", o.punktStart(innhold.forveksles));
     o.punktliste(innhold.forveksles, FARGE.dempet);
   }
 
   // 7. Forbehold
-  o.overskrift("Forbehold");
+  o.overskrift("Forbehold", o.avsnittStart(innhold.forbehold[0] ?? innhold.aiForbehold, 9.5));
   for (const t of innhold.forbehold) o.avsnitt(t, { storrelse: 9.5 });
   o.avsnitt(innhold.aiForbehold, { storrelse: 9.5, font: f.fet });
   if (innhold.kilde) o.avsnitt(`Les mer i FHIs skadedyrhåndbok: ${innhold.kilde}`, { storrelse: 9, farge: FARGE.dempet });
   o.avsnitt(`Rapporten ble laget ${innhold.rapportDato}. Den er ikke signert og er ikke en inspeksjonsrapport.`, { storrelse: 9, farge: FARGE.dempet });
 
+  // Vedlegg: samtale med Artsorakel – egne sider etter rapporten
+  let vedleggStart: number | undefined;
+  if (vedlegg && vedlegg.meldinger.length) {
+    o.nySide();
+    vedleggStart = o.sider.length;
+    o.avsnitt("Vedlegg – Samtale med Artsorakel", { storrelse: 16, font: f.fet, farge: FARGE.ocab900, luftEtter: 0 });
+    o.avsnitt("AI-generert samtale knyttet til dette funnet.", { storrelse: 10, farge: FARGE.dempet, luftEtter: 8 });
+    o.boks(SAMTALE_FORBEHOLD, { bakgrunn: FARGE.signal100, kant: FARGE.signal500 });
+    for (const m of vedlegg.meldinger) {
+      o.melding(m.fra === "kunde" ? "Kunde" : "Artsorakel (AI)", m.tid, m.tekst, m.fra === "kunde" ? FARGE.ocab900 : FARGE.signal500);
+    }
+  }
+
   o.bunntekster();
   const bytes = await doc.save();
-  return { bytes, sider: o.sider.length, bildeRamme };
+  return { bytes, sider: o.sider.length, bildeRamme, vedleggStart };
 }

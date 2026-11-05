@@ -7,6 +7,8 @@ artsbiblioteket er uendret.
 
 - «Last ned PDF-rapport» etter analyse og fra historikken. Lages lokalt i nettleseren fra det
   eksisterende resultatet (ny avhengighet: `pdf-lib`).
+- PDF-dialog med valgfri samtale som vedlegg – bare meldinger fra «Spør om dette funnet» for funnet
+  som vises (koblet med visningsnummer og chat-billett, ikke tidspunkt). Bedre sideskift.
 - Chatboblen dekker aldri knapper eller skjemafelt: blir kompakt, flytter seg til ledig plass eller
   tones ut, og skjules mens tastaturet er oppe.
 - Forsiden: ny tekst om skadedyr og ekskrementer.
