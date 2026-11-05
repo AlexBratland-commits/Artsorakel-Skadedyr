@@ -36,7 +36,7 @@ export const ROTTE_FORBEHOLD =
  * bibliotekets egne kjennetegn (konsistens og innhold).
  */
 export const MUS_FLAGGERMUS_FORBEHOLD =
-  "Mus- og flaggermusekskrementer er omtrent like store og kan ligne på bilder. Smuldrer de til glinsende pulver når du knuser dem (bruk hansker), tyder det på flaggermus. Er de faste og harde, tyder det på mus.";
+  "Flaggermusekskrementer består av insektrester og er tørre og smuldrer lett. Museekskrementer er faste og harde. Ikke ta på eller knus ekskrementene – vurder heller utseendet på bildet, og kontakt Ocab ved tvil.";
 
 /** Tekst når bildet tydelig viser noe annet enn et skadedyr (oppgave 4). */
 export const IKKE_SKADEDYR_TEKST =

@@ -19,7 +19,7 @@ test("ekskrementer uten størrelse og beskrivelse viser tips, som forsvinner nå
   await page.goto("/");
   await page.locator('input[type="file"]').setInputFiles(bilde);
   await page.getByRole("button", { name: "Ekskrementer" }).click();
-  const tips = page.getByText(/særlig for å skille mus fra flaggermus/);
+  const tips = page.getByText(/Ikke ta på ekskrementene\. Beskriv det du ser/);
   await expect(tips).toBeVisible();
   await page.getByLabel(/Beskriv det du ser/).fill("Harde, i skuffen");
   await expect(tips).toHaveCount(0);

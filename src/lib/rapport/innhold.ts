@@ -19,6 +19,7 @@ import {
   GENERELT_FORBEHOLD,
   latinskNavn,
   OCAB_SKADEDYR_URL,
+  oppryddingFor,
   SIKKERHET_FORKLARING,
   SIKKERHET_USIKKER_TILLEGG,
   USIKKER_KANDIDAT_TEKST,
@@ -64,6 +65,8 @@ export interface RapportInnhold {
   fagfolk: string[];
   forveksles: string[];
   forbehold: string[];
+  /** Trygg opprydding for ekskrementer av gnagere og flaggermus (M9). */
+  opprydding?: string;
   aiForbehold: string;
   kilde?: string;
   /** Filnavn uten mappe, bare a–z, 0–9 og bindestrek. */
@@ -174,6 +177,7 @@ export function lagRapportInnhold(result: AnalysisResult, valg: RapportValg): Ra
     fagfolk,
     forveksles: result.forveksles ?? [],
     forbehold,
+    opprydding: oppryddingFor(result),
     aiForbehold: AI_FORBEHOLD,
     kilde: result.fhiUrl || undefined,
     filnavn: `artsorakel-rapport-${filDato.format(valg.analyseTid)}${filnavnDel(navn) ? `-${filnavnDel(navn)}` : ""}.pdf`,

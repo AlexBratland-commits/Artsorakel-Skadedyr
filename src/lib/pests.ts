@@ -1308,7 +1308,7 @@ export const PESTS: Pest[] = [
     ],
     bekreftelse: [
       "3–8 mm lange og smale – størrelsen er det sikreste skillet mot rotte",
-      "Faste og harde – smuldrer ikke ved berøring",
+      "Ser faste og harde ut, uten glinsende insektrester",
       "Mange og spredt langs vegger, i skuffer, skap og isolasjon",
       "Ofte stikkende muselukt der de holder til",
     ],
@@ -1404,7 +1404,7 @@ export const PESTS: Pest[] = [
     ],
     bekreftelse: [
       "3–5 mm, ligner et lite riskorn",
-      "Smuldrer lett til pulver mellom fingrene (bruk hansker)",
+      "Tørre, og ser ut til å bestå av glinsende insektrester",
       "Glinser av uknuste insektskall i bruddflaten",
       "Finnes ofte i hauger under en fast oppholdsplass, f.eks. på loft eller under takutstikk",
     ],

@@ -108,6 +108,8 @@ describe("PDF-rapport", () => {
     expect(alt).toContain("Type: Ekskrementer");
     expect(alt.replace(/\n/g, " ")).toContain("ikke en laboratorieprøve");
     if (r.bekreftelse?.length) expect(alt).toContain("Slik bekrefter du funnet");
+    expect(alt).toContain("Trygg opprydding");
+    expect(alt.replace(/\n/g, " ")).toContain("Ikke fei eller støvsug");
   });
 
   it("usikker og «Ukjent»: ingen alvorlighet eller sikker art, men forbehold og råd", async () => {

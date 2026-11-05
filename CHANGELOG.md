@@ -1,5 +1,18 @@
 # Endringslogg
 
+## Uutgitt – M9: trygg veiledning for ekskrementer
+
+Ingen tekst ber lenger brukeren knuse, trykke på eller ta på ekskrementer, heller ikke med hansker.
+AI-modeller og analyseprompter er uendret.
+
+- Tipset og eksempelteksten i ekskrementflyten ber om å beskrive utseende og funnsted, og
+  anbefaler et nærbilde med mynt eller linjal. Tipset sier «Ikke ta på ekskrementene.»
+- Forbeholdet om mus og flaggermus beskriver forskjellen uten å be brukeren knuse noe.
+- «Slik bekrefter du funnet» for flaggermus- og museekskrementer bygger på utseendet.
+- Ny boks «Trygg opprydding» (FHI: hansker og munnbind, fukt med såpevann, tørk opp med klut,
+  ikke fei eller støvsug) for mus, rotte, flaggermus og ukjente ekskrementer, på skjermen og i
+  PDF-en. Mårdyrekskrementer og bilder av selve dyret får den ikke.
+
 ## Uutgitt – tekniske rettelser etter uavhengig revisjon
 
 Gjelder funn H2, L1, M3, M4, M5, L2 og L4. AI-modeller, artsbibliotek og faglige prompter er uendret.
