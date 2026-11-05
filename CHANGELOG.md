@@ -1,15 +1,15 @@
 # Endringslogg
 
-## Uutgitt – roligere chatboble under scrolling
+## Uutgitt – stabil chatboble på mobil
 
-- Chatboblen «Spør Artsorakel» står stille mens man scroller. Plassen (stor/liten boble og
-  løft) vurderes først når scrollingen har stoppet (150 ms), i stedet for i hver
-  animasjonsramme. Tidligere byttet den størrelse og hoppet opp og ned hver gang en knapp
-  passerte hjørnet, og på iPhone Safari også når verktøylinjen ble skjult under scrolling.
-- Mobil: boblen er alltid en liten, rund knapp med chatikonet – ingen tekst, samme størrelse
-  og fast plass nede til høyre (med safe-area). Den flyttes ikke opp; dekker den en knapp når
-  siden står stille, tones den ut til plassen er fri.
-- PC: uendret – knappen med teksten «Spør Artsorakel», som viker for knapper som før.
+- Mobil (under 640 px): chatboblen «Spør Artsorakel» er alltid synlig, rund (52 × 52 px) med
+  chatikonet og fast nede til høyre med safe-area. Den skjules, tones ut, flyttes eller endrer
+  størrelse aldri – verken under scrolling, over andre knapper eller med tastaturet oppe.
+  Plassberegningen (scroll-lytter, kollisjonsmåling, skjuling og løft) kjører ikke på mobil.
+- Siden har mer luft nederst på mobil (6,5 rem + safe-area), så bunnteksten og andre knapper
+  kan scrolles fri av boblen.
+- PC: uendret – knappen med teksten «Spør Artsorakel», som viker for knapper. Plassen
+  vurderes når scrollingen har stoppet, ikke i hver animasjonsramme.
 
 ## Uutgitt – H5: sikkerhetsnivå etter grunnlaget
 
