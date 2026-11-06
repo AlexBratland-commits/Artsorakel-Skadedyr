@@ -17,6 +17,9 @@ alvorlighet, tiltak og forvekslinger hentes fra biblioteket, ikke fra AI-en.
 
 ## Kom i gang lokalt
 
+Prosjektet bruker **Node.js 24** – samme versjon som Vercel og GitHub Actions
+(se `.nvmrc` og `engines` i `package.json`). Med nvm: `nvm use`.
+
 ```bash
 npm ci
 cp .env.example .env.local   # legg inn OPENROUTER_API_KEY

@@ -37,9 +37,9 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "eslint"
         update-types: ["version-update:semver-major"]
-      # Typene skal følge Node-versjonen prosjektet kjører på (Node 22 i CI).
-      # Fjern regelen og oppdater samtidig node-version i ci.yml (og Node-
-      # versjonen i Vercel) når prosjektet går over til en ny Node-versjon.
+      # Typene skal følge Node-versjonen prosjektet kjører på: Node 24 i CI,
+      # i Vercel og lokalt (.nvmrc, engines i package.json). Ved bytte til en ny
+      # Node-versjon: oppdater alle disse samtidig, og deretter @types/node.
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]
 
